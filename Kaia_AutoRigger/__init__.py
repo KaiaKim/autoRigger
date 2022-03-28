@@ -3,9 +3,9 @@ from functools import partial
 import importlib
 
 from Kaia_AutoRigger import ModFunc
-
+from Kaia_AutoRigger import MouthFunc
 importlib.reload(ModFunc)
-
+importlib.reload(MouthFunc)
 
 class AutoRigMouth():
     def __init__(self):
@@ -16,8 +16,8 @@ class AutoRigMouth():
         self.faceLowerBind = 'face_lower_bind' #This name is from the template file. No change this!
         self.jawBind = 'jaw_bind' #This name is from the template file. No change this!
         
-        self.upperCurv = 'lip_upper_curve' #This name is from the template file. No change this!
-        self.lowerCurv = 'lip_lower_curve' #This name is from the template file. No change this!
+        self.lipUpperCurv = 'lip_upper_curve' #This name is from the template file. No change this!
+        self.lipLowerCurv = 'lip_lower_curve' #This name is from the template file. No change this!
         self.lipCVList = []
         self.mouthCurv = None
         
@@ -30,7 +30,7 @@ class AutoRigMouth():
         
         self.lipJnts = []
         
-        self.mouthDriversGrp = 'mouth_driver_jnt_grp'
+        self.mouthDriverGrp = 'mouth_driver_jnt_grp'
         self.mouthDrivers = []
         
         self.mouthBindmeshesGrp = 'mouth_bindmesh_grp'
@@ -45,7 +45,7 @@ class AutoRigMouth():
         self.lipMicroCtlGrp = 'mouth_ctl_grp'
         self.lipMicroCtls = []
         
-        self.jawClsGrp = 'jaw_Cls_grp'
+        self.jawClsGrp = 'jaw_cls_grp'
         self.jawCls = []
 
         self.createWindow()
@@ -99,19 +99,11 @@ class AutoRigMouth():
 
         cmds.text( label='It only works with template joint hierarchy.')
         cmds.text( label='Make sure you have everything assigned!')
-        cmds.button(label='1: Generate mouth_curve from lip_curves',c=self._createMouthCurv)
-        cmds.button(label='1: Create lip_locs on lip verts && connect to lip_curves', c=self._createLipLocs)
-        cmds.button(label='2: Aim constraint lip_locs to jaw_bind', c=self._aimConstMouthLocs)
-        cmds.button(label='2: Create lip_bind_jnts && constraint to lip_locs',c=self._createJntsOnMouthLocs)
-        cmds.button(label='2: Create drivers && connect to mouth CVs',c=self._createMouthDrivers)
-        cmds.button(label='3: Create Bindmeshes on drivers',c=self._createBindmeshesOnMouthDrivers)
-        cmds.button(label='4: Create Follicles on Bindmeshes',c=self._createFolsOnMouthBindmeshes)
-        cmds.button(label='4: Create Clusters on Bindmeshes',c=self._createClsOnMouthBindmeshes)
-        cmds.button(label='4: Create Lip Micro Controllers',c=self._createMouthCtrls)
+        cmds.button(label='Build Mouth Rig 01',c=self.buildMouthRig01)
         cmds.button(label='5: Finish Adjusting Orient', enable=False)
         cmds.button(label='6: Attach Lip Micro Controllers to Follicles',c=self._attachLipMicroCtls)
         cmds.button(label='7: Attach Mouth Clusters to Jaw',c=self._attachMouthClsToJaw)
-        cmds.button(label='8: Create Jaw Clusters on lip_curves',c=self._createJawClsOnLipCurv)
+        cmds.button(label='8: Create Jaw Clusters on lip_curves',c=self._createClsOnLipCurv)
         cmds.button(label='9: Attach Lip Controllers on Jaw Clusters',c=self._attachLipCtlsOnJawCls)
         
         cmds.setParent('..')
@@ -121,6 +113,14 @@ class AutoRigMouth():
         cmds.columnLayout( rowSpacing = 10 )
 
         cmds.text(label='Create duplicate curves for blendshapes?')
+        
+        cmds.setParent('..')
+        cmds.setParent('..')
+        ###
+        cmds.frameLayout( label='Extra', collapsable=True, collapse=False)
+        cmds.columnLayout( rowSpacing = 10 )
+        
+        cmds.button(label='select Jaw Bind',c=lambda _:cmds.select(self.jawBind))
 
         cmds.showWindow()
         
@@ -136,9 +136,38 @@ class AutoRigMouth():
         elif flag=='del':
             data=None
     
-    def _createMouthCurv(self,_):
-        upperCVs = cmds.ls(self.upperCurv+'.cv[*]',fl=True) #get list of CVs from lip curves
-        lowerCVs = cmds.ls(self.lowerCurv+'.cv[*]',fl=True)
+    def buildMouthRig01(self,_):
+        #1: Generate mouth_curve from lip_curves
+        self._createMouthCurv()
+        
+        #1: Create lip_locs on lip verts && connect to lip_curves
+        self._createLipLocs()
+        
+        #2: Aim constraint lip_locs to jaw_bind
+        ModFunc._aimConstLocs(self.lipLocs, self.jawBind, self.faceLowerBind)
+        
+        #2: Create lip_bind_jnts && constraint to lip_locs
+        self.lipJnts = ModFunc._createJntsOnLocs(self.lipLocs,self.faceLowerBind)
+        
+        #2: Create drivers && connect to mouth CVs
+        self._createMouthDrivers()
+        
+        #3: Create Bindmeshes on driver
+        self.mouthBindmeshes = ModFunc._createBindmeshesOnJnts(self.mouthDrivers,self.mouthBindmeshesGrp)
+        
+        #4: Create Follicles on Bindmeshes
+        self.mouthFols = ModFunc._createFolsOnBindmeshes(self.mouthBindmeshes,self.mouthFolGrp)
+        
+        #4: Create Clusters on Bindmeshes
+        self.mouthCls = ModFunc._createClsOnBindmeshes(self.mouthBindmeshes,self.mouthClsGrp)
+        
+        #4: Create Lip Micro Controllers
+        self._createMouthCtrls()
+        
+        
+    def _createMouthCurv(self):
+        upperCVs = cmds.ls(self.lipUpperCurv+'.cv[*]',fl=True) #get list of CVs from lip curves
+        lowerCVs = cmds.ls(self.lipLowerCurv+'.cv[*]',fl=True)
         lowerCVs.reverse() #reverse list order so that it comes back to the start, as a circle
 
         self.lipCVList = upperCVs + lowerCVs
@@ -159,92 +188,26 @@ class AutoRigMouth():
             cmds.move(pos[0],pos[1],pos[2],mouthCV) #snap mouth CV to the position
 
             counter+=1 #increase counter
-            
-        #Do I have to return mouthCV data?
+
         
-    def _createLipLocs(self,_):
-        #specific(higher) functions has _
-        upperLocs = ModFunc._createLocsOnCurve(self.upperCurv,self.upperVerts,self.lipUpperLocGrp)
-        for loc in upperLocs: #loc[0] is the loc name, loc[1] is the X position of the loc
-            cmds.reorder( loc[0], back=True )
-            if upperLocs.index(loc)==( (len(upperLocs)-1)/2 ): #if the item is in the middle of the list
-                name='upper_lip_loc'
-            elif loc[1]<0:
-                name='upper_lip_%02d_l_loc'%upperLocs.index(loc) #result: 'upper_lip_00_l_loc'
-            elif loc[1]>0:
-                name='upper_lip_%02d_r_loc'%( (len(upperLocs)-1)-(upperLocs.index(loc)) ) #result: 'upper_lip_00_r_loc'
-            cmds.rename(loc[0],name) #Rename the locs in right order
-            self.lipLocs.append(name) #append the loc name to self.lipLocs list
-            
-        lowerLocs = ModFunc._createLocsOnCurve(self.lowerCurv,self.lowerVerts,self.lipLowerLocGrp)
-        for loc in lowerLocs:
-            cmds.reorder( loc[0], back=True )
-            if lowerLocs.index(loc)==( (len(lowerLocs)-1)/2 ):
-                name='lower_lip_loc'
-            elif loc[1]<0:
-                name='lower_lip_%02d_l_loc'%lowerLocs.index(loc) #result: 'lower_lip_00_l_loc'
-            elif loc[1]>0:
-                name='lower_lip_%02d_r_loc'%( (len(lowerLocs)-1)-(lowerLocs.index(loc)) ) #result: 'lower_lip_00_r_loc'
-            cmds.rename(loc[0],name)
-            self.lipLocs.append(name) #append the loc name to self.lipLocs list
-    
-    def _aimConstMouthLocs(self,_):
-        ModFunc._aimConstLocs(self.lipLocs, self.jawBind, self.faceLowerBind)
-    
-    def _createJntsOnMouthLocs(self,_):
-        self.lipJnts = ModFunc._createJntsOnLocs(self.lipLocs,self.faceLowerBind)
+    def _createLipLocs(self):
+        upperLocsPos = ModFunc._createLocsOnCurve(self.lipUpperCurv,self.upperVerts,self.lipUpperLocGrp)
+        upperLocs = MouthFunc._lipLocsNamer(upperLocsPos, prefix='upper_lip', suffix='_loc')
+
+        lowerLocsPos = ModFunc._createLocsOnCurve(self.lipLowerCurv,self.lowerVerts,self.lipLowerLocGrp)
+        lowerLocs = MouthFunc._lipLocsNamer(lowerLocsPos, prefix='lower_lip', suffix='_loc')
         
-    def _createMouthDrivers(self,_):
-        ###change the code to put group name! ###put them in the class variable list! self.mouthDrivers??
-        driverList = ModFunc._createJntsOnCVs(self.mouthCurv,self.mouthDriversGrp) 
+        self.lipLocs = upperLocs + lowerLocs
+        
+        
+    def _createMouthDrivers(self):
+        driverList = ModFunc._createJntsOnCVs(self.mouthCurv,self.mouthDriverGrp) 
         driverList = driverList[-1:] + driverList[:-1] #param 0 attachs to cv[1] for somehow, so I shifted last element to first position in list.
+        
+        self.mouthDrivers = MouthFunc._mouthDriverNamer(driverList, prefix='mouth',suffix='_driver',doubleCorner=False)
 
         
-        if len(driverList)%4 != 0:
-            print('Error: number of the drivers are not multiple of 4.')
-
-        c = 0 #c is a counter for list index
-        for driver in driverList:
-            name = 'lip'
-            if c == 0 or c==len(driverList)/2: #on the corner
-                name += '_corner'
-            elif c>0 and c<len(driverList)/2: 
-                name += '_upper'
-            elif c>len(driverList)/2:
-                name += '_lower'
-                
-            if c != len(driverList)/4 and c != len(driverList)*3/4: #not in the middle        
-                if c < len(driverList)/4 or c > len(driverList)*3/4: #on the right
-                    name += '_r'
-                else:
-                    name += '_l'
-                
-                if '_corner' in name:
-                    numUp = 0 #numUp is a counter for rename 
-                    numDown = (len(driverList)-4)//4 -1 #numDown is a counter that goes reverse direction. It decreases from the maximum number
-                else:
-                    if '_upper_r' in name or 'lower_l' in name:
-                        name += ('_%02d'%numUp)
-                        numUp+=1
-                    elif '_upper_l' in name or 'lower_r' in name:
-                        name += ('_%02d'%numDown)
-                        numDown-=1
-                                  
-            name += '_driver'
-            cmds.rename(driver,name)
-            self.mouthDrivers.append(name) #put the driver joint name to the list
-            c+=1 #increase the counter
-                            
-    def _createBindmeshesOnMouthDrivers(self,_):
-        self.mouthBindmeshes = ModFunc._createBindmeshesOnJnts(self.mouthDrivers,self.mouthBindmeshesGrp)
-    
-    def _createClsOnMouthBindmeshes(self,_):
-        self.mouthCls = ModFunc._createClsOnBindmeshes(self.mouthBindmeshes,self.mouthClsGrp)
-        
-    def _createFolsOnMouthBindmeshes(self,_):
-        self.mouthFols = ModFunc._createFolsOnBindmeshes(self.mouthBindmeshes,self.mouthFolGrp)
-        
-    def _createMouthCtrls(self,_):
+    def _createMouthCtrls(self):
         #micro ctrls
         self.lipMicroCtls = ModFunc._createCtrlGrp(self.mouthFols,self.lipMicroCtlGrp,offset=(0,0,1))
         
@@ -289,12 +252,15 @@ class AutoRigMouth():
 
             #cmds.select(self.jawBind) #temp
     
-    def _createJawClsOnLipCurv(self,_):
+    def _createClsOnLipCurv(self,_):
         #WIP
-        pass
-
+        self.jawCls = ModFunc._createClsOn2Curv(self.lipUpperCurv, self.lipLowerCurv, self.jawClsGrp)
+        self.jawCls = MouthFunc._jawClsNamer(self.jawCls)
+        
     def _attachLipCtlsOnJawCls(self,_):
         ModFunc._parentConstIterate() #WIP
         pass
 ###-----------------------------------------------------EXECUTE---------------------------------------------------------------
 letsgo=AutoRigMouth()
+
+print(letsgo.lipLocs)

@@ -33,8 +33,8 @@ def _createLocsOnCurve(curv,verts,grpName):
         
         cmds.parent(loc,grp)
         
-        locPosList.append([loc,pos[0]])
-    locPosList.sort(key=lambda t: t[1]) #sort the list with x pos value
+        locPosList.append( {'loc':loc,'xpos':pos[0]} ) #return list of mini dictionaries
+    locPosList.sort(key=lambda t: t['xpos']) #sort the list with x pos value
     return locPosList
         
 def _aimConstLocs(locs,targ,upObj):
@@ -56,9 +56,10 @@ def _createJntsOnLocs(locs,parJnt): #parJnt means parent joint
 def _createJntsOnCVs(curv,grpName):
     jntList = []
     grp = cmds.group(em=True, n=grpName)
-    curvShape = cmds.listRelatives(curv, type = 'nurbsCurve')[0]
-    cvs = cmds.ls(curv + '.cv[*]', fl=1)
     
+    curvShape = _getCrvShape(curv)
+    cvs = _getCVs(curv)
+
     counter = 0
     for cv in cvs:
         cmds.select(cl=True)
@@ -75,22 +76,40 @@ def _createJntsOnCVs(curv,grpName):
         counter += 1
     return jntList
 
-def _createClsOnCVs(curv,grpName):
+def _createClsOn2Curv(upCurv,loCurv,grpName):
+    #can use this for lip_upper_curve & lip_lower_curve, or eye_upper_curve & eye_lower_curve
     clsList = []
     grp = cmds.group(em=True, n=grpName)
-    curvShape = cmds.listRelatives(curv, type = 'nurbsCurve')[0]
-    cvs = cmds.ls(curv + '.cv[*]', fl=1)
     
-    counter = 0
-    for cv in cvs:
-        cmds.select(cl=True) #clear selection for safety
-        #name=bindmesh.replace('bindmesh','cls')
+    upCurvShape = _getCrvShape(upCurv)
+    upCVs = _getCVs(upCurv)
+    loCurvShape = _getCrvShape(loCurv)
+    loCVs = _getCVs(loCurv)
+    leftCorner = [upCVs.pop(0) , loCVs.pop(0)]
+    rightCorner = [upCVs.pop(-1) , loCVs.pop(-1)]
+    
+    leftCornerCls = cmds.cluster(leftCorner)[1] #[1] gets trans node
+    cmds.parent(leftCornerCls,grp)
+    clsList.append(leftCornerCls)
+    
+    print('upCVs:',upCVs)
+    for cv in upCVs:
+        clus = cmds.cluster(cv)[1]
+        cmds.parent(clus,grp)
+        clsList.append(clus)
         
-        clus = cmds.cluster(cv)
-        clsTrans = clus[1]
-        #clsTrans = cmds.rename(clsTrans, name)
-        cmds.parent(clsTrans,grp)
-        clsList.append(clsTrans)
+    rightCornerCls = cmds.cluster(rightCorner)[1]
+    cmds.parent(rightCornerCls,grp)
+    clsList.append(rightCornerCls)
+    
+    loCVs.reverse()
+    print('loCVs:',loCVs)
+    for cv in loCVs:
+        clus = cmds.cluster(cv)[1]
+        cmds.parent(clus,grp)
+        clsList.append(clus)
+        
+    print('clsList:',clsList)
     return clsList
 
 def _createBindmeshesOnJnts(jnts,grpName):
@@ -176,7 +195,7 @@ def _createCtrlGrp(fols, grpName, offset=(0,0,0)):
     return ctlList
     
 def _parentConstIterate(parents,childs):
-    for i in range(len(child)):
+    for i in range(len(childs)):
         cmds.parentConstraint(parents[i],childs[i],mo=True)
     
 def _localScaleLoc(loc,num):
@@ -192,5 +211,11 @@ def _overrideColor(dag, color=(1,1,0)):
     
     for channel, color in zip(rgb, color):
         cmds.setAttr(shape + '.overrideColor%s' %channel, color)
+
+def _getCrvShape(crv):
+    return cmds.listRelatives(crv, type = 'nurbsCurve')[0]
+
+def _getCVs(crv):
+    return cmds.ls(crv + '.cv[*]', fl=1)
     
 ###---------test execute--------------------------------------
