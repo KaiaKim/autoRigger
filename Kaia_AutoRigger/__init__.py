@@ -1,6 +1,6 @@
 import maya.cmds as cmds
 from functools import partial
-import importlib
+from importlib import reload
 
 from Kaia_AutoRigger import ModFunc
 from Kaia_AutoRigger import MouthFunc
@@ -50,7 +50,7 @@ class AutoRigMouth():
         
         self.lipMicroCtlGrp = 'lip_micro_ctl_grp'
         self.lipMicroCtls = []
-        self.lipMacroCtlGrp = 'lip_ctl_grp'
+        self.lipMacroCtlGrp = 'lip_macro_ctl_grp'
         self.lipMacroCtls = []
         
         self.lipCvClsGrp = 'lipCV_cls_grp'
@@ -92,12 +92,12 @@ class AutoRigMouth():
         cmds.gridLayout( numberOfColumns=3, cellWidthHeight=(100, 20) ) #fourth layout - frame layout
 
         cmds.text( label='Upper Lip Verts')
-        cmds.button( label='assign', c=lambda x:self.assignDelete('self.upperVerts','ass') )
-        cmds.button( label='delete', c=lambda x:self.assignDelete('self.upperVerts','del') )
+        cmds.button( label='assign', c=lambda _:self.assignDelete('self.upperVerts','ass') )
+        cmds.button( label='delete', c=lambda _:self.assignDelete('self.upperVerts','del') )
 
         cmds.text( label='Lower Lip Verts')
-        cmds.button( label='assign', c=lambda x:self.assignDelete('self.lowerVerts','ass') )
-        cmds.button( label='delete', c=lambda x:self.assignDelete('self.lowerVerts','del') )
+        cmds.button( label='assign', c=lambda _:self.assignDelete('self.lowerVerts','ass') )
+        cmds.button( label='delete', c=lambda _:self.assignDelete('self.lowerVerts','del') )
 
         cmds.setParent('..')
         cmds.setParent('..')
@@ -109,10 +109,13 @@ class AutoRigMouth():
         cmds.text( label='Make sure you have everything assigned!')
         cmds.button(label='Build Mouth Rig 01',c=self.buildMouthRig01)
         cmds.button(label='5: Finish Adjusting Orient', enable=False)
-        cmds.button(label='7: Attach Jaw Clusters to Jaw',c=self._attachJawCls)
-        cmds.button(label='8: Create lipCV Clusters on lip_curves',c=self._createClsOnLipCurv)
-        cmds.button(label='9: Attach Lip Controllers on lipCV', c=self._attachLipCtlsOnJawCls)
-        cmds.button(label='00: Arrange Groups',c=self.arrangeGrps)
+        cmds.button(label='Build Mouth Rig 02',c=self.buildMouthRig02)
+        cmds.button(label='#10: Create Mouth Corner Ctrls',c=self._createMouthCornerCtls)
+        cmds.button(label='#11: Finish Adjusting Right Corner Ctrl Orient', enable=False)
+        cmds.button(label='#11: Normalize Transform Value 0~1', enable=False)
+        cmds.button(label='#12: Quick Test Data: Orient, Normalize',c=self.quickTestData2)
+        cmds.button(label='#13: Mirror orient value r to l', c=self._mirrorMouthCornerCtls)
+        cmds.button(label='000: Arrange Groups',c=self.arrangeGrps)
         
         cmds.setParent('..')
         cmds.setParent('..')
@@ -121,6 +124,7 @@ class AutoRigMouth():
         cmds.columnLayout( rowSpacing = 10 )
 
         cmds.text(label='Create duplicate curves for blendshapes?')
+        cmds.button(label='1: Duplicate Mouth Curve', c=self._duplicateMouthCurves)
         
         cmds.setParent('..')
         cmds.setParent('..')
@@ -137,6 +141,9 @@ class AutoRigMouth():
         #some hard coded data for quick testing
         self.upperVerts=['baseBody.vtx[12501]', 'baseBody.vtx[12502]', 'baseBody.vtx[12504]', 'baseBody.vtx[12507]', 'baseBody.vtx[12508]', 'baseBody.vtx[12509]', 'baseBody.vtx[12512]', 'baseBody.vtx[12513]', 'baseBody.vtx[12514]', 'baseBody.vtx[12518]', 'baseBody.vtx[12519]', 'baseBody.vtx[12522]', 'baseBody.vtx[12524]', 'baseBody.vtx[12682]', 'baseBody.vtx[15942]', 'baseBody.vtx[15943]', 'baseBody.vtx[15945]', 'baseBody.vtx[15948]', 'baseBody.vtx[15949]', 'baseBody.vtx[15950]', 'baseBody.vtx[15953]', 'baseBody.vtx[15954]', 'baseBody.vtx[15955]', 'baseBody.vtx[15959]', 'baseBody.vtx[15960]', 'baseBody.vtx[15963]', 'baseBody.vtx[15965]']
         self.lowerVerts=['baseBody.vtx[12500]', 'baseBody.vtx[12503]', 'baseBody.vtx[12505]', 'baseBody.vtx[12506]', 'baseBody.vtx[12510]', 'baseBody.vtx[12511]', 'baseBody.vtx[12514]', 'baseBody.vtx[12515]', 'baseBody.vtx[12516]', 'baseBody.vtx[12517]', 'baseBody.vtx[12520]', 'baseBody.vtx[12521]', 'baseBody.vtx[12523]', 'baseBody.vtx[12681]', 'baseBody.vtx[15941]', 'baseBody.vtx[15944]', 'baseBody.vtx[15946]', 'baseBody.vtx[15947]', 'baseBody.vtx[15951]', 'baseBody.vtx[15952]', 'baseBody.vtx[15955]', 'baseBody.vtx[15956]', 'baseBody.vtx[15957]', 'baseBody.vtx[15958]', 'baseBody.vtx[15961]', 'baseBody.vtx[15962]', 'baseBody.vtx[15964]']
+    
+    def quickTestData2(self,_):
+        pass
         
     def assignDelete(self,data,flag):
         if flag=='ass':
@@ -147,34 +154,33 @@ class AutoRigMouth():
     def buildMouthRig01(self,_):
         #0:Create Groups
         self.createGrps()  
-         
         #1: Generate mouth_curve from lip_curves
         self._createMouthCurv()
-        
         #1: Create lip_locs on lip verts && connect to lip_curves
         self._createLipLocs()
-        
         #2: Aim constraint lip_locs to jaw_bind
         ModFunc._aimConstLocs(self.lipLocs, self.jawBind, self.faceLowerBind)
-        
         #2: Create lip_bind_jnts && constraint to lip_locs
         self.lipJnts = ModFunc._createJntsOnLocs(self.lipLocs,self.faceLowerBind)
-        
         #2: Create drivers && connect to mouth CVs
         self._createMouthDrivers()
-        
         #3: Create Bindmeshes on driver
         self.mouthBindmeshes = ModFunc._createBindmeshesOnJnts(self.mouthDrivers,self.mouthBindmeshesGrp)
-        
         #4: Create Follicles on Bindmeshes
         self.mouthFols = ModFunc._createFolsOnBindmeshes(self.mouthBindmeshes,self.mouthFolGrp)
-        
         #4: Create Clusters on Bindmeshes
         self.jawCls = ModFunc._createClsOnBindmeshes(self.mouthBindmeshes,self.jawClsGrp)
-        
-        #4: Create Lip Micro Controllers
-        self._createMouthCtrls()
+        #4: Create Lip Micro Ctrls
+        self._createMouthCtls()
     
+    def buildMouthRig02(self,_):
+        #7: Attach Jaw Clusters to Jaw
+        self._attachJawCls()
+        #8: Create lipCV Clusters on lip_curves
+        self._createClsOnLipCurv()
+        #9: Attach Lip Ctrls on lipCV
+        self._attachLipCtlsOnJawCls()
+        
     def createGrps(self):
         self.faceRoot = cmds.group(n=self.faceRoot, em=True)
         self.animGrp = cmds.group(n=self.animGrp, em=True)
@@ -202,8 +208,10 @@ class AutoRigMouth():
                 self.rigGrp)
         except: print('rig_grp parent skipped')
         
-        try:    
-            cmds.parent(self.lipMicroCtlGrp, self.animGrp)
+        try:
+            cmds.parent(
+                self.lipMicroCtlGrp, self.lipMacroCtlGrp,
+                self.animGrp)
         except: print('anim_grp parent skipped')
 
         
@@ -249,57 +257,101 @@ class AutoRigMouth():
         self.mouthDrivers = MouthFunc._mouthRigNamer(driverList, prefix='mouth',suffix='_driver')
 
         
-    def _createMouthCtrls(self):
+    def _createMouthCtls(self):
         #micro ctrls
-        self.lipMicroCtls = ModFunc._createCtrlGrp(self.mouthFols,self.lipMicroCtlGrp,offset=(0,0,1))
+        self.lipMicroCtls = ModFunc._createCtrlGrp(self.mouthFols,self.lipMicroCtlGrp,offset=(0,0,1), prefix='micro_')
         
         for i in self.lipMicroCtls:
             ModFunc._overrideColor(i['ctl'], color=(1,1,0))
             
         #macro ctrls
         macroFols = [d for d in self.mouthFols if '_m_' in d] #'mouth_upper_m_fol','mouth_lower_m_fol'
-        self.lipMacroCtls = ModFunc._createCtrlGrp(macroFols, self.lipMacroCtlGrp, offset=(0,0,1.5), prefix='MACRO_', shape='square')
+        self.lipMacroCtls = ModFunc._createCtrlGrp(macroFols, self.lipMacroCtlGrp, offset=(0,0,1.5), prefix='macro_', shape='square')
         
         for i in self.lipMacroCtls:
             ModFunc._overrideColor(i['ctl'], color=(1,1,0))
         
-    def _attachJawCls(self,_):
-        TopBotMidCls = [d for d in self.jawCls if '0' not in d]
-        for clus in TopBotMidCls:
-            #We're gonna parent constraint jawClusters directly to the mouth macro controllers
-            cmds.parentConstraint(self.faceLowerBind,self.jawBind,clus,mo=True)
-            #set mouth constraint weight value
-            MouthFunc.setMouthConstWeightVal(clus, self.faceLowerBind,self.jawBind,follow00=.8,follow01=.95) 
+        #parent constraint micro nul2 group to macro ctl
+        for i in self.lipMicroCtls:
+            if '_m_' in i['ctl']:
+                i['nul2'] = cmds.group(i['ori'],n=i['nul']+'2') #create nul2 grp
+                macro = i['ctl'].replace('micro','macro') #micro_mouth_lower_m_ctl
+                cmds.parentConstraint(macro,i['nul2'],mo=True)
+                
+        
+    def _attachJawCls(self):
+        #We're gonna parent constraint jawClusters directly to the mouth macro controllers
+        for clus in self.jawCls:
+            if '0' not in clus: #corner or mid
+                parent1=self.faceLowerBind
+                parent2=self.jawBind
             
-        inbetweenCls = [d for d in self.jawCls if '0' in d]
-        for clus in inbetweenCls:
-            if 'upper' in clus:
-                parent1=self.lipMacroCtls[0]['ctl'] #macro_mouth_upper_ctl
-            elif 'lower' in clus:
-                parent1=self.lipMacroCtls[1]['ctl'] #macro_mouth_lower_ctl
-            
-            if '_r_' in clus:
-                parent2=self.jawCls[0] #mouth_corner_r_cls
-            if '_l_' in clus:
-                parent2=self.jawCls[len(self.jawCls)//2] #mouth_corner_l_cls
+            elif '0' in clus: #inbetween
+                if 'upper' in clus:
+                    parent1=self.lipMacroCtls[0]['ctl'] #macro_mouth_upper_ctl
+                elif 'lower' in clus:
+                    parent1=self.lipMacroCtls[1]['ctl'] #macro_mouth_lower_ctl
+                
+                if '_r_' in clus:
+                    parent2=self.jawCls[0] #mouth_corner_r_cls
+                if '_l_' in clus:
+                    parent2=self.jawCls[len(self.jawCls)//2] #mouth_corner_l_cls
                 
             cmds.parentConstraint(parent1,parent2,clus,mo=True)
             #set mouth constraint weight value
-            MouthFunc.setMouthConstWeightVal(clus, parent1,parent2,follow00=.8,follow01=.95) 
+            MouthFunc.setMouthConstWeightVal(clus, parent1,parent2, follow00=.7,follow01=.95) 
             
     
-    def _createClsOnLipCurv(self,_):
+    def _createClsOnLipCurv(self):
         clsList = ModFunc._createClsOn2Curv(self.lipUpperCurv, self.lipLowerCurv, self.lipCvClsGrp)
         self.lipCvCls = MouthFunc._mouthRigNamer(clsList, prefix='lipCV',suffix='_cls')
         
-    def _attachLipCtlsOnJawCls(self,_):
-        nulList = [d['ctl'] for d in self.lipMicroCtls]
+    def _attachLipCtlsOnJawCls(self):
+        ctlList = [d['ctl'] for d in self.lipMicroCtls]
         ###not parent constraint? hard parenting under micro ctrls with offset group?
-        ModFunc._parentConstIterate(nulList, self.lipCvCls)
+        ModFunc._parentConstIterate(ctlList, self.lipCvCls)
+    
+    def _createMouthCornerCtls(self,_):
+        #get corner fols
+        ModFunc._createCtrlGrp() #create ctrl group on corner fols #shape: trangle
+        ModFunc._parentConstIterate() #parent constraint nul group to the fols
+        pass
         
+        ###MouthFunc.setCornerPin()
+        #Add Attribute: cornerPin min -1, max 1, default 0
+        #connect to jaw cls W0, W1
+        
+        #set range node
+        #cornerPin >> valueX , cornerPin >> valueY
+        # minX 0 maxX 1, oldMinX -1 oldMaxX 1
+        #outValueX >> face_Lower_bindW0
+        #reverse node
+        #outValueX >> inputX, outputX >> jaw_bindW1
+        pass
+        
+        ###MouthFunc.setLipPull()
+        #Add Attribute: lipOnePull min 0 max 1 default 0
+        # connect to upper_lip_01_l_cls_parentConstraint1, lower_lip_01_l_cls_parentConstraint1
+        # either follow the upper lip or the lip corner
+        #lipOnePull >> lower_lip_ctlW0
+        #reverse node
+        #lipOnePull >> inputX, outputX >> lip_corner_l_clsW1
+        
+        #Add Attribute: lipTwoPull min 0 max 1 default 0
+        pass
+        
+        #Session 4 (1:26:47~)
+        
+    def _mirrorMouthCornerCtls(self,_):
+        pass
+    
+    def _duplicateMouthCurves(self,_):
+        newCurv=cmds.duplicate(self.mouthCurv)
+        cmds.select(newCurv)
         
 
 ###-----------------------------------------------------EXECUTE---------------------------------------------------------------
 run=AutoRigMouth()
 
 ###orient edit mode (unparent the clusters - edit orient(save/load orient data) - reparent the clusters)
+###DQ skin > attibute editor > support Non-rigid transformation ON

@@ -169,7 +169,7 @@ def _createCtrlGrp(fols, grpName, offset=(0,0,0), prefix='', shape='circle'):
     #lower lip controllers has scale -1 on orient groups
     #I have to figure out how to figure out the offset value
     
-    #shape
+    ###divide shape part to another function
     #rename
     ctlDicList = []
     bigGrp = cmds.group(em=True, n=grpName)
