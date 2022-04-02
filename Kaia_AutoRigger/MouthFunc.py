@@ -19,7 +19,7 @@ def _lipLocsNamer(inList, prefix='', suffix=''): #this function takes a list wit
     return outList
     
     
-def _mouthDriverNamer(inList, prefix='',suffix='', doubleCorner=True):
+def _mouthRigNamer(inList, prefix='',suffix=''):
     if len(inList)%4 != 0:
         print('Error: number of the list elements are not multiple of 4.')
         
@@ -33,8 +33,10 @@ def _mouthDriverNamer(inList, prefix='',suffix='', doubleCorner=True):
             name += '_upper'
         elif c>len(inList)/2:
             name += '_lower'
-            
-        if c != len(inList)/4 and c != len(inList)*3/4: #not in the middle        
+        
+        if c == len(inList)/4 or c == len(inList)*3/4: #in the middle    
+            name += '_m'
+        elif c != len(inList)/4 and c != len(inList)*3/4: #not in the middle        
             if c < len(inList)/4 or c > len(inList)*3/4: #on the right
                 name += '_r'
             else:
@@ -58,7 +60,26 @@ def _mouthDriverNamer(inList, prefix='',suffix='', doubleCorner=True):
         c+=1 #increase the counter
     return outList
 
-def _jawClsNamer(inList):
-    #clsList: ['cluster1Handle_l_corner', 'cluster2Handle', 'cluster3Handle', 'cluster4Handle', 'cluster5Handle', 'cluster6Handle', 'cluster7Handle_r_corner', 'cluster8Handle', 'cluster9Handle', 'cluster10Handle', 'cluster11Handle', 'cluster12Handle']
-    #reference driver namer
-    pass
+def setMouthConstWeightVal(child, parent00, parent01, follow00=.9, follow01=.7):
+    #should I hard coad weight values? maybe I could set up a set driven key
+    constraint = child + '_parentConstraint1'
+    W0 = 1 #Face Lower Bind W0
+    if '_corner_' in child:
+        W0=.5
+    elif '_upper_' in child:
+        W0=1
+        if '_00_' in child:
+            W0=follow00
+        elif '_01_' in child:
+            W0=follow01
+    elif '_lower_' in child:
+        W0=0
+        if '_00_' in child:
+            W0= follow00
+        elif '_01_' in child:
+            W0=follow01
+    W1 = 1-W0 #Jaw Bind W1
+    
+    cmds.setAttr(constraint+'.'+parent00+'W0', W0)
+    cmds.setAttr(constraint+'.'+parent01+'W1',W1)
+    cmds.setAttr(constraint+'.interpType',2) #Interpolation Type: Shortest

@@ -92,7 +92,6 @@ def _createClsOn2Curv(upCurv,loCurv,grpName):
     cmds.parent(leftCornerCls,grp)
     clsList.append(leftCornerCls)
     
-    print('upCVs:',upCVs)
     for cv in upCVs:
         clus = cmds.cluster(cv)[1]
         cmds.parent(clus,grp)
@@ -103,13 +102,11 @@ def _createClsOn2Curv(upCurv,loCurv,grpName):
     clsList.append(rightCornerCls)
     
     loCVs.reverse()
-    print('loCVs:',loCVs)
     for cv in loCVs:
         clus = cmds.cluster(cv)[1]
         cmds.parent(clus,grp)
         clsList.append(clus)
-        
-    print('clsList:',clsList)
+
     return clsList
 
 def _createBindmeshesOnJnts(jnts,grpName):
@@ -165,18 +162,23 @@ def _createFolsOnBindmeshes(bindmeshes,grpName):
         folList.append(folTrans)
     return folList
 
-def _createCtrlGrp(fols, grpName, offset=(0,0,0)):
+def _createCtrlGrp(fols, grpName, offset=(0,0,0), prefix='', shape='circle'):
     #Create lip controllers on the follicles.
     #We need both micro controllers, and macro controllers. So we're gonna call this function twice with different attr.
     #Nurv curves, ctl group, orient group, nul group
     #lower lip controllers has scale -1 on orient groups
     #I have to figure out how to figure out the offset value
-    ctlList = []
+    
+    #shape
+    #rename
+    ctlDicList = []
     bigGrp = cmds.group(em=True, n=grpName)
     for fol in fols:
-        name = fol.replace('fol','ctl')
-
-        ctl = cmds.circle(n=name, normal=(0,1,0), r=.3, d=1)[0] #degree=1(linear)
+        name = prefix + fol.replace('fol','ctl')
+        if shape=='circle':
+            ctl = cmds.circle(n=name, normal=(0,1,0), r=.3, d=1)[0] #degree=1(linear)
+        if shape=='square':
+            ctl = cmds.circle(n=name, normal=(0,1,0), r=.5, sections=4, d=1)[0]
         nulGrp = cmds.group(ctl, n = ctl+'_nul')
         cmds.parentConstraint(fol, nulGrp, mo=False)
         orientGrp = cmds.group(ctl, n=ctl+'_orient')
@@ -191,8 +193,9 @@ def _createCtrlGrp(fols, grpName, offset=(0,0,0)):
         cmds.scale(scaleVal[0],scaleVal[1],scaleVal[2],orientGrp)
         
         cmds.parent(nulGrp,bigGrp)
-        ctlList.append(ctl)
-    return ctlList
+        #ctlList.append(ctl)
+        ctlDicList.append( {'nul':nulGrp,'ori':orientGrp,'ctl':ctl} ) #return list of mini dictionaries
+    return ctlDicList
     
 def _parentConstIterate(parents,childs):
     for i in range(len(childs)):
