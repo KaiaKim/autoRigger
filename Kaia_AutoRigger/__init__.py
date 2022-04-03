@@ -1,17 +1,27 @@
 import maya.cmds as cmds
 from functools import partial
-from importlib import reload
+import importlib
+import json
 
 from Kaia_AutoRigger import ModFunc
 from Kaia_AutoRigger import MouthFunc
 importlib.reload(ModFunc)
 importlib.reload(MouthFunc)
 
+###-----------------------------------------------------FILE PATH---------------------------------------------------
+usd = cmds.internalVar(usd=True) #result: C:/Users/user/Documents/maya/2022/scripts/
+mayascripts = '%s/%s' % (usd.rsplit('/', 3)[0], 'scripts') #result: C:/Users/user/Documents/maya/scripts
+
+###-----------------------------------------------------CLASS---------------------------------------------------
 class AutoRigMouth():
     def __init__(self):
         self.winTitle = 'Kaia\'s auto rigger_mouth' #this is the title of the window #display name
         self.winName = 'kaiaAutoRigMouth' #this needs to be ac word that has no spaces or it won't work! #node name
-
+        
+        ###orient data
+        self.orientJsonPath = mayascripts+'/Kaia_AutoRigger/orientData/testData.json'
+        self.orientData = None
+        
         ###
         self.faceRoot = 'face_root'
         self.animGrp = 'anim_grp'
@@ -48,14 +58,18 @@ class AutoRigMouth():
         self.mouthFolGrp = 'mouth_fol_grp'
         self.mouthFols = []
         
-        self.lipMicroCtlGrp = 'lip_micro_ctl_grp'
-        self.lipMicroCtls = []
-        self.lipMacroCtlGrp = 'lip_macro_ctl_grp'
-        self.lipMacroCtls = []
+        self.lipCtlGrp = 'lip_ctl_grp'
+        self.lipCtls = []
+        self.mouthCtlGrp = 'mouth_ctl_grp'
+        self.mouthCtls = []
+        self.mCornerCtlGrp = 'mouth_corner_ctl_grp'
+        self.mCornerCtls = []
         
         self.lipCvClsGrp = 'lipCV_cls_grp'
         self.lipCvCls = []
-
+        
+        
+        
         self.createWindow()
 
     def createWindow(self):
@@ -74,9 +88,9 @@ class AutoRigMouth():
         
         cmds.gridLayout( numberOfColumns=2, cellWidthHeight=(150, 20))
         cmds.text( label='Face Bind Joints')
-        cmds.button( label='Import',c=lambda x:cmds.file('D:/Thesis/Assets/Scripts/Rigging/Kaia_AutoRig_mouth_files/faceBindJoints.ma',i=True))
+        cmds.button( label='Import',c=lambda x:cmds.file(mayascripts+'/templateFiles/faceBindJoints.ma',i=True))
         cmds.text( label='Lip Curves')
-        cmds.button( label='Import',c=lambda x:cmds.file('D:/Thesis/Assets/Scripts/Rigging/Kaia_AutoRig_mouth_files/mouthCurve.ma',i=True))
+        cmds.button( label='Import',c=lambda x:cmds.file(mayascripts+'/templateFiles/mouthCurve.ma',i=True))
 
         cmds.setParent('..')
         cmds.setParent('..')
@@ -108,13 +122,14 @@ class AutoRigMouth():
         cmds.text( label='It only works with template joint hierarchy.')
         cmds.text( label='Make sure you have everything assigned!')
         cmds.button(label='Build Mouth Rig 01',c=self.buildMouthRig01)
-        cmds.button(label='5: Finish Adjusting Orient', enable=False)
+        
+        cmds.rowLayout(numberOfColumns=3)
+        cmds.button( label='mirror orient R to L', c=self.mirrorOrient)
+        cmds.button( label='save orient', c=self.saveOrient )
+        cmds.button( label='load orient', c=self.loadOrient )
+        cmds.setParent('..')
+        
         cmds.button(label='Build Mouth Rig 02',c=self.buildMouthRig02)
-        cmds.button(label='#10: Create Mouth Corner Ctrls',c=self._createMouthCornerCtls)
-        cmds.button(label='#11: Finish Adjusting Right Corner Ctrl Orient', enable=False)
-        cmds.button(label='#11: Normalize Transform Value 0~1', enable=False)
-        cmds.button(label='#12: Quick Test Data: Orient, Normalize',c=self.quickTestData2)
-        cmds.button(label='#13: Mirror orient value r to l', c=self._mirrorMouthCornerCtls)
         cmds.button(label='000: Arrange Groups',c=self.arrangeGrps)
         
         cmds.setParent('..')
@@ -141,9 +156,6 @@ class AutoRigMouth():
         #some hard coded data for quick testing
         self.upperVerts=['baseBody.vtx[12501]', 'baseBody.vtx[12502]', 'baseBody.vtx[12504]', 'baseBody.vtx[12507]', 'baseBody.vtx[12508]', 'baseBody.vtx[12509]', 'baseBody.vtx[12512]', 'baseBody.vtx[12513]', 'baseBody.vtx[12514]', 'baseBody.vtx[12518]', 'baseBody.vtx[12519]', 'baseBody.vtx[12522]', 'baseBody.vtx[12524]', 'baseBody.vtx[12682]', 'baseBody.vtx[15942]', 'baseBody.vtx[15943]', 'baseBody.vtx[15945]', 'baseBody.vtx[15948]', 'baseBody.vtx[15949]', 'baseBody.vtx[15950]', 'baseBody.vtx[15953]', 'baseBody.vtx[15954]', 'baseBody.vtx[15955]', 'baseBody.vtx[15959]', 'baseBody.vtx[15960]', 'baseBody.vtx[15963]', 'baseBody.vtx[15965]']
         self.lowerVerts=['baseBody.vtx[12500]', 'baseBody.vtx[12503]', 'baseBody.vtx[12505]', 'baseBody.vtx[12506]', 'baseBody.vtx[12510]', 'baseBody.vtx[12511]', 'baseBody.vtx[12514]', 'baseBody.vtx[12515]', 'baseBody.vtx[12516]', 'baseBody.vtx[12517]', 'baseBody.vtx[12520]', 'baseBody.vtx[12521]', 'baseBody.vtx[12523]', 'baseBody.vtx[12681]', 'baseBody.vtx[15941]', 'baseBody.vtx[15944]', 'baseBody.vtx[15946]', 'baseBody.vtx[15947]', 'baseBody.vtx[15951]', 'baseBody.vtx[15952]', 'baseBody.vtx[15955]', 'baseBody.vtx[15956]', 'baseBody.vtx[15957]', 'baseBody.vtx[15958]', 'baseBody.vtx[15961]', 'baseBody.vtx[15962]', 'baseBody.vtx[15964]']
-    
-    def quickTestData2(self,_):
-        pass
         
     def assignDelete(self,data,flag):
         if flag=='ass':
@@ -151,6 +163,44 @@ class AutoRigMouth():
         elif flag=='del':
             data=None
     
+    def mirrorOrient(self,_):
+        #get transform
+        allCtls = self.lipCtls + self.mouthCtls + self.mCornerCtls
+        orients = [d['ori'] for d in allCtls]
+        orientData = ModFunc._getTransformData(orients)
+        rightOrientData = [d for d in orientData if '_r_' in d['name']]
+        
+        #modify data
+        mirrorData = rightOrientData
+        for i in mirrorData:
+            i['name'] = i['name'].replace('_r_','_l_')
+            (rx,ry,rz) = i['rot']
+            ry = -ry
+            rz = -rz
+            i['rot'] = (rx,ry,rz)
+        
+        #apply transform
+        ModFunc._applyTransformData(mirrorData)
+        
+    def saveOrient(self,_):
+        #get transform
+        allCtls = self.lipCtls + self.mouthCtls + self.mCornerCtls
+        orients = [d['ori'] for d in allCtls]
+        orientData = ModFunc._getTransformData(orients)
+        
+        #write json file
+        with open(self.orientJsonPath, "w") as outfile:
+            json.dump(orientData, outfile)
+
+    def loadOrient(self,_):
+        #read json file
+        with open(self.orientJsonPath,"r") as read_file:
+            orientData = json.load(read_file)
+            
+        #apply transform
+        ModFunc._applyTransformData(orientData)
+
+        
     def buildMouthRig01(self,_):
         #0:Create Groups
         self.createGrps()  
@@ -189,7 +239,6 @@ class AutoRigMouth():
         
     def arrangeGrps(self,_):
         #these are rather simple parent commands, we keep going even if there's an error.
-        
         try:
             cmds.parent(self.animGrp,self.rigGrp,self.bindGrp,self.faceRoot)
         except: print('face_grp parent skipped')
@@ -210,7 +259,7 @@ class AutoRigMouth():
         
         try:
             cmds.parent(
-                self.lipMicroCtlGrp, self.lipMacroCtlGrp,
+                self.lipCtlGrp, self.mouthCtlGrp,
                 self.animGrp)
         except: print('anim_grp parent skipped')
 
@@ -258,24 +307,38 @@ class AutoRigMouth():
 
         
     def _createMouthCtls(self):
-        #micro ctrls
-        self.lipMicroCtls = ModFunc._createCtrlGrp(self.mouthFols,self.lipMicroCtlGrp,offset=(0,0,1), prefix='micro_')
+        ###maybe I need an offset group??
+        #lip ctrls
+        microNames = [d.replace('fol','ctl').replace('mouth','lip') for d in self.mouthFols]
         
-        for i in self.lipMicroCtls:
-            ModFunc._overrideColor(i['ctl'], color=(1,1,0))
+        self.lipCtls = ModFunc._createCtrlGrp(self.mouthFols,microNames,self.lipCtlGrp)
+        ModFunc._moveOffset(self.lipCtls, offset=(0,0,1))
+        MouthFunc._scaleOrient(self.lipCtls)
+        ModFunc._overrideColor(microNames, color=(1,1,0))
             
-        #macro ctrls
+        #mouth ctrls
         macroFols = [d for d in self.mouthFols if '_m_' in d] #'mouth_upper_m_fol','mouth_lower_m_fol'
-        self.lipMacroCtls = ModFunc._createCtrlGrp(macroFols, self.lipMacroCtlGrp, offset=(0,0,1.5), prefix='macro_', shape='square')
+        macroNames = [d.replace('fol','ctl') for d in macroFols]
         
-        for i in self.lipMacroCtls:
-            ModFunc._overrideColor(i['ctl'], color=(1,1,0))
+        self.mouthCtls = ModFunc._createCtrlGrp(macroFols, macroNames, self.mouthCtlGrp, shape='square')
+        ModFunc._moveOffset(self.mouthCtls, offset=(0,0,1.5))
+        MouthFunc._scaleOrient(self.mouthCtls)
+        ModFunc._overrideColor(macroNames, color=(1,1,0))
+        
+        #corner ctrls
+        cornerFols = [d for d in self.mouthFols if '_corner_' in d]
+        cornerNames = [d.replace('fol','ctl') for d in cornerFols]
+        
+        self.mCornerCtls = ModFunc._createCtrlGrp(cornerFols, cornerNames, self.mCornerCtlGrp, shape='triangle')
+        ModFunc._moveOffset(self.mCornerCtls, offset=(0,0,1.5))
+        MouthFunc._scaleOrient(self.mCornerCtls)
+        ModFunc._overrideColor(cornerNames, color=(1,0,0))
         
         #parent constraint micro nul2 group to macro ctl
-        for i in self.lipMicroCtls:
+        for i in self.lipCtls:
             if '_m_' in i['ctl']:
                 i['nul2'] = cmds.group(i['ori'],n=i['nul']+'2') #create nul2 grp
-                macro = i['ctl'].replace('micro','macro') #micro_mouth_lower_m_ctl
+                macro = i['ctl'].replace('lip','mouth') #micro_mouth_lower_m_ctl
                 cmds.parentConstraint(macro,i['nul2'],mo=True)
                 
         
@@ -288,9 +351,9 @@ class AutoRigMouth():
             
             elif '0' in clus: #inbetween
                 if 'upper' in clus:
-                    parent1=self.lipMacroCtls[0]['ctl'] #macro_mouth_upper_ctl
+                    parent1=self.mouthCtls[0]['ctl'] #macro_mouth_upper_ctl
                 elif 'lower' in clus:
-                    parent1=self.lipMacroCtls[1]['ctl'] #macro_mouth_lower_ctl
+                    parent1=self.mouthCtls[1]['ctl'] #macro_mouth_lower_ctl
                 
                 if '_r_' in clus:
                     parent2=self.jawCls[0] #mouth_corner_r_cls
@@ -299,7 +362,7 @@ class AutoRigMouth():
                 
             cmds.parentConstraint(parent1,parent2,clus,mo=True)
             #set mouth constraint weight value
-            MouthFunc.setMouthConstWeightVal(clus, parent1,parent2, follow00=.7,follow01=.95) 
+            MouthFunc._setWeightVal(clus, parent1,parent2, follow00=.7,follow01=.95) 
             
     
     def _createClsOnLipCurv(self):
@@ -307,17 +370,12 @@ class AutoRigMouth():
         self.lipCvCls = MouthFunc._mouthRigNamer(clsList, prefix='lipCV',suffix='_cls')
         
     def _attachLipCtlsOnJawCls(self):
-        ctlList = [d['ctl'] for d in self.lipMicroCtls]
+        ctlList = [d['ctl'] for d in self.lipCtls]
         ###not parent constraint? hard parenting under micro ctrls with offset group?
         ModFunc._parentConstIterate(ctlList, self.lipCvCls)
     
-    def _createMouthCornerCtls(self,_):
-        #get corner fols
-        ModFunc._createCtrlGrp() #create ctrl group on corner fols #shape: trangle
-        ModFunc._parentConstIterate() #parent constraint nul group to the fols
-        pass
-        
-        ###MouthFunc.setCornerPin()
+    def _setMouthCornerCtls(self,_):
+        ###MouthFunc._setCornerPin()
         #Add Attribute: cornerPin min -1, max 1, default 0
         #connect to jaw cls W0, W1
         
@@ -329,7 +387,7 @@ class AutoRigMouth():
         #outValueX >> inputX, outputX >> jaw_bindW1
         pass
         
-        ###MouthFunc.setLipPull()
+        ###MouthFunc._setLipPull()
         #Add Attribute: lipOnePull min 0 max 1 default 0
         # connect to upper_lip_01_l_cls_parentConstraint1, lower_lip_01_l_cls_parentConstraint1
         # either follow the upper lip or the lip corner
@@ -342,9 +400,7 @@ class AutoRigMouth():
         
         #Session 4 (1:26:47~)
         
-    def _mirrorMouthCornerCtls(self,_):
-        pass
-    
+
     def _duplicateMouthCurves(self,_):
         newCurv=cmds.duplicate(self.mouthCurv)
         cmds.select(newCurv)
@@ -353,5 +409,10 @@ class AutoRigMouth():
 ###-----------------------------------------------------EXECUTE---------------------------------------------------------------
 run=AutoRigMouth()
 
-###orient edit mode (unparent the clusters - edit orient(save/load orient data) - reparent the clusters)
+###Tomorrow
+### 1. save/load orient data >> OK
+### 2. mirror orient R to L 
+### 3. orient edit mode (unparent the clusters - edit orient - reparent the clusters)
+
+
 ###DQ skin > attibute editor > support Non-rigid transformation ON

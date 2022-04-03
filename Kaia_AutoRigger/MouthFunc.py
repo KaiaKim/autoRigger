@@ -60,7 +60,7 @@ def _mouthRigNamer(inList, prefix='',suffix=''):
         c+=1 #increase the counter
     return outList
 
-def setMouthConstWeightVal(child, parent00, parent01, follow00=.9, follow01=.7):
+def _setWeightVal(child, parent00, parent01, follow00=.9, follow01=.7):
     #should I hard coad weight values? maybe I could set up a set driven key
     constraint = child + '_parentConstraint1'
     W0 = 1 #Face Lower Bind W0
@@ -83,3 +83,21 @@ def setMouthConstWeightVal(child, parent00, parent01, follow00=.9, follow01=.7):
     cmds.setAttr(constraint+'.'+parent00+'W0', W0)
     cmds.setAttr(constraint+'.'+parent01+'W1',W1)
     cmds.setAttr(constraint+'.interpType',2) #Interpolation Type: Shortest
+    
+
+def _scaleOrient(ctlDicList):
+    for i in ctlDicList:    
+        scaleVal = [1,1,1]
+        if '_lower_' in i['ctl']:
+            scaleVal[2] = -1 #Z value is -1 
+        if '_l_' in i['ctl']:
+            scaleVal[0] = -1 #X value is -1
+        
+        cmds.scale(scaleVal[0],scaleVal[1],scaleVal[2],i['ori'])
+
+
+def _setCornerPin():
+    pass
+
+def _setLipPull():
+    pass

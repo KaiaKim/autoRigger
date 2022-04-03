@@ -162,40 +162,33 @@ def _createFolsOnBindmeshes(bindmeshes,grpName):
         folList.append(folTrans)
     return folList
 
-def _createCtrlGrp(fols, grpName, offset=(0,0,0), prefix='', shape='circle'):
-    #Create lip controllers on the follicles.
-    #We need both micro controllers, and macro controllers. So we're gonna call this function twice with different attr.
-    #Nurv curves, ctl group, orient group, nul group
+def _createCtrlGrp(drivenList, nameList, grpName, shape='circle'):
+    #Create lip controllers on given drivers.
+    #Nurv curves, orient group, nul group
     #lower lip controllers has scale -1 on orient groups
-    #I have to figure out how to figure out the offset value
-    
-    ###divide shape part to another function
-    #rename
+   
     ctlDicList = []
     bigGrp = cmds.group(em=True, n=grpName)
-    for fol in fols:
-        name = prefix + fol.replace('fol','ctl')
-        if shape=='circle':
-            ctl = cmds.circle(n=name, normal=(0,1,0), r=.3, d=1)[0] #degree=1(linear)
-        if shape=='square':
-            ctl = cmds.circle(n=name, normal=(0,1,0), r=.5, sections=4, d=1)[0]
+    counter = 0
+    for driven in drivenList:
+        name = nameList[counter]
+        ctl = _customNURBScircle(shape,name)
+        
         nulGrp = cmds.group(ctl, n = ctl+'_nul')
-        cmds.parentConstraint(fol, nulGrp, mo=False)
         orientGrp = cmds.group(ctl, n=ctl+'_orient')
-        cmds.move(offset[0],offset[1],offset[2], orientGrp, r=True)
-        
-        scaleVal = [1,1,1]
-        if '_lower_' in name:
-            scaleVal[2] = -1 #Z value is -1 
-        if '_l_' in name:
-            scaleVal[0] = -1 #X value is -1
-        
-        cmds.scale(scaleVal[0],scaleVal[1],scaleVal[2],orientGrp)
+        offsetGrp = cmds.group(ctl, n=ctl+'_offset')
+        cmds.parentConstraint(driven, nulGrp, mo=False)
         
         cmds.parent(nulGrp,bigGrp)
-        #ctlList.append(ctl)
-        ctlDicList.append( {'nul':nulGrp,'ori':orientGrp,'ctl':ctl} ) #return list of mini dictionaries
+        ctlDicList.append( {'nul':nulGrp,'ori':orientGrp, 'off':offsetGrp,'ctl':ctl} ) #return list of mini dictionaries
+        
+        counter += 1
     return ctlDicList
+
+def _moveOffset(ctlDicList, offset=(0,0,0)):
+    for i in ctlDicList:
+        cmds.move(offset[0],offset[1],offset[2], i['off'], r=True)
+    
     
 def _parentConstIterate(parents,childs):
     for i in range(len(childs)):
@@ -205,15 +198,16 @@ def _localScaleLoc(loc,num):
     locShape = cmds.listRelatives(loc)[0]
     cmds.setAttr(locShape+'.localScale',num,num,num)
     
-def _overrideColor(dag, color=(1,1,0)):
-    shape = cmds.listRelatives(dag, shapes=True)[0]
-    rgb = ('R','G','B')
-    
-    cmds.setAttr(shape + '.overrideEnabled',1)
-    cmds.setAttr(shape + '.overrideRGBColors',1)
-    
-    for channel, color in zip(rgb, color):
-        cmds.setAttr(shape + '.overrideColor%s' %channel, color)
+def _overrideColor(Crvlist, color=(1,1,0)):
+    for crv in Crvlist:
+        shape = cmds.listRelatives(crv, shapes=True)[0]
+        rgb = ('R','G','B')
+        
+        cmds.setAttr(shape + '.overrideEnabled',1)
+        cmds.setAttr(shape + '.overrideRGBColors',1)
+        
+        for channel, col in zip(rgb, color):
+            cmds.setAttr(shape + '.overrideColor%s' %channel, col)
 
 def _getCrvShape(crv):
     return cmds.listRelatives(crv, type = 'nurbsCurve')[0]
@@ -221,4 +215,34 @@ def _getCrvShape(crv):
 def _getCVs(crv):
     return cmds.ls(crv + '.cv[*]', fl=1)
     
+def _customNURBScircle(shape,name):
+    if shape=='circle':
+        ctl = cmds.circle(n=name, normal=(0,1,0), r=.3, d=1)[0] #degree=1(linear)
+    elif shape=='square':
+        ctl = cmds.circle(n=name, normal=(0,1,0), r=.5, sections=4, d=1)[0]
+    elif shape=='triangle':
+        ctl = cmds.circle(n=name, normal=(0,1,0), r=.5, sections=3, d=1)[0]
+        CVs = _getCVs(ctl)
+        cmds.rotate(0,30,0,CVs)
+
+    return ctl
+
+def _getTransformData(inList):
+    outData = []
+    for i in inList:
+        pos = cmds.getAttr(i+'.t')[0]
+        rot = cmds.getAttr(i+'.r')[0]
+        
+        dic = {'name':i, 'pos':pos, 'rot':rot}
+        outData.append(dic)
+    return tuple(outData)
+
+def _applyTransformData(inData):
+    for i in inData:
+        pos = i['pos']
+        rot = i['rot']
+
+        cmds.move(pos[0],pos[1],pos[2],i['name'], os=True)
+        cmds.rotate(rot[0],rot[1],rot[2],i['name'], os=True)
+
 ###---------test execute--------------------------------------
