@@ -130,6 +130,7 @@ class AutoRigMouth():
         cmds.setParent('..')
         
         cmds.button(label='Build Mouth Rig 02',c=self.buildMouthRig02)
+        cmds.button(label='Set Mouth Corner Ctls',c=self._setMouthCornerCtls)
         cmds.button(label='000: Arrange Groups',c=self.arrangeGrps)
         
         cmds.setParent('..')
@@ -376,24 +377,60 @@ class AutoRigMouth():
     
     def _setMouthCornerCtls(self,_):
         ###MouthFunc._setCornerPin()
+        ctl='mouth_corner_r_ctl'
+        clus='mouth_corner_r_cls'
+        parent1='face_lower_bind'
+        parent2='jaw_bind'
         #Add Attribute: cornerPin min -1, max 1, default 0
-        #connect to jaw cls W0, W1
+        cmds.addAttr(ctl, shortName='cornerPin', defaultValue=0, minValue=-1, maxValue=1)
         
         #set range node
-        #cornerPin >> valueX , cornerPin >> valueY
+        setRanNode = cmds.createNode('setRange')
+        
+        #cornerPin >> valueX
+        cmds.connectAttr(ctl+'.cornerPin',setRanNode+'.valueX')
         # minX 0 maxX 1, oldMinX -1 oldMaxX 1
+        cmds.setAttr(setRanNode+'.minX',0)
+        cmds.setAttr(setRanNode+'.maxX',1)
+        cmds.setAttr(setRanNode+'.oldMinX',-1)
+        cmds.setAttr(setRanNode+'.oldMaxX',1)
+        
         #outValueX >> face_Lower_bindW0
+        cmds.connectAttr(setRanNode+'.outValueX',clus+'_parentConstraint1.'+parent1+'W0')
+        
         #reverse node
+        revNode = cmds.createNode('reverse')
         #outValueX >> inputX, outputX >> jaw_bindW1
+        cmds.connectAttr(setRanNode+'.outValueX',revNode+'.inputX')
+        cmds.connectAttr(revNode+'.outputX',clus+'_parentConstraint1.'+parent2+'W1')
         pass
         
+        ###iterate!
+        upperLip01Rcls = 'mouth_upper_r_01_cls'
+        lowerLip01Rcls = 'mouth_lower_r_01_cls'
+        parent3 = 'mouth_upper_m_ctl'
+        parent4 = 'mouth_corner_r_cls'
         ###MouthFunc._setLipPull()
+        
         #Add Attribute: lipOnePull min 0 max 1 default 0
+        cmds.addAttr(ctl, shortName='lipOnePull', defaultValue=0, minValue=0, maxValue=1)
         # connect to upper_lip_01_l_cls_parentConstraint1, lower_lip_01_l_cls_parentConstraint1
         # either follow the upper lip or the lip corner
+        
+        #get attr of driven
+        val1 = cmds.getAttr(upperLip01Rcls+'_parentConstraint1.'+parent3+'W0')
+        val2 = 1 - val1
         #lipOnePull >> lower_lip_ctlW0
+        cmds.connectAttr(ctl+'.lipOnePull',upperLip01Rcls+'_parentConstraint1.'+parent3+'W0' )
+        
         #reverse node
+        revNode2 = cmds.createNode('reverse')
         #lipOnePull >> inputX, outputX >> lip_corner_l_clsW1
+        cmds.connectAttr(ctl+'.lipOnePull',revNode2+'.inputX')
+        cmds.connectAttr(revNode2+'.outputX',upperLip01Rcls+'_parentConstraint1.'+parent4+'W1')
+        
+        #set attr of driver
+        cmds.setAttr(ctl+'.lipOnePull', val1)
         
         #Add Attribute: lipTwoPull min 0 max 1 default 0
         pass
