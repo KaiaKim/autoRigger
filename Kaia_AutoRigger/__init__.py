@@ -36,22 +36,30 @@ class AutoRigFace():
         self.eyeSocketBindR = 'eye_socket_r_bind'
         self.eyeSocketBindL = 'eye_socket_l_bind'
         
-        self.upperLidRCurve = 'upper_lid_r_curve' #No change this!
-        self.lowerLidRCurve = 'lower_lid_r_curve' #No change this!
+        self.lidUpperRCurv = 'upper_lid_r_curve' #No change this!
+        self.lidLowerRCurv = 'lower_lid_r_curve' #No change this!
         
         self.lipUpperCurv = 'lip_upper_curve' #No change this!
         self.lipLowerCurv = 'lip_lower_curve' #No change this!
         self.lipCVList = []
         self.mouthCurv = None
         
-        self.upperLipVerts = None
-        self.lowerLipVerts = None
+        self.lipUpperVerts = None
+        self.lipLowerVerts = None
+        self.lidUpperRVerts = None
+        self.lidLowerRVerts = None
         
         self.lipUpperLocGrp = 'lip_upper_loc_grp' #Grp means group name. I will use these strings when I create the node.
         self.lipLowerLocGrp = 'lip_lower_loc_grp'
+        self.lidRLocGrp = 'lid_upper_r_loc_grp'
+        self.lidLLocGrp = self.lidRLocGrp.replace('_r_','_l_')
         self.lipLocs = []
+        self.lidRLocs = []
+        self.lidLLocs = []
         
         self.lipBinds = []
+        self.lidRBinds = []
+        self.lidLBinds = []
         
         self.mouthDriverGrp = 'mouth_driver_jnt_grp'
         self.mouthDrivers = []
@@ -125,20 +133,20 @@ class AutoRigFace():
         cmds.gridLayout( numberOfColumns=3, cellWidthHeight=(100, 20) ) #fourth layout - frame layout
 
         cmds.text( label='Upper Lip Verts')
-        cmds.button( label='assign', c=lambda _:self.assignDelete('self.upperLipVerts','ass') )
-        cmds.button( label='delete', c=lambda _:self.assignDelete('self.upperLipVerts','del') )
+        cmds.button( label='assign', c=lambda _:self.assignDelete('self.lipUpperVerts','ass') )
+        cmds.button( label='delete', c=lambda _:self.assignDelete('self.lipUpperVerts','del') )
 
         cmds.text( label='Lower Lip Verts')
-        cmds.button( label='assign', c=lambda _:self.assignDelete('self.lowerLipVerts','ass') )
-        cmds.button( label='delete', c=lambda _:self.assignDelete('self.lowerLipVerts','del') )
+        cmds.button( label='assign', c=lambda _:self.assignDelete('self.lipLowerVerts','ass') )
+        cmds.button( label='delete', c=lambda _:self.assignDelete('self.lipLowerVerts','del') )
 
         cmds.text( label='Upper Eye Verts R')
-        cmds.button( label='assign', c=lambda _:self.assignDelete('self.upperEyeVertsR','ass') )
-        cmds.button( label='delete', c=lambda _:self.assignDelete('self.upperEyeVertsR','del') )
+        cmds.button( label='assign', c=lambda _:self.assignDelete('self.lidUpperRVerts','ass') )
+        cmds.button( label='delete', c=lambda _:self.assignDelete('self.lidUpperRVerts','del') )
 
         cmds.text( label='Lower Eye Verts R')
-        cmds.button( label='assign', c=lambda _:self.assignDelete('self.lowerEyeVertsR','ass') )
-        cmds.button( label='delete', c=lambda _:self.assignDelete('self.lowerEyeVertsR','del') )
+        cmds.button( label='assign', c=lambda _:self.assignDelete('self.lidLowerRVerts','ass') )
+        cmds.button( label='delete', c=lambda _:self.assignDelete('self.lidLowerRVerts','del') )
 
 
         cmds.setParent('..')
@@ -185,14 +193,15 @@ class AutoRigFace():
     
     def quickTestData(self,_):
         #some hard coded data for quick testing
-        self.upperLipVerts=[]
-        self.lowerLipVerts=[]
-        self.upperEyeVertsR=[]
-        self.lowerEyeVertsR=[]
-        
+        self.lipUpperVerts=['baseBody.vtx[7885]', 'baseBody.vtx[7886]', 'baseBody.vtx[7888]', 'baseBody.vtx[7891]', 'baseBody.vtx[7892]', 'baseBody.vtx[7893]', 'baseBody.vtx[7896]', 'baseBody.vtx[7897]', 'baseBody.vtx[7898]', 'baseBody.vtx[7902]', 'baseBody.vtx[7903]', 'baseBody.vtx[7906]', 'baseBody.vtx[7908]', 'baseBody.vtx[8066]', 'baseBody.vtx[8571]', 'baseBody.vtx[8850]', 'baseBody.vtx[9135]', 'baseBody.vtx[9424]', 'baseBody.vtx[9723]', 'baseBody.vtx[9999]', 'baseBody.vtx[10166]', 'baseBody.vtx[10327]', 'baseBody.vtx[10463]', 'baseBody.vtx[10598]', 'baseBody.vtx[10733]', 'baseBody.vtx[10868]', 'baseBody.vtx[10989]']
+        self.lipLowerVerts=['baseBody.vtx[7884]', 'baseBody.vtx[7887]', 'baseBody.vtx[7889]', 'baseBody.vtx[7890]', 'baseBody.vtx[7894]', 'baseBody.vtx[7895]', 'baseBody.vtx[7898]', 'baseBody.vtx[7899]', 'baseBody.vtx[7900]', 'baseBody.vtx[7901]', 'baseBody.vtx[7904]', 'baseBody.vtx[7905]', 'baseBody.vtx[7907]', 'baseBody.vtx[8065]', 'baseBody.vtx[8482]', 'baseBody.vtx[8790]', 'baseBody.vtx[9079]', 'baseBody.vtx[9372]', 'baseBody.vtx[9675]', 'baseBody.vtx[9955]', 'baseBody.vtx[10126]', 'baseBody.vtx[10291]', 'baseBody.vtx[10431]', 'baseBody.vtx[10570]', 'baseBody.vtx[10709]', 'baseBody.vtx[10848]', 'baseBody.vtx[10989]']
+        self.lidUpperRCurv=['baseBody.vtx[11499]', 'baseBody.vtx[11500]', 'baseBody.vtx[11501]', 'baseBody.vtx[11502]', 'baseBody.vtx[11503]', 'baseBody.vtx[11504]', 'baseBody.vtx[11505]', 'baseBody.vtx[11506]', 'baseBody.vtx[11507]', 'baseBody.vtx[11508]', 'baseBody.vtx[11509]', 'baseBody.vtx[11510]', 'baseBody.vtx[11511]', 'baseBody.vtx[11512]', 'baseBody.vtx[11514]', 'baseBody.vtx[11554]', 'baseBody.vtx[11595]']
+        self.lidLowerRVerts=['baseBody.vtx[11487]', 'baseBody.vtx[11488]', 'baseBody.vtx[11489]', 'baseBody.vtx[11490]', 'baseBody.vtx[11491]', 'baseBody.vtx[11492]', 'baseBody.vtx[11493]', 'baseBody.vtx[11494]', 'baseBody.vtx[11495]', 'baseBody.vtx[11496]', 'baseBody.vtx[11497]', 'baseBody.vtx[11498]', 'baseBody.vtx[11499]', 'baseBody.vtx[11525]', 'baseBody.vtx[11561]', 'baseBody.vtx[11595]', 'baseBody.vtx[11596]']
+
     def assignDelete(self,data,flag):
         if flag=='ass':
             data=cmds.ls(sl=True,fl=True)
+            print(data)
         elif flag=='del':
             data=None
     
@@ -239,10 +248,10 @@ class AutoRigFace():
         self.createGrps()  
         #1: Generate mouth_curve from lip_curves
         self._createMouthCurv()
-        #1: Create lip_locs on lip verts && connect to lip_curves
+        #1: Create lip_locs on lip verts & connect to lip_curves
         self._createLipLocs()
         #2: Aim constraint lip_locs to jaw_bind
-        ModFunc._aimConstLocs(self.lipLocs, self.jawBind, self.faceLowerBind)
+        ModFunc._aimConstLocs(self.lipLocs, self.jawBind, upObj=self.faceLowerBind)
         #2: Create lip_bind_jnts && constraint to lip_locs
         self.lipBinds = ModFunc._createJntsOnLocs(self.lipLocs,self.faceLowerBind)
         #2: Create drivers && connect to mouth CVs
@@ -265,11 +274,15 @@ class AutoRigFace():
         self._attachLipCtlsOnJawCls()
     
     def buildEyeRig01(self,_):
-        ModFunc._createLocsOnCurve()
-        EyeFunc._mirrorLocsRtoL()
+        #1: Mirror Lid Curves
+        self.lidUpperLCurv = ModFunc._mirrorObjRtoL(self.lidUpperRCurv)
+        self.lidLowerLCurv = ModFunc._mirrorObjRtoL(self.lidLowerRCurv)
         
-        ModFunc._aimConstLocs() #self.eyeSocketBindR
-        
+        #2: Create lid locs on lid verts & connect to lid curves
+        self._createLidLocs()
+
+        ModFunc._aimConstLocs(self.lidRLocs,self.eyeSocketBindR)
+        '''
         ModFunc._createJntsOnLocs()
         ModFunc._parentConstIterate()
         
@@ -278,6 +291,7 @@ class AutoRigFace():
         
         EyeFunc._createLoftBall()
         EyeFunc._SlideOnSurface()
+        '''
         
     def createGrps(self):
         self.faceRoot = cmds.group(n=self.faceRoot, em=True)
@@ -335,17 +349,39 @@ class AutoRigFace():
             cmds.move(pos[0],pos[1],pos[2],mouthCV) #snap mouth CV to the position
 
             counter+=1 #increase counter
-
-        
+    
     def _createLipLocs(self):
-        upperLocsPos = ModFunc._createLocsOnCurve(self.lipUpperCurv,self.upperLipVerts,self.lipUpperLocGrp)
-        upperLocs = MouthFunc._lipLocsNamer(upperLocsPos, prefix='upper_lip', suffix='_loc')
-
-        lowerLocsPos = ModFunc._createLocsOnCurve(self.lipLowerCurv,self.lowerLipVerts,self.lipLowerLocGrp)
-        lowerLocs = MouthFunc._lipLocsNamer(lowerLocsPos, prefix='lower_lip', suffix='_loc')
+        upperPos = ModFunc._getPosListFromVerts(self.lipUpperVerts)###if I rearrange the list according to xpos in the first place
+        upperLocs = ModFunc._createLocsOnCurve(self.lipUpperCurv,upperPos,self.lipUpperLocGrp)###I don't have to use stupid dicList
+        upperLocs = MouthFunc._lipLocsNamer(upperLocs, prefix='lip_upper')###But I also have to fix this
+        
+        lowerPos = ModFunc._getPosListFromVerts(self.lipLowerVerts)
+        lowerLocs = ModFunc._createLocsOnCurve(self.lipLowerCurv,lowerPos,self.lipLowerLocGrp)
+        lowerLocs = MouthFunc._lipLocsNamer(lowerLocs, prefix='lip_lower')
         
         self.lipLocs = upperLocs + lowerLocs
+    
+    
+    def _createLidLocs(self):
+        upperRPos = ModFunc._getPosListFromVerts(self.lidUpperRVerts)
+        upperRLocs = ModFunc._createLocsOnCurve(self.lidUpperRCurv, upperRPos, self.lidRLocGrp)
+        upperRLocs = EyeFunc._eyeLocsNamer(upperRLocs, side='R', prefix='lid_upper')
         
+        upperLPos = ModFunc._mirrorPosX(upperRPos)
+        upperLLocs = ModFunc._createLocsOnCurve(self.lidUpperLCurv, upperLPos, self.lidLLocGrp)
+        upperLLocs = EyeFunc._eyeLocsNamer(upperLLocs, side='L', prefix='lid_upper')
+        
+        lowerRPos = ModFunc._getPosListFromVerts(self.lidLowerVerts)
+        lowerRLocs = ModFunc._createLocsOnCurve(self.lidLowerRCurv, lowerRPos, self.lidRLocGrp, newGrp=False)
+        lowerRLocs = EyeFunc._eyeLocsNamer(lowerRLocs, side='R', prefix='lid_lower')
+        
+        lowerLPos = ModFunc._mirrorPosX(lowerRPos)
+        lowerLLocs = ModFunc._createLocsOnCurve(self.lidLowerLCurv, lowerLPos, self.lidLLocGrp, newGrp=False)
+        lowerLLocs = EyeFunc._eyeLocsNamer(lowerLLocs, side='L', prefix='lid_lower')
+        
+        self.lidRLocs = upperRLocs + lowerRLocs
+        self.lidLLocs = upperLLocs + lowerLLocs
+             
         
     def _createMouthDrivers(self):
         driverList = ModFunc._createJntsOnCVs(self.mouthCurv,self.mouthDriverGrp) 

@@ -1,11 +1,20 @@
 import maya.cmds as cmds
 
-def _createLocsOnCurve(curv,verts,grpName):
-    locPosList = []
-    grp = cmds.group(em=True, n=grpName)
+def _getPosListFromVerts(verts):
+    posList = []
     for vert in verts:
         pos = cmds.xform(vert, q=True, ws=True, t=True ) #get position from the verts
+        posList.append(pos)
+    return posList
 
+def _createLocsOnCurve(curv,posList,grpName,newGrp=True):
+    locDicList = []
+    if newGrp==True:
+        grp = cmds.group(em=True, n=grpName)
+    else:
+        grp = grpName
+        
+    for pos in posList:
         nearNode = cmds.createNode('nearestPointOnCurve') #create nearestPointOnCurve node
         #connect position to the nearestPointOnCurve node
         cmds.connectAttr( curv+'.worldSpace', nearNode+'.inputCurve' )
@@ -33,14 +42,19 @@ def _createLocsOnCurve(curv,verts,grpName):
         
         cmds.parent(loc,grp)
         
-        locPosList.append( {'loc':loc,'xpos':pos[0]} ) #return list of mini dictionaries
-    locPosList.sort(key=lambda t: t['xpos']) #sort the list with x pos value
-    return locPosList
+        locDicList.append( {'loc':loc,'param':param} ) #return list of mini dictionaries
+    locDicList.sort(key=lambda t: t['param']) #sort the list with parameter
+    
+    locList = [d['loc'] for d in locPosList]
+    return locList
         
-def _aimConstLocs(locs,targ,upObj):
+def _aimConstLocs(locs,targ,upObj=None):
     #Create aim constraint on list of locators
     for loc in locs:
-        cmds.aimConstraint(targ, loc,  aimVector = [0, 0, -1] , upVector = [0, 1, 0], worldUpType = 'objectrotation', worldUpVector = [0, 1, 0] , worldUpObject = upObj )
+        if upObj == None:
+            cmds.aimConstraint(targ, loc, aimVector=[0,0,-1], upVector=[0,1,0], worldUpType='objectrotation', worldUpVector=[0,1,0] )
+        else:
+            cmds.aimConstraint(targ, loc, aimVector=[0,0,-1], upVector=[0,1,0], worldUpType='objectrotation', worldUpVector=[0,1,0] , worldUpObject=upObj )
 
 def _createJntsOnLocs(locs,parJnt): #parJnt means parent joint
     jntList = []
@@ -245,4 +259,14 @@ def _applyTransformData(inData):
         cmds.move(pos[0],pos[1],pos[2],i['name'], os=True)
         cmds.rotate(rot[0],rot[1],rot[2],i['name'], os=True)
 
+def _mirrorObjRtoL(rightObj):
+    leftObj = cmds.duplicate(rightObj)[0]
+    leftObj = cmds.rename(leftObj,rightObj.replace('_r_','_l_'))
+    cmds.makeIdentity(leftObj, apply=True)
+    cmds.delete(leftObj, constructionHistory=True)
+    return leftObj
+    
+def _mirrorPosX(posList):
+    mirList = []
+    return mirList
 ###---------test execute--------------------------------------

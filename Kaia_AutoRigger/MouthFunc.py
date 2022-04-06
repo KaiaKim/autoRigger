@@ -1,19 +1,18 @@
 import maya.cmds as cmds
 
-def _lipLocsNamer(inList, prefix='', suffix=''): #this function takes a list with mini dics
+def _lipLocsNamer(locs, prefix=''):
     outList = []
-    ###make function of this
-    for i in inList: #i['loc'] is the loc trans, i['xpos'] is the X position of the loc
+    for i,loc in enumerate(locs):
         name = prefix
-        cmds.reorder( i['loc'], back=True )#reorder alphabetically in hierarchy
-        if inList.index(i)==( (len(inList)-1)/2 ):
-            pass #result: 'lower_lip_loc'
-        elif i['xpos']<0:
-            name += '_%02d_l'%inList.index(i) #result: 'lower_lip_00_l_loc'
-        elif i['xpos']>0:
-            name += '_%02d_r'%( (len(inList)-1)-(inList.index(i)) ) #result: 'lower_lip_00_r_loc'
-        name += suffix
-        cmds.rename(i['loc'],name)
+        cmds.reorder( loc, back=True )#reorder in hierarchy
+        if i==((len(locs)-1)/2):
+            name += '_m_'
+        elif i<((len(locs)-1)/2):
+            name += '_%02d_l'%i #result: 'lower_lip_00_l_loc'
+        elif i>((len(locs)-1)/2):
+            name += '_%02d_r'%( (len(locs)-1)-i ) #result: 'lower_lip_00_r_loc'
+        name += '_loc'
+        cmds.rename(loc,name)
         
         outList.append(name) #append the loc name to self.lipLocs list
     return outList

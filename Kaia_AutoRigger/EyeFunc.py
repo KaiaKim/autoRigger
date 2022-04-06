@@ -1,7 +1,9 @@
 import maya.cmds as cmds
 
-def _mirrorLocsRtoL():
+def _eyeLocsNamer(inList, prefix=''):
     pass
+    
+
         
 def _createLoftBall():
     pass
