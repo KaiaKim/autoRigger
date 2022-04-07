@@ -3,7 +3,7 @@ import maya.cmds as cmds
 def _getPosListFromVerts(verts):
     posList = []
     for vert in verts:
-        pos = cmds.xform(vert, q=True, ws=True, t=True ) #get position from the verts
+        pos = cmds.xform(vert, q=True, ws=True, t=True) #get position from the verts
         posList.append(pos)
     return posList
 
@@ -44,9 +44,13 @@ def _createLocsOnCurve(curv,posList,grpName,newGrp=True):
         
         locDicList.append( {'loc':loc,'param':param} ) #return list of mini dictionaries
     locDicList.sort(key=lambda t: t['param']) #sort the list with parameter
+    locList = [d['loc'] for d in locDicList]
     
-    locList = [d['loc'] for d in locPosList]
+    for loc in locList:
+        cmds.reorder( loc, back=True )#reorder in hierarchy
+        
     return locList
+    
         
 def _aimConstLocs(locs,targ,upObj=None):
     #Create aim constraint on list of locators
@@ -205,8 +209,8 @@ def _moveOffset(ctlDicList, offset=(0,0,0)):
     
     
 def _parentConstIterate(parents,childs):
-    for i in range(len(childs)):
-        cmds.parentConstraint(parents[i],childs[i],mo=True)
+    for parent,child in zip(parents,childs):
+        cmds.parentConstraint(parent,child,mo=True)
     
 def _localScaleLoc(loc,num):
     locShape = cmds.listRelatives(loc)[0]
@@ -241,32 +245,48 @@ def _customNURBScircle(shape,name):
 
     return ctl
 
-def _getTransformData(inList):
+def _getTransformData(inList, r=False, wpos=False):
     outData = []
     for i in inList:
-        pos = cmds.getAttr(i+'.t')[0]
-        rot = cmds.getAttr(i+'.r')[0]
+        if wpos==True:
+            pos = cmds.xform(i, q=True, ws=True, t=True)
+        elif wpos==False:
+            pos = cmds.getAttr(i+'.t')[0]
+        dic = {'name':i, 'pos':pos}
         
-        dic = {'name':i, 'pos':pos, 'rot':rot}
+        if r==True:
+            rot = cmds.getAttr(i+'.r')[0]
+            dic['rot']=rot
+            
         outData.append(dic)
     return tuple(outData)
 
-def _applyTransformData(inData):
+def _applyTransformData(inData, r=False, wpos=False, opos=True):
     for i in inData:
         pos = i['pos']
-        rot = i['rot']
+        cmds.move(pos[0],pos[1],pos[2],i['name'], os=opos, ws=wpos)
+        
+        if r==True: 
+            rot = i['rot']
+            cmds.rotate(rot[0],rot[1],rot[2],i['name'])
 
-        cmds.move(pos[0],pos[1],pos[2],i['name'], os=True)
-        cmds.rotate(rot[0],rot[1],rot[2],i['name'], os=True)
+
 
 def _mirrorObjRtoL(rightObj):
+    print('rightObj:', rightObj)
     leftObj = cmds.duplicate(rightObj)[0]
     leftObj = cmds.rename(leftObj,rightObj.replace('_r_','_l_'))
+    cmds.scale(-1,1,1,leftObj)
     cmds.makeIdentity(leftObj, apply=True)
     cmds.delete(leftObj, constructionHistory=True)
     return leftObj
     
 def _mirrorPosX(posList):
+    print(posList)
     mirList = []
+    for pos in posList:
+        x,y,z = pos
+        mirList.append((-x,y,z))
+    print (mirList)
     return mirList
 ###---------test execute--------------------------------------

@@ -21,7 +21,7 @@ class AutoRigFace():
         self.winName = 'kaiaAutoRigFace' #this needs to be ac word that has no spaces or it won't work! #node name
         
         ###orient data
-        self.orientJsonPath = mayascripts+'/Kaia_AutoRigger/orientData/testData.json'
+        self.orientJsonPath = mayascripts+'/Kaia_AutoRigger/data/'
         self.orientData = None
         
         ###
@@ -48,11 +48,15 @@ class AutoRigFace():
         self.lipLowerVerts = None
         self.lidUpperRVerts = None
         self.lidLowerRVerts = None
+        self.eyeballRLtc = None
+        self.eyeballLLtc = None
+        self.eyeballRLtc = 'eye_r_ffd1'
+        self.eyeballRLtc = 'eye_r_ffd1'
         
         self.lipUpperLocGrp = 'lip_upper_loc_grp' #Grp means group name. I will use these strings when I create the node.
         self.lipLowerLocGrp = 'lip_lower_loc_grp'
-        self.lidRLocGrp = 'lid_upper_r_loc_grp'
-        self.lidLLocGrp = self.lidRLocGrp.replace('_r_','_l_')
+        self.lidRLocGrp = 'lid_r_loc_grp'
+        self.lidLLocGrp = 'lid_l_loc_grp'
         self.lipLocs = []
         self.lidRLocs = []
         self.lidLLocs = []
@@ -83,16 +87,7 @@ class AutoRigFace():
         self.lipCvClsGrp = 'lipCV_cls_grp' #we dont need group
         self.lipCvCls = [] #we need offset groups & hard parenting under lip Ctrl curv
         
-        self.eyeRLocGrp = ''
-        self.eyeRLocs = []
-        self.eyeLLocGrp = ''
-        self.eyeLLocs = []
-        
-        self.eyeRBinds = []
-        
-        self.eyeRCvCls = [] #???
-        
-        self.loftBall = ''
+        self.eyeLoft = None
         
         
         self.createWindow()
@@ -106,87 +101,98 @@ class AutoRigFace():
         cmds.scrollLayout( 'scorllLayout', width=320) #makes your entire layout scrollable #first - main layout
         cmds.columnLayout( adjustableColumn=True ) #second layout - attaches to the main layout
         ###
-        cmds.frameLayout( label='Template', collapsable=True, collapse=False )
+        cmds.frameLayout( l='Template', collapsable=True, collapse=False )
         cmds.columnLayout()
-        cmds.text(label='Load template files')
+        cmds.text(l='Load template files')
         cmds.setParent('..')
         
         cmds.gridLayout( numberOfColumns=2, cellWidthHeight=(150, 20))
-        cmds.text( label='Face Bind Joints')
-        cmds.button( label='Import',c=lambda x:cmds.file(mayascripts+'/Kaia_AutoRigger/templateFiles/faceBindJoints.ma',i=True))
-        cmds.text( label='Lip Curves')
-        cmds.button( label='Import',c=lambda x:cmds.file(mayascripts+'/Kaia_AutoRigger/templateFiles/lipCurves.ma',i=True))
-        cmds.text( label='Eye Curves')
-        cmds.button( label='Import',c=lambda x:cmds.file(mayascripts+'/Kaia_AutoRigger/templateFiles/eyeCurves.ma',i=True))
+        cmds.text( l='Face Bind Joints')
+        cmds.button( l='Import',c=lambda x:cmds.file(mayascripts+'/Kaia_AutoRigger/templateFiles/faceBindJoints.ma',i=True))
+        cmds.text( l='Lip Curves')
+        cmds.button( l='Import',c=lambda x:cmds.file(mayascripts+'/Kaia_AutoRigger/templateFiles/lipCurves.ma',i=True))
+        cmds.text( l='Eye Curves')
+        cmds.button( l='Import',c=lambda x:cmds.file(mayascripts+'/Kaia_AutoRigger/templateFiles/eyeCurves.ma',i=True))
 
         cmds.setParent('..')
         cmds.setParent('..')
         ###
-        cmds.frameLayout( label='Assign', collapsable=True, collapse=False )
+        cmds.frameLayout( l='Assign', collapsable=True, collapse=False )
 
         cmds.columnLayout()
-        cmds.text(label='Assign vertices from selection')
-        cmds.button(label='Quick Test Data',c=self.quickTestData )
+        cmds.text(l='Assign vertices from selection')
+        cmds.button(l='Quick Test Data',c=self.quickTestData )
 
         cmds.setParent('..')
 
         cmds.gridLayout( numberOfColumns=3, cellWidthHeight=(100, 20) ) #fourth layout - frame layout
 
-        cmds.text( label='Upper Lip Verts')
-        cmds.button( label='assign', c=lambda _:self.assignDelete('self.lipUpperVerts','ass') )
-        cmds.button( label='delete', c=lambda _:self.assignDelete('self.lipUpperVerts','del') )
+        cmds.text( l='Upper Lip Verts')
+        cmds.button( l='assign', c=lambda _:self.assignDelete('self.lipUpperVerts','ass') )
+        cmds.button( l='delete', c=lambda _:self.assignDelete('self.lipUpperVerts','del') )
 
-        cmds.text( label='Lower Lip Verts')
-        cmds.button( label='assign', c=lambda _:self.assignDelete('self.lipLowerVerts','ass') )
-        cmds.button( label='delete', c=lambda _:self.assignDelete('self.lipLowerVerts','del') )
+        cmds.text( l='Lower Lip Verts')
+        cmds.button( l='assign', c=lambda _:self.assignDelete('self.lipLowerVerts','ass') )
+        cmds.button( l='delete', c=lambda _:self.assignDelete('self.lipLowerVerts','del') )
 
-        cmds.text( label='Upper Eye Verts R')
-        cmds.button( label='assign', c=lambda _:self.assignDelete('self.lidUpperRVerts','ass') )
-        cmds.button( label='delete', c=lambda _:self.assignDelete('self.lidUpperRVerts','del') )
-
-        cmds.text( label='Lower Eye Verts R')
-        cmds.button( label='assign', c=lambda _:self.assignDelete('self.lidLowerRVerts','ass') )
-        cmds.button( label='delete', c=lambda _:self.assignDelete('self.lidLowerRVerts','del') )
-
+        cmds.text( l='Upper Eye Verts R')
+        cmds.button( l='assign', c=lambda _:self.assignDelete('self.lidUpperRVerts','ass') )
+        cmds.button( l='delete', c=lambda _:self.assignDelete('self.lidUpperRVerts','del') )
 
         cmds.setParent('..')
         cmds.setParent('..')
         ###
-        cmds.frameLayout( label='Functions', collapsable=True, collapse=False)
+        cmds.frameLayout( l='Helper', collapsable=True, collapse=True)
         cmds.columnLayout( rowSpacing = 10 )
 
-        cmds.text( label='It only works with template joint hierarchy.')
-        cmds.text( label='Make sure you have everything assigned!')
-        cmds.button(label='Build Mouth Rig 01',c=self.buildMouthRig01)
+        cmds.text( l='! eye cluster name: eye_r_cls')
+        cmds.text( l='! eye lattice name: eye_r_ffd1')
         
-        cmds.rowLayout(numberOfColumns=3)
-        cmds.button( label='mirror orient R to L', c=self.mirrorOrient)
-        cmds.button( label='save orient', c=self.saveOrient )
-        cmds.button( label='load orient', c=self.loadOrient )
+        cmds.rowLayout(numberOfColumns=4)
+        cmds.text(l='eye lattice points: ')
+        cmds.button( l='mirror R to L', c=self.mirrorLattice)
+        cmds.button( l='save', c=self.saveLattice )
+        cmds.button( l='load', c=self.loadLattice )
         cmds.setParent('..')
-        
-        cmds.button(label='Build Mouth Rig 02',c=self.buildMouthRig02)
-        cmds.button(label='Set Mouth Corner Ctls',c=self._setMouthCornerCtls)
-        
-        cmds.button(label='Build Eye Rig 01',c=self.buildEyeRig01)
-        cmds.button(label='000: Arrange Groups',c=self.arrangeGrps)
         
         cmds.setParent('..')
         cmds.setParent('..')
         ###
-        cmds.frameLayout( label='Blendshapes', collapsable=True, collapse=False)
+        cmds.frameLayout( l='Build', collapsable=True, collapse=False)
         cmds.columnLayout( rowSpacing = 10 )
+        
+        cmds.button(l='Build Mouth Rig 01',c=self.buildMouthRig01)
+        cmds.button(l='Build Eye Rig 01',c=self.buildEyeRig01)
+        
+        cmds.rowLayout(numberOfColumns=4)
+        cmds.text( l='Ctrl orients: ')
+        cmds.button( l='mirror R to L', c=self.mirrorOrient)
+        cmds.button( l='save', c=self.saveOrient )
+        cmds.button( l='load', c=self.loadOrient )
+        cmds.setParent('..')
+        
+        cmds.button(l='Build Mouth Rig 02',c=self.buildMouthRig02)
+        cmds.button(l='Build Eye Rig 02')
 
-        cmds.text(label='Create duplicate curves for blendshapes?')
-        cmds.button(label='1: Duplicate Mouth Curve', c=self._duplicateMouthCurves)
+        
+        cmds.button(l='000: Arrange Groups',c=self.arrangeGrps)
         
         cmds.setParent('..')
         cmds.setParent('..')
         ###
-        cmds.frameLayout( label='Extra', collapsable=True, collapse=False)
+        cmds.frameLayout( l='Blendshapes', collapsable=True, collapse=False)
+        cmds.columnLayout( rowSpacing = 10 )
+
+        cmds.text(l='Create duplicate curves for blendshapes?')
+        cmds.button(l='1: Duplicate Mouth Curve', c=self._duplicateMouthCurves)
+        
+        cmds.setParent('..')
+        cmds.setParent('..')
+        ###
+        cmds.frameLayout( l='Extra', collapsable=True, collapse=False)
         cmds.columnLayout( rowSpacing = 10 )
         
-        cmds.button(label='select Jaw Bind',c=lambda _:cmds.select(self.jawBind))
+        cmds.button(l='select Jaw Bind',c=lambda _:cmds.select(self.jawBind))
 
         cmds.showWindow()
         
@@ -195,9 +201,9 @@ class AutoRigFace():
         #some hard coded data for quick testing
         self.lipUpperVerts=['baseBody.vtx[7885]', 'baseBody.vtx[7886]', 'baseBody.vtx[7888]', 'baseBody.vtx[7891]', 'baseBody.vtx[7892]', 'baseBody.vtx[7893]', 'baseBody.vtx[7896]', 'baseBody.vtx[7897]', 'baseBody.vtx[7898]', 'baseBody.vtx[7902]', 'baseBody.vtx[7903]', 'baseBody.vtx[7906]', 'baseBody.vtx[7908]', 'baseBody.vtx[8066]', 'baseBody.vtx[8571]', 'baseBody.vtx[8850]', 'baseBody.vtx[9135]', 'baseBody.vtx[9424]', 'baseBody.vtx[9723]', 'baseBody.vtx[9999]', 'baseBody.vtx[10166]', 'baseBody.vtx[10327]', 'baseBody.vtx[10463]', 'baseBody.vtx[10598]', 'baseBody.vtx[10733]', 'baseBody.vtx[10868]', 'baseBody.vtx[10989]']
         self.lipLowerVerts=['baseBody.vtx[7884]', 'baseBody.vtx[7887]', 'baseBody.vtx[7889]', 'baseBody.vtx[7890]', 'baseBody.vtx[7894]', 'baseBody.vtx[7895]', 'baseBody.vtx[7898]', 'baseBody.vtx[7899]', 'baseBody.vtx[7900]', 'baseBody.vtx[7901]', 'baseBody.vtx[7904]', 'baseBody.vtx[7905]', 'baseBody.vtx[7907]', 'baseBody.vtx[8065]', 'baseBody.vtx[8482]', 'baseBody.vtx[8790]', 'baseBody.vtx[9079]', 'baseBody.vtx[9372]', 'baseBody.vtx[9675]', 'baseBody.vtx[9955]', 'baseBody.vtx[10126]', 'baseBody.vtx[10291]', 'baseBody.vtx[10431]', 'baseBody.vtx[10570]', 'baseBody.vtx[10709]', 'baseBody.vtx[10848]', 'baseBody.vtx[10989]']
-        self.lidUpperRCurv=['baseBody.vtx[11499]', 'baseBody.vtx[11500]', 'baseBody.vtx[11501]', 'baseBody.vtx[11502]', 'baseBody.vtx[11503]', 'baseBody.vtx[11504]', 'baseBody.vtx[11505]', 'baseBody.vtx[11506]', 'baseBody.vtx[11507]', 'baseBody.vtx[11508]', 'baseBody.vtx[11509]', 'baseBody.vtx[11510]', 'baseBody.vtx[11511]', 'baseBody.vtx[11512]', 'baseBody.vtx[11514]', 'baseBody.vtx[11554]', 'baseBody.vtx[11595]']
+        self.lidUpperRVerts=['baseBody.vtx[11499]', 'baseBody.vtx[11500]', 'baseBody.vtx[11501]', 'baseBody.vtx[11502]', 'baseBody.vtx[11503]', 'baseBody.vtx[11504]', 'baseBody.vtx[11505]', 'baseBody.vtx[11506]', 'baseBody.vtx[11507]', 'baseBody.vtx[11508]', 'baseBody.vtx[11509]', 'baseBody.vtx[11510]', 'baseBody.vtx[11511]', 'baseBody.vtx[11512]', 'baseBody.vtx[11514]', 'baseBody.vtx[11554]', 'baseBody.vtx[11595]']
         self.lidLowerRVerts=['baseBody.vtx[11487]', 'baseBody.vtx[11488]', 'baseBody.vtx[11489]', 'baseBody.vtx[11490]', 'baseBody.vtx[11491]', 'baseBody.vtx[11492]', 'baseBody.vtx[11493]', 'baseBody.vtx[11494]', 'baseBody.vtx[11495]', 'baseBody.vtx[11496]', 'baseBody.vtx[11497]', 'baseBody.vtx[11498]', 'baseBody.vtx[11499]', 'baseBody.vtx[11525]', 'baseBody.vtx[11561]', 'baseBody.vtx[11595]', 'baseBody.vtx[11596]']
-
+        
     def assignDelete(self,data,flag):
         if flag=='ass':
             data=cmds.ls(sl=True,fl=True)
@@ -228,20 +234,53 @@ class AutoRigFace():
         #get transform
         allCtls = self.lipCtls + self.mouthCtls + self.mCornerCtls
         orients = [d['ori'] for d in allCtls]
-        orientData = ModFunc._getTransformData(orients)
+        orientData = ModFunc._getTransformData(orients, r=True)
         
         #write json file
-        with open(self.orientJsonPath, "w") as outfile:
+        with open(self.orientJsonPath+'ctlOrient.json', "w") as outfile:
             json.dump(orientData, outfile)
 
     def loadOrient(self,_):
         #read json file
-        with open(self.orientJsonPath,"r") as read_file:
+        with open(self.orientJsonPath+'ctlOrient.json',"r") as read_file:
             orientData = json.load(read_file)
             
         #apply transform
-        ModFunc._applyTransformData(orientData)
+        ModFunc._applyTransformData(orientData, r=True)
 
+    def mirrorLattice(self,_): #mirror lattice point pos
+        #get pos
+        ltsPt = cmds.ls(self.eyeballRLtc + 'Lattice' + '.pt[*][*][*]', fl=1)
+        ptPos = ModFunc._getTransformData(ltsPt, wpos=True)
+        
+        #modify data
+        mirrorPos = ptPos
+        for i in mirrorPos:
+            i['name'] = i['name'].replace('_r_','_l_')
+            x,y,z = i['pos']
+            i['pos'] = (-x,y,z)
+            
+        #apply transform
+        ModFunc._applyTransformData(mirrorPos, wpos=True, opos=False)
+        pass
+        
+    def saveLattice(self,_): #save lattice point pos
+        #get transform
+        
+        ltsPt = cmds.ls(self.eyeballRLtc + 'Lattice' + '.pt[*][*][*]', fl=1)
+        ptPos = ModFunc._getTransformData(ltsPt, wpos=True)
+            
+        #write json file
+        with open(self.orientJsonPath+'latticePtPos.json', "w") as outfile:
+            json.dump(ptPos, outfile)
+
+    def loadLattice(self,_): #load lattice point pos
+        #read json file
+        with open(self.orientJsonPath+'latticePtPos.json',"r") as read_file:
+            ptPos = json.load(read_file)
+            
+        #apply transform
+        ModFunc._applyTransformData(ptPos, wpos=True, opos=False)
         
     def buildMouthRig01(self,_):
         #0:Create Groups
@@ -272,20 +311,26 @@ class AutoRigFace():
         self._createClsOnLipCurv()
         #9: Attach Lip Ctrls on lipCV
         self._attachLipCtlsOnJawCls()
+        #10: Corner pin, Lip pull
+        self._setMouthCornerCtls()
     
+        
     def buildEyeRig01(self,_):
         #1: Mirror Lid Curves
         self.lidUpperLCurv = ModFunc._mirrorObjRtoL(self.lidUpperRCurv)
         self.lidLowerLCurv = ModFunc._mirrorObjRtoL(self.lidLowerRCurv)
-        
         #2: Create lid locs on lid verts & connect to lid curves
         self._createLidLocs()
-
+        #3: Aim constraint lid locs to eye socket bind
         ModFunc._aimConstLocs(self.lidRLocs,self.eyeSocketBindR)
+        ModFunc._aimConstLocs(self.lidLLocs,self.eyeSocketBindL)
+        #4: Create lid bind jnts
+        self.lidRBinds = ModFunc._createJntsOnLocs(self.lidRLocs,self.eyeSocketBindR)
+        self.lidRBinds = ModFunc._createJntsOnLocs(self.lidLLocs,self.eyeSocketBindL)
+        #5: Constraint to lid locs
+        ModFunc._parentConstIterate(self.lidRLocs,self.lidRBinds)
+        ModFunc._parentConstIterate(self.lidLLocs,self.lidLBinds)
         '''
-        ModFunc._createJntsOnLocs()
-        ModFunc._parentConstIterate()
-        
         ModFunc._createClsOn2Curv()
         ModFunc._createCtrlGrp()
         
@@ -327,8 +372,8 @@ class AutoRigFace():
 
         
     def _createMouthCurv(self):
-        upperCVs = cmds.ls(self.lipUpperCurv+'.cv[*]',fl=True) #get list of CVs from lip curves
-        lowerCVs = cmds.ls(self.lipLowerCurv+'.cv[*]',fl=True)
+        upperCVs = _getCVs(self.lipUpperCurv)
+        lowerCVs = _getCVs(self.lipLowerCurv)
         lowerCVs.reverse() #reverse list order so that it comes back to the start, as a circle
 
         self.lipCVList = upperCVs + lowerCVs
@@ -365,19 +410,19 @@ class AutoRigFace():
     def _createLidLocs(self):
         upperRPos = ModFunc._getPosListFromVerts(self.lidUpperRVerts)
         upperRLocs = ModFunc._createLocsOnCurve(self.lidUpperRCurv, upperRPos, self.lidRLocGrp)
-        upperRLocs = EyeFunc._eyeLocsNamer(upperRLocs, side='R', prefix='lid_upper')
+        upperRLocs = EyeFunc._eyeLocsNamer(upperRLocs, prefix='lid_upper_r')
         
         upperLPos = ModFunc._mirrorPosX(upperRPos)
         upperLLocs = ModFunc._createLocsOnCurve(self.lidUpperLCurv, upperLPos, self.lidLLocGrp)
-        upperLLocs = EyeFunc._eyeLocsNamer(upperLLocs, side='L', prefix='lid_upper')
+        upperLLocs = EyeFunc._eyeLocsNamer(upperLLocs, prefix='lid_upper_l')
         
-        lowerRPos = ModFunc._getPosListFromVerts(self.lidLowerVerts)
+        lowerRPos = ModFunc._getPosListFromVerts(self.lidLowerRVerts)
         lowerRLocs = ModFunc._createLocsOnCurve(self.lidLowerRCurv, lowerRPos, self.lidRLocGrp, newGrp=False)
-        lowerRLocs = EyeFunc._eyeLocsNamer(lowerRLocs, side='R', prefix='lid_lower')
+        lowerRLocs = EyeFunc._eyeLocsNamer(lowerRLocs, prefix='lid_lower_r')
         
         lowerLPos = ModFunc._mirrorPosX(lowerRPos)
         lowerLLocs = ModFunc._createLocsOnCurve(self.lidLowerLCurv, lowerLPos, self.lidLLocGrp, newGrp=False)
-        lowerLLocs = EyeFunc._eyeLocsNamer(lowerLLocs, side='L', prefix='lid_lower')
+        lowerLLocs = EyeFunc._eyeLocsNamer(lowerLLocs, prefix='lid_lower_l')
         
         self.lidRLocs = upperRLocs + lowerRLocs
         self.lidLLocs = upperLLocs + lowerLLocs
@@ -391,7 +436,6 @@ class AutoRigFace():
 
         
     def _createMouthCtls(self):
-        ###maybe I need an offset group??
         #lip ctrls
         microNames = [d.replace('fol','ctl').replace('mouth','lip') for d in self.mouthFols]
         
@@ -446,8 +490,7 @@ class AutoRigFace():
                 
             cmds.parentConstraint(parent1,parent2,clus,mo=True)
             #set mouth constraint weight value
-            MouthFunc._setWeightVal(clus, parent1,parent2, follow00=.7,follow01=.95) 
-            
+            MouthFunc._setWeightVal(clus, parent1,parent2)
     
     def _createClsOnLipCurv(self):
         clsList = ModFunc._createClsOn2Curv(self.lipUpperCurv, self.lipLowerCurv, self.lipCvClsGrp)
@@ -455,70 +498,31 @@ class AutoRigFace():
         
     def _attachLipCtlsOnJawCls(self):
         ctlList = [d['ctl'] for d in self.lipCtls]
-        ###not parent constraint? hard parenting under micro ctrls with offset group?
         ModFunc._parentConstIterate(ctlList, self.lipCvCls)
     
-    def _setMouthCornerCtls(self,_):
-        ###MouthFunc._setCornerPin()
-        ctl='mouth_corner_r_ctl'
-        clus='mouth_corner_r_cls'
-        parent1='face_lower_bind'
-        parent2='jaw_bind'
-        #Add Attribute: cornerPin min -1, max 1, default 0
-        cmds.addAttr(ctl, shortName='cornerPin', defaultValue=0, minValue=-1, maxValue=1)
+    def _setMouthCornerCtls(self):
+        cornerCtl = [d['ctl'] for d in self.mCornerCtls]
+        cornerCls = [d for d in self.jawCls if '_corner_' in d] #left, right
+        midCtl = [d['ctl'] for d in self.mouthCtls] #upper, lower
+        inbetweenCls = [d for d in self.jawCls if re.findall('[0-9]+',d)!=[] ]
         
-        #set range node
-        setRanNode = cmds.createNode('setRange')
+        #set corner pin
+        MouthFunc._setCornerPin(cornerCtl[0], cornerCls[0], self.faceLowerBind,self.jawBind)
+        MouthFunc._setCornerPin(cornerCtl[1], cornerCls[1], self.faceLowerBind,self.jawBind)
+
+        #add attribute
+        for ctl in cornerCtl:
+            cmds.addAttr(ctl, shortName='lipOnePull', defaultValue=0, minValue=0, maxValue=1)
+            cmds.addAttr(ctl, shortName='lipTwoPull', defaultValue=0, minValue=0, maxValue=1)
         
-        #cornerPin >> valueX
-        cmds.connectAttr(ctl+'.cornerPin',setRanNode+'.valueX')
-        # minX 0 maxX 1, oldMinX -1 oldMaxX 1
-        cmds.setAttr(setRanNode+'.minX',0)
-        cmds.setAttr(setRanNode+'.maxX',1)
-        cmds.setAttr(setRanNode+'.oldMinX',-1)
-        cmds.setAttr(setRanNode+'.oldMaxX',1)
+        ###--------------------MouthFunc._setLipPull()
+        MouthFunc._connectLipPull(cornerCtl,inbetweenCls,midCtl,cornerCls)
         
-        #outValueX >> face_Lower_bindW0
-        cmds.connectAttr(setRanNode+'.outValueX',clus+'_parentConstraint1.'+parent1+'W0')
+        #set lip pull attribute
+        for ctl in cornerCtl:
+            cmds.setAttr(ctl+'.lipOnePull', 0.7)
+            cmds.setAttr(ctl+'.lipTwoPull', 0.95)
         
-        #reverse node
-        revNode = cmds.createNode('reverse')
-        #outValueX >> inputX, outputX >> jaw_bindW1
-        cmds.connectAttr(setRanNode+'.outValueX',revNode+'.inputX')
-        cmds.connectAttr(revNode+'.outputX',clus+'_parentConstraint1.'+parent2+'W1')
-        pass
-        
-        ###iterate!
-        upperLip01Rcls = 'mouth_upper_r_01_cls'
-        lowerLip01Rcls = 'mouth_lower_r_01_cls'
-        parent3 = 'mouth_upper_m_ctl'
-        parent4 = 'mouth_corner_r_cls'
-        ###MouthFunc._setLipPull()
-        
-        #Add Attribute: lipOnePull min 0 max 1 default 0
-        cmds.addAttr(ctl, shortName='lipOnePull', defaultValue=0, minValue=0, maxValue=1)
-        # connect to upper_lip_01_l_cls_parentConstraint1, lower_lip_01_l_cls_parentConstraint1
-        # either follow the upper lip or the lip corner
-        
-        #get attr of driven
-        val1 = cmds.getAttr(upperLip01Rcls+'_parentConstraint1.'+parent3+'W0')
-        val2 = 1 - val1
-        #lipOnePull >> lower_lip_ctlW0
-        cmds.connectAttr(ctl+'.lipOnePull',upperLip01Rcls+'_parentConstraint1.'+parent3+'W0' )
-        
-        #reverse node
-        revNode2 = cmds.createNode('reverse')
-        #lipOnePull >> inputX, outputX >> lip_corner_l_clsW1
-        cmds.connectAttr(ctl+'.lipOnePull',revNode2+'.inputX')
-        cmds.connectAttr(revNode2+'.outputX',upperLip01Rcls+'_parentConstraint1.'+parent4+'W1')
-        
-        #set attr of driver
-        cmds.setAttr(ctl+'.lipOnePull', val1)
-        
-        #Add Attribute: lipTwoPull min 0 max 1 default 0
-        pass
-        
-        #Session 4 (1:26:47~)
         
 
     def _duplicateMouthCurves(self,_):

@@ -4,13 +4,12 @@ def _lipLocsNamer(locs, prefix=''):
     outList = []
     for i,loc in enumerate(locs):
         name = prefix
-        cmds.reorder( loc, back=True )#reorder in hierarchy
         if i==((len(locs)-1)/2):
             name += '_m_'
         elif i<((len(locs)-1)/2):
-            name += '_%02d_l'%i #result: 'lower_lip_00_l_loc'
+            name += '_l_%02d'%i #result: 'lip_lower_l_00_loc'
         elif i>((len(locs)-1)/2):
-            name += '_%02d_r'%( (len(locs)-1)-i ) #result: 'lower_lip_00_r_loc'
+            name += '_r_%02d'%( (len(locs)-1)-i ) #result: 'lip_lower_r_00_loc'
         name += '_loc'
         cmds.rename(loc,name)
         
@@ -59,7 +58,7 @@ def _mouthRigNamer(inList, prefix='',suffix=''):
         c+=1 #increase the counter
     return outList
 
-def _setWeightVal(child, parent00, parent01, follow00=.9, follow01=.7):
+def _setWeightVal(child, parent00, parent01):
     #should I hard coad weight values? maybe I could set up a set driven key
     constraint = child + '_parentConstraint1'
     W0 = 1 #Face Lower Bind W0
@@ -67,16 +66,9 @@ def _setWeightVal(child, parent00, parent01, follow00=.9, follow01=.7):
         W0=.5
     elif '_upper_' in child:
         W0=1
-        if '_00_' in child:
-            W0=follow00
-        elif '_01_' in child:
-            W0=follow01
     elif '_lower_' in child:
         W0=0
-        if '_00_' in child:
-            W0= follow00
-        elif '_01_' in child:
-            W0=follow01
+
     W1 = 1-W0 #Jaw Bind W1
     
     cmds.setAttr(constraint+'.'+parent00+'W0', W0)
@@ -95,8 +87,75 @@ def _scaleOrient(ctlDicList):
         cmds.scale(scaleVal[0],scaleVal[1],scaleVal[2],i['ori'])
 
 
-def _setCornerPin():
-    pass
+def _setCornerPin(ctl,clus,parent1,parent2):
+    '''
+    ctl='mouth_corner_r_ctl'
+    clus='mouth_corner_r_cls'
+    parent1='face_lower_bind'
+    parent2='jaw_bind'
+    '''
+    #Add Attribute: cornerPin min -1, max 1, default 0
+    cmds.addAttr(ctl, shortName='cornerPin', defaultValue=0, minValue=-1, maxValue=1)
+    
+    #set range node
+    setRanNode = cmds.createNode('setRange')
+    
+    #cornerPin >> valueX
+    cmds.connectAttr(ctl+'.cornerPin',setRanNode+'.valueX')
+    # minX 0 maxX 1, oldMinX -1 oldMaxX 1
+    cmds.setAttr(setRanNode+'.minX',0)
+    cmds.setAttr(setRanNode+'.maxX',1)
+    cmds.setAttr(setRanNode+'.oldMinX',-1)
+    cmds.setAttr(setRanNode+'.oldMaxX',1)
+    
+    #outValueX >> face_Lower_bindW0
+    cmds.connectAttr(setRanNode+'.outValueX',clus+'_parentConstraint1.'+parent1+'W0')
+    
+    #reverse node
+    revNode = cmds.createNode('reverse')
+    #outValueX >> inputX, outputX >> jaw_bindW1
+    cmds.connectAttr(setRanNode+'.outValueX',revNode+'.inputX')
+    cmds.connectAttr(revNode+'.outputX',clus+'_parentConstraint1.'+parent2+'W1')
+    
 
-def _setLipPull():
-    pass
+def _connectLipPull(cornerCtl,clsList,midCtl,cornerCls):
+    '''
+    upperLip01Rcls = 'mouth_upper_r_01_cls'
+    lowerLip01Rcls = 'mouth_lower_r_01_cls'
+    parent3 = 'mouth_upper_m_ctl' #upper lower
+    parent4 = 'mouth_corner_r_cls' #left right
+    '''
+    # connect to upper_lip_01_l_cls_parentConstraint1, lower_lip_01_l_cls_parentConstraint1
+    # either follow the upper lip or the lip corner
+    for clus in clsList:
+        if '_00_' in clus: 
+            attr='.lipOnePull'
+        elif '_01_' in clus:
+            attr='.lipTwoPull'
+        
+        if '_upper_' in clus:
+            parent3 = midCtl[0]
+        elif '_lower_' in clus:
+            parent3 = midCtl[1]
+        
+        if '_r_' in clus:
+            ctl = cornerCtl[0]
+            parent4 = cornerCls[0]
+        elif '_l_' in clus:
+            ctl = cornerCtl[1]
+            parent4 = cornerCls[1]
+            
+        print('ctl:',ctl,'clus:',clus, 'attr:',attr, 'p3:', parent3, 'p4:', parent4)
+        
+        #lipOnePull >> lower_lip_ctlW0
+        cmds.connectAttr(ctl+attr,clus+'_parentConstraint1.'+parent3+'W0' )
+        
+        #reverse node
+        revNode2 = cmds.createNode('reverse')
+        #lipOnePull >> inputX, outputX >> lip_corner_l_clsW1
+        cmds.connectAttr(ctl+attr,revNode2+'.inputX')
+        cmds.connectAttr(revNode2+'.outputX',clus+'_parentConstraint1.'+parent4+'W1')
+        
+        
+
+
