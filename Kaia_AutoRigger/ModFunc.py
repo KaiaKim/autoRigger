@@ -94,38 +94,7 @@ def _createJntsOnCVs(curv,grpName):
         counter += 1
     return jntList
 
-def _createClsOn2Curv(upCurv,loCurv,grpName):
-    #can use this for lip_upper_curve & lip_lower_curve, or eye_upper_curve & eye_lower_curve
-    clsList = []
-    grp = cmds.group(em=True, n=grpName)
-    
-    upCurvShape = _getCrvShape(upCurv)
-    upCVs = _getCVs(upCurv)
-    loCurvShape = _getCrvShape(loCurv)
-    loCVs = _getCVs(loCurv)
-    leftCorner = [upCVs.pop(0) , loCVs.pop(0)]
-    rightCorner = [upCVs.pop(-1) , loCVs.pop(-1)]
-    
-    leftCornerCls = cmds.cluster(leftCorner)[1] #[1] gets trans node
-    cmds.parent(leftCornerCls,grp)
-    clsList.append(leftCornerCls)
-    
-    for cv in upCVs:
-        clus = cmds.cluster(cv)[1]
-        cmds.parent(clus,grp)
-        clsList.append(clus)
-        
-    rightCornerCls = cmds.cluster(rightCorner)[1]
-    cmds.parent(rightCornerCls,grp)
-    clsList.append(rightCornerCls)
-    
-    loCVs.reverse()
-    for cv in loCVs:
-        clus = cmds.cluster(cv)[1]
-        cmds.parent(clus,grp)
-        clsList.append(clus)
 
-    return clsList
 
 def _createBindmeshesOnJnts(jnts,grpName):
     bindmeshList = []

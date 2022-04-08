@@ -83,8 +83,6 @@ class AutoRigFace():
         self.mouthCtls = []
         self.mCornerCtlGrp = 'mouth_corner_ctl_grp'
         self.mCornerCtls = []
-        
-        self.lipCvClsGrp = 'lipCV_cls_grp' #we dont need group
         self.lipCvCls = [] #we need offset groups & hard parenting under lip Ctrl curv
         
         self.eyeLoft = None
@@ -308,9 +306,7 @@ class AutoRigFace():
         #7: Attach Jaw Clusters to Jaw
         self._attachJawCls()
         #8: Create lipCV Clusters on lip_curves
-        self._createClsOnLipCurv()
-        #9: Attach Lip Ctrls on lipCV
-        self._attachLipCtlsOnJawCls()
+        self._createLipCvCls()
         #10: Corner pin, Lip pull
         self._setMouthCornerCtls()
     
@@ -360,7 +356,7 @@ class AutoRigFace():
                 self.lipUpperLocGrp, self.lipLowerLocGrp,
                 self.mouthCurv,
                 self.mouthBindmeshesGrp,self.jawClsGrp, self.mouthFolGrp,
-                self.mouthDriverGrp, self.lipCvClsGrp,
+                self.mouthDriverGrp,
                 self.rigGrp)
         except: print('rig_grp parent skipped')
         
@@ -372,8 +368,8 @@ class AutoRigFace():
 
         
     def _createMouthCurv(self):
-        upperCVs = _getCVs(self.lipUpperCurv)
-        lowerCVs = _getCVs(self.lipLowerCurv)
+        upperCVs = ModFunc._getCVs(self.lipUpperCurv)
+        lowerCVs = ModFunc._getCVs(self.lipLowerCurv)
         lowerCVs.reverse() #reverse list order so that it comes back to the start, as a circle
 
         self.lipCVList = upperCVs + lowerCVs
@@ -492,13 +488,10 @@ class AutoRigFace():
             #set mouth constraint weight value
             MouthFunc._setWeightVal(clus, parent1,parent2)
     
-    def _createClsOnLipCurv(self):
-        clsList = ModFunc._createClsOn2Curv(self.lipUpperCurv, self.lipLowerCurv, self.lipCvClsGrp)
-        self.lipCvCls = MouthFunc._mouthRigNamer(clsList, prefix='lipCV',suffix='_cls')
-        
-    def _attachLipCtlsOnJawCls(self):
+    def _createLipCvCls(self):
         ctlList = [d['ctl'] for d in self.lipCtls]
-        ModFunc._parentConstIterate(ctlList, self.lipCvCls)
+        self.lipCvCls = MouthFunc._2CurvCvCls(self.lipUpperCurv, self.lipLowerCurv, ctlList)
+
     
     def _setMouthCornerCtls(self):
         cornerCtl = [d['ctl'] for d in self.mCornerCtls]

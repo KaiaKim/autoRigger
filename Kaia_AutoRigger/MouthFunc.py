@@ -1,4 +1,8 @@
 import maya.cmds as cmds
+import importlib
+
+from Kaia_AutoRigger import ModFunc
+importlib.reload(ModFunc)
 
 def _lipLocsNamer(locs, prefix=''):
     outList = []
@@ -57,6 +61,32 @@ def _mouthRigNamer(inList, prefix='',suffix=''):
         outList.append(name) #put the driver joint name to the list
         c+=1 #increase the counter
     return outList
+
+def _2CurvCvCls(upCurv,loCurv,ctlList):
+    #can use this for lip_upper_curve & lip_lower_curve, or eye_upper_curve & eye_lower_curve
+    clsList = []
+    
+    upCurvShape = ModFunc._getCrvShape(upCurv)
+    loCurvShape = ModFunc._getCrvShape(loCurv)
+    
+    upCVs = ModFunc._getCVs(upCurv)
+    loCVs = ModFunc._getCVs(loCurv)
+    leftCorner = (upCVs.pop(0) , loCVs.pop(0))
+    rightCorner = (upCVs.pop(-1), loCVs.pop(-1))
+    
+    loCVs.reverse()
+
+    cvList = [leftCorner]+upCVs+[rightCorner]+loCVs
+    
+    for cv,ctl in zip(cvList,ctlList):
+        name = ctl.replace('lip_','lipCv_').replace('_ctl','_cls') #ex) lipCV_corner_r_cls
+        clus = cmds.cluster(cv, n=name)[1] #[1] gets trans node
+        clsList.append(clus)
+        offGrp = cmds.group(clus,n=name+'_offset')
+
+        cmds.parent(offGrp, ctl) #(child, parent)
+    
+    return clsList
 
 def _setWeightVal(child, parent00, parent01):
     #should I hard coad weight values? maybe I could set up a set driven key
