@@ -4,6 +4,32 @@ import importlib
 from Kaia_AutoRigger import ModFunc
 importlib.reload(ModFunc)
 
+def _createMouthCrv(upperCrv, lowerCrv):
+    upperCVs = ModFunc._getCVs(upperCrv)
+    lowerCVs = ModFunc._getCVs(lowerCrv)
+    lowerCVs.reverse() #reverse list order so that it comes back to the start, as a circle
+
+    cvList = upperCVs + lowerCVs
+
+    sectionCount = len(cvList)-2
+    mouthCrv = cmds.circle(n='mouth_curve', s=sectionCount )[0] #create a new curve
+    
+    cmds.makeIdentity(mouthCrv, apply=True) #freeze transformation
+    cmds.xform(mouthCrv, piv=(0,0,0), ws=True) #set pivot to 0,0,0
+    
+    counter = 0 #this is a counter
+    for i in range(sectionCount): #We're going to iterate through mouth curv(CVs)
+        pos=cmds.xform(cvList[counter], q=True, t=True, ws=True) #get world position from the CV
+        if counter==sectionCount/2: #there's two cvs overlapping on the corner. sectionCount/2 is the right corner CV.
+            counter+=1 #We skip the overlapping cv by adding 1 to the counter
+               
+        mouthCV = mouthCrv + '.cv[%d]'%i #get mouth CV
+        cmds.move(pos[0],pos[1],pos[2],mouthCV) #snap mouth CV to the position
+
+        counter+=1 #increase counter
+    
+    return mouthCrv
+
 def _lipLocsNamer(locs, prefix=''):
     outList = []
     for i,loc in enumerate(locs):
@@ -118,12 +144,11 @@ def _scaleOrient(ctlDicList):
 
 
 def _setCornerPin(ctl,clus,parent1,parent2):
-    '''
-    ctl='mouth_corner_r_ctl'
-    clus='mouth_corner_r_cls'
-    parent1='face_lower_bind'
-    parent2='jaw_bind'
-    '''
+    #ctl='mouth_corner_r_ctl'
+    #clus='mouth_corner_r_cls'
+    #parent1='face_lower_bind'
+    #parent2='jaw_bind'
+    
     #Add Attribute: cornerPin min -1, max 1, default 0
     cmds.addAttr(ctl, shortName='cornerPin', defaultValue=0, minValue=-1, maxValue=1)
     
@@ -149,12 +174,11 @@ def _setCornerPin(ctl,clus,parent1,parent2):
     
 
 def _connectLipPull(cornerCtl,clsList,midCtl,cornerCls):
-    '''
-    upperLip01Rcls = 'mouth_upper_r_01_cls'
-    lowerLip01Rcls = 'mouth_lower_r_01_cls'
-    parent3 = 'mouth_upper_m_ctl' #upper lower
-    parent4 = 'mouth_corner_r_cls' #left right
-    '''
+    #upperLip01Rcls = 'mouth_upper_r_01_cls'
+    #lowerLip01Rcls = 'mouth_lower_r_01_cls'
+    #parent3 = 'mouth_upper_m_ctl' #upper lower
+    #parent4 = 'mouth_corner_r_cls' #left right
+    
     # connect to upper_lip_01_l_cls_parentConstraint1, lower_lip_01_l_cls_parentConstraint1
     # either follow the upper lip or the lip corner
     for clus in clsList:
@@ -175,8 +199,7 @@ def _connectLipPull(cornerCtl,clsList,midCtl,cornerCls):
             ctl = cornerCtl[1]
             parent4 = cornerCls[1]
             
-        print('ctl:',ctl,'clus:',clus, 'attr:',attr, 'p3:', parent3, 'p4:', parent4)
-        
+        #print('ctl:',ctl,'clus:',clus, 'attr:',attr, 'p3:', parent3, 'p4:', parent4)
         #lipOnePull >> lower_lip_ctlW0
         cmds.connectAttr(ctl+attr,clus+'_parentConstraint1.'+parent3+'W0' )
         
@@ -186,6 +209,17 @@ def _connectLipPull(cornerCtl,clsList,midCtl,cornerCls):
         cmds.connectAttr(ctl+attr,revNode2+'.inputX')
         cmds.connectAttr(revNode2+'.outputX',clus+'_parentConstraint1.'+parent4+'W1')
         
-        
+def _createBlendshapeCrv(orig,grpName):
+    outList = []
+    grp = cmds.group(em=True,n=grpName)
+    suffixList = ['_wide','_small','_smile','_frown']
+    for i in suffixList:
+        crv1 = cmds.duplicate(orig, n=orig+'_r'+i)[0]
+        outList.append(crv1)
+        crv2 = cmds.duplicate(orig, n=orig+'_l'+i)[0]
+        outList.append(crv2)
+        cmds.parent(crv1,crv2,grp)
+
+    return outList
 
 

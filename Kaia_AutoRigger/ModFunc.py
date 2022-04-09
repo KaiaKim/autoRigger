@@ -66,7 +66,14 @@ def _createJntsOnLocs(locs,parJnt): #parJnt means parent joint
         cmds.select(cl=True)
         jntName = loc.replace('_loc', '_bind')
         jnt = cmds.joint( n=jntName, rad=.1 )
-        cmds.parentConstraint(loc, jnt, maintainOffset=False)
+        const = cmds.parentConstraint(loc, jnt, mo=False)[0]
+        '''
+        #fuck I don know I'm sorry!?>>???
+        cmds.delete(const)
+        cmds.makeIdentity(loc) ###why this is here??? XXX
+        cmds.makeIdentity(jnt)  ###why orient not applyed??? XXX
+        cmds.parentConstraint(loc, jnt, mo=False)
+        '''
         cmds.parent(jnt,parJnt)
     return jntList
 
@@ -211,7 +218,8 @@ def _customNURBScircle(shape,name):
         ctl = cmds.circle(n=name, normal=(0,1,0), r=.5, sections=3, d=1)[0]
         CVs = _getCVs(ctl)
         cmds.rotate(0,30,0,CVs)
-
+    
+    cmds.delete(ctl, constructionHistory=True)
     return ctl
 
 def _getTransformData(inList, r=False, wpos=False):
@@ -239,23 +247,31 @@ def _applyTransformData(inData, r=False, wpos=False, opos=True):
             rot = i['rot']
             cmds.rotate(rot[0],rot[1],rot[2],i['name'])
 
+def _mirrorObj(right):
 
+    left = cmds.duplicate(right)[0]
+    left = cmds.rename(left,right.replace('_r_','_l_'))
+    cmds.scale(-1,1,1,left)
+    cmds.makeIdentity(left, apply=True)
+    cmds.delete(left, constructionHistory=True)
 
-def _mirrorObjRtoL(rightObj):
-    print('rightObj:', rightObj)
-    leftObj = cmds.duplicate(rightObj)[0]
-    leftObj = cmds.rename(leftObj,rightObj.replace('_r_','_l_'))
-    cmds.scale(-1,1,1,leftObj)
-    cmds.makeIdentity(leftObj, apply=True)
-    cmds.delete(leftObj, constructionHistory=True)
-    return leftObj
-    
+    return left
+
+def _mirrorIterate(rightList):
+    leftList = []
+    for right in rightList:
+        left = cmds.duplicate(right)[0]
+        left = cmds.rename(left,right.replace('_r_','_l_'))
+        cmds.scale(-1,1,1,left)
+        cmds.makeIdentity(left, apply=True)
+        cmds.delete(left, constructionHistory=True)
+        leftList.append(left)
+    return leftList
+
 def _mirrorPosX(posList):
-    print(posList)
     mirList = []
     for pos in posList:
         x,y,z = pos
         mirList.append((-x,y,z))
-    print (mirList)
     return mirList
 ###---------test execute--------------------------------------

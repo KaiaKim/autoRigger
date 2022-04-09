@@ -3,25 +3,26 @@ from functools import partial
 import importlib
 import json
 
+from Kaia_AutoRigger import UI
 from Kaia_AutoRigger import ModFunc
 from Kaia_AutoRigger import MouthFunc
 from Kaia_AutoRigger import EyeFunc
+importlib.reload(UI)
 importlib.reload(ModFunc)
 importlib.reload(MouthFunc)
 importlib.reload(EyeFunc)
 
-###-----------------------------------------------------FILE PATH---------------------------------------------------
-usd = cmds.internalVar(usd=True) #result: C:/Users/user/Documents/maya/2022/scripts/
-mayascripts = '%s/%s' % (usd.rsplit('/', 3)[0], 'scripts') #result: C:/Users/user/Documents/maya/scripts
-
 ###-----------------------------------------------------CLASS---------------------------------------------------
 class AutoRigFace():
     def __init__(self):
+        self.usd = cmds.internalVar(usd=True) #result: C:/Users/user/Documents/maya/2022/scripts/
+        self.mayascripts = '%s/%s' % (usd.rsplit('/', 3)[0], 'scripts') #result: C:/Users/user/Documents/maya/scripts
+        
         self.winTitle = 'Kaia\'s auto rigger' #this is the title of the window #display name
         self.winName = 'kaiaAutoRigFace' #this needs to be ac word that has no spaces or it won't work! #node name
         
         ###orient data
-        self.orientJsonPath = mayascripts+'/Kaia_AutoRigger/data/'
+        self.orientJsonPath = self.mayascripts+'/Kaia_AutoRigger/data/'
         self.orientData = None
         
         ###
@@ -36,13 +37,12 @@ class AutoRigFace():
         self.eyeSocketBindR = 'eye_socket_r_bind'
         self.eyeSocketBindL = 'eye_socket_l_bind'
         
-        self.lidUpperRCurv = 'upper_lid_r_curve' #No change this!
-        self.lidLowerRCurv = 'lower_lid_r_curve' #No change this!
+        self.lidUpperRCrv = 'upper_lid_r_curve' #No change this!
+        self.lidLowerRCrv = 'lower_lid_r_curve' #No change this!
         
-        self.lipUpperCurv = 'lip_upper_curve' #No change this!
-        self.lipLowerCurv = 'lip_lower_curve' #No change this!
-        self.lipCVList = []
-        self.mouthCurv = None
+        self.lipUpperCrv = 'lip_upper_curve' #No change this!
+        self.lipLowerCrv = 'lip_lower_curve' #No change this!
+        self.mouthCrv = None
         
         self.lipUpperVerts = None
         self.lipLowerVerts = None
@@ -85,116 +85,15 @@ class AutoRigFace():
         self.mCornerCtls = []
         self.lipCvCls = [] #we need offset groups & hard parenting under lip Ctrl curv
         
+        self.mouthBlendCrvGrp = 'mouth_blend_crv_grp'
+        self.mouthBlendCrvs = []
+        self.eyeBlendRCrvGrp = 'eye_blend_r_crv_grp'
+        self.eyeBlendRCrvs = []
+        self.eyeBlendLCrvGrp = 'eye_blend_l_crv_grp'
+        self.eyeBlendLCrvs = []
+        
         self.eyeLoft = None
         
-        
-        self.createWindow()
-
-    def createWindow(self):
-        #test to see if the window exists
-        if cmds.window(self.winName, exists=True):
-            cmds.deleteUI(self.winName) #we don't want to create extra windows
-
-        cmds.window(self.winName, title=self.winTitle) #create a new window
-        cmds.scrollLayout( 'scorllLayout', width=320) #makes your entire layout scrollable #first - main layout
-        cmds.columnLayout( adjustableColumn=True ) #second layout - attaches to the main layout
-        ###
-        cmds.frameLayout( l='Template', collapsable=True, collapse=False )
-        cmds.columnLayout()
-        cmds.text(l='Load template files')
-        cmds.setParent('..')
-        
-        cmds.gridLayout( numberOfColumns=2, cellWidthHeight=(150, 20))
-        cmds.text( l='Face Bind Joints')
-        cmds.button( l='Import',c=lambda x:cmds.file(mayascripts+'/Kaia_AutoRigger/templateFiles/faceBindJoints.ma',i=True))
-        cmds.text( l='Lip Curves')
-        cmds.button( l='Import',c=lambda x:cmds.file(mayascripts+'/Kaia_AutoRigger/templateFiles/lipCurves.ma',i=True))
-        cmds.text( l='Eye Curves')
-        cmds.button( l='Import',c=lambda x:cmds.file(mayascripts+'/Kaia_AutoRigger/templateFiles/eyeCurves.ma',i=True))
-
-        cmds.setParent('..')
-        cmds.setParent('..')
-        ###
-        cmds.frameLayout( l='Assign', collapsable=True, collapse=False )
-
-        cmds.columnLayout()
-        cmds.text(l='Assign vertices from selection')
-        cmds.button(l='Quick Test Data',c=self.quickTestData )
-
-        cmds.setParent('..')
-
-        cmds.gridLayout( numberOfColumns=3, cellWidthHeight=(100, 20) ) #fourth layout - frame layout
-
-        cmds.text( l='Upper Lip Verts')
-        cmds.button( l='assign', c=lambda _:self.assignDelete('self.lipUpperVerts','ass') )
-        cmds.button( l='delete', c=lambda _:self.assignDelete('self.lipUpperVerts','del') )
-
-        cmds.text( l='Lower Lip Verts')
-        cmds.button( l='assign', c=lambda _:self.assignDelete('self.lipLowerVerts','ass') )
-        cmds.button( l='delete', c=lambda _:self.assignDelete('self.lipLowerVerts','del') )
-
-        cmds.text( l='Upper Eye Verts R')
-        cmds.button( l='assign', c=lambda _:self.assignDelete('self.lidUpperRVerts','ass') )
-        cmds.button( l='delete', c=lambda _:self.assignDelete('self.lidUpperRVerts','del') )
-
-        cmds.setParent('..')
-        cmds.setParent('..')
-        ###
-        cmds.frameLayout( l='Helper', collapsable=True, collapse=True)
-        cmds.columnLayout( rowSpacing = 10 )
-
-        cmds.text( l='! eye cluster name: eye_r_cls')
-        cmds.text( l='! eye lattice name: eye_r_ffd1')
-        
-        cmds.rowLayout(numberOfColumns=4)
-        cmds.text(l='eye lattice points: ')
-        cmds.button( l='mirror R to L', c=self.mirrorLattice)
-        cmds.button( l='save', c=self.saveLattice )
-        cmds.button( l='load', c=self.loadLattice )
-        cmds.setParent('..')
-        
-        cmds.setParent('..')
-        cmds.setParent('..')
-        ###
-        cmds.frameLayout( l='Build', collapsable=True, collapse=False)
-        cmds.columnLayout( rowSpacing = 10 )
-        
-        cmds.button(l='Build Mouth Rig 01',c=self.buildMouthRig01)
-        cmds.button(l='Build Eye Rig 01',c=self.buildEyeRig01)
-        
-        cmds.rowLayout(numberOfColumns=4)
-        cmds.text( l='Ctrl orients: ')
-        cmds.button( l='mirror R to L', c=self.mirrorOrient)
-        cmds.button( l='save', c=self.saveOrient )
-        cmds.button( l='load', c=self.loadOrient )
-        cmds.setParent('..')
-        
-        cmds.button(l='Build Mouth Rig 02',c=self.buildMouthRig02)
-        cmds.button(l='Build Eye Rig 02')
-
-        
-        cmds.button(l='000: Arrange Groups',c=self.arrangeGrps)
-        
-        cmds.setParent('..')
-        cmds.setParent('..')
-        ###
-        cmds.frameLayout( l='Blendshapes', collapsable=True, collapse=False)
-        cmds.columnLayout( rowSpacing = 10 )
-
-        cmds.text(l='Create duplicate curves for blendshapes?')
-        cmds.button(l='1: Duplicate Mouth Curve', c=self._duplicateMouthCurves)
-        
-        cmds.setParent('..')
-        cmds.setParent('..')
-        ###
-        cmds.frameLayout( l='Extra', collapsable=True, collapse=False)
-        cmds.columnLayout( rowSpacing = 10 )
-        
-        cmds.button(l='select Jaw Bind',c=lambda _:cmds.select(self.jawBind))
-
-        cmds.showWindow()
-        
-    
     def quickTestData(self,_):
         #some hard coded data for quick testing
         self.lipUpperVerts=['baseBody.vtx[7885]', 'baseBody.vtx[7886]', 'baseBody.vtx[7888]', 'baseBody.vtx[7891]', 'baseBody.vtx[7892]', 'baseBody.vtx[7893]', 'baseBody.vtx[7896]', 'baseBody.vtx[7897]', 'baseBody.vtx[7898]', 'baseBody.vtx[7902]', 'baseBody.vtx[7903]', 'baseBody.vtx[7906]', 'baseBody.vtx[7908]', 'baseBody.vtx[8066]', 'baseBody.vtx[8571]', 'baseBody.vtx[8850]', 'baseBody.vtx[9135]', 'baseBody.vtx[9424]', 'baseBody.vtx[9723]', 'baseBody.vtx[9999]', 'baseBody.vtx[10166]', 'baseBody.vtx[10327]', 'baseBody.vtx[10463]', 'baseBody.vtx[10598]', 'baseBody.vtx[10733]', 'baseBody.vtx[10868]', 'baseBody.vtx[10989]']
@@ -282,39 +181,53 @@ class AutoRigFace():
         
     def buildMouthRig01(self,_):
         #0:Create Groups
-        self.createGrps()  
+        self.createGrps() 
+        
         #1: Generate mouth_curve from lip_curves
-        self._createMouthCurv()
+        self.mouthCrv = MouthFunc._createMouthCrv(self.lipUpperCrv, self.lipLowerCrv)
+        
         #1: Create lip_locs on lip verts & connect to lip_curves
         self._createLipLocs()
+        
         #2: Aim constraint lip_locs to jaw_bind
         ModFunc._aimConstLocs(self.lipLocs, self.jawBind, upObj=self.faceLowerBind)
+        
         #2: Create lip_bind_jnts && constraint to lip_locs
         self.lipBinds = ModFunc._createJntsOnLocs(self.lipLocs,self.faceLowerBind)
-        #2: Create drivers && connect to mouth CVs
-        self._createMouthDrivers()
+        
+        #2: Create mouth drivers
+        driverList = ModFunc._createJntsOnCVs(self.mouthCrv,self.mouthDriverGrp) 
+        driverList = driverList[-1:] + driverList[:-1] #param 0 attachs to cv[1] for somehow, so I shifted last element to first position in list.
+        self.mouthDrivers = MouthFunc._mouthRigNamer(driverList, prefix='mouth',suffix='_driver')
+        
         #3: Create Bindmeshes on driver
         self.mouthBindmeshes = ModFunc._createBindmeshesOnJnts(self.mouthDrivers,self.mouthBindmeshesGrp)
+        
         #4: Create Follicles on Bindmeshes
         self.mouthFols = ModFunc._createFolsOnBindmeshes(self.mouthBindmeshes,self.mouthFolGrp)
+        
         #4: Create Clusters on Bindmeshes
         self.jawCls = ModFunc._createClsOnBindmeshes(self.mouthBindmeshes,self.jawClsGrp)
+        
         #4: Create Lip Micro Ctrls
         self._createMouthCtls()
     
     def buildMouthRig02(self,_):
         #7: Attach Jaw Clusters to Jaw
         self._attachJawCls()
+        
         #8: Create lipCV Clusters on lip_curves
-        self._createLipCvCls()
+        ctlList = [d['ctl'] for d in self.lipCtls]
+        self.lipCvCls = MouthFunc._2CurvCvCls(self.lipUpperCrv, self.lipLowerCrv, ctlList)
+        
         #10: Corner pin, Lip pull
         self._setMouthCornerCtls()
     
         
     def buildEyeRig01(self,_):
         #1: Mirror Lid Curves
-        self.lidUpperLCurv = ModFunc._mirrorObjRtoL(self.lidUpperRCurv)
-        self.lidLowerLCurv = ModFunc._mirrorObjRtoL(self.lidLowerRCurv)
+        self.lidUpperLCurv = ModFunc._mirrorObj(self.lidUpperRCrv)
+        self.lidLowerLCurv = ModFunc._mirrorObj(self.lidLowerRCrv)
         #2: Create lid locs on lid verts & connect to lid curves
         self._createLidLocs()
         #3: Aim constraint lid locs to eye socket bind
@@ -334,6 +247,20 @@ class AutoRigFace():
         EyeFunc._SlideOnSurface()
         '''
         
+    def BuildMouthBlendshapes01(self,_):
+        self.mouthBlendCrvs = MouthFunc._createBlendshapeCrv(self.mouthCrv,self.mouthBlendCrvGrp)
+        
+        for targ in self.mouthBlendCrvs:
+            cmds.blendShape(targ,self.mouthCrv)
+    
+    def BuildEyeBlendshapes01(self,_):
+        upperR = EyeFunc._createBlendshapeCrv(self.lidUpperRCrv)
+        lowerR = EyeFunc._createBlendshapeCrv(self.lidLowerRCrv)
+        
+        self.eyeBlendRCrvs = upperR+lowerR
+        self.eyeBlendLCrvs = ModFunc._mirrorIterate(self.eyeBlendRCrvs)
+
+    
     def createGrps(self):
         self.faceRoot = cmds.group(n=self.faceRoot, em=True)
         self.animGrp = cmds.group(n=self.animGrp, em=True)
@@ -352,9 +279,9 @@ class AutoRigFace():
         
         try:
             cmds.parent(
-                self.lipUpperCurv, self.lipLowerCurv,
+                self.lipUpperCrv, self.lipLowerCrv,
                 self.lipUpperLocGrp, self.lipLowerLocGrp,
-                self.mouthCurv,
+                self.mouthCrv,
                 self.mouthBindmeshesGrp,self.jawClsGrp, self.mouthFolGrp,
                 self.mouthDriverGrp,
                 self.rigGrp)
@@ -365,39 +292,14 @@ class AutoRigFace():
                 self.lipCtlGrp, self.mouthCtlGrp,
                 self.animGrp)
         except: print('anim_grp parent skipped')
-
-        
-    def _createMouthCurv(self):
-        upperCVs = ModFunc._getCVs(self.lipUpperCurv)
-        lowerCVs = ModFunc._getCVs(self.lipLowerCurv)
-        lowerCVs.reverse() #reverse list order so that it comes back to the start, as a circle
-
-        self.lipCVList = upperCVs + lowerCVs
-        
-        sectionCount = len(self.lipCVList)-2
-        self.mouthCurv = cmds.circle(n='mouth_curve', s=sectionCount )[0] #create a new curve
-        
-        cmds.makeIdentity(self.mouthCurv, apply=True) #freeze transformation
-        cmds.xform(self.mouthCurv, piv=(0,0,0), ws=True) #set pivot to 0,0,0
-        
-        counter = 0 #this is a counter
-        for i in range(sectionCount): #We're going to iterate through mouth curv(CVs)
-            pos=cmds.xform(self.lipCVList[counter], q=True, t=True, ws=True) #get world position from the CV
-            if counter==sectionCount/2: #there's two cvs overlapping on the corner. sectionCount/2 is the right corner CV.
-                counter+=1 #We skip the overlapping cv by adding 1 to the counter
-                   
-            mouthCV = self.mouthCurv + '.cv[%d]'%i #get mouth CV
-            cmds.move(pos[0],pos[1],pos[2],mouthCV) #snap mouth CV to the position
-
-            counter+=1 #increase counter
     
     def _createLipLocs(self):
         upperPos = ModFunc._getPosListFromVerts(self.lipUpperVerts)###if I rearrange the list according to xpos in the first place
-        upperLocs = ModFunc._createLocsOnCurve(self.lipUpperCurv,upperPos,self.lipUpperLocGrp)###I don't have to use stupid dicList
+        upperLocs = ModFunc._createLocsOnCurve(self.lipUpperCrv,upperPos,self.lipUpperLocGrp)###I don't have to use stupid dicList
         upperLocs = MouthFunc._lipLocsNamer(upperLocs, prefix='lip_upper')###But I also have to fix this
         
         lowerPos = ModFunc._getPosListFromVerts(self.lipLowerVerts)
-        lowerLocs = ModFunc._createLocsOnCurve(self.lipLowerCurv,lowerPos,self.lipLowerLocGrp)
+        lowerLocs = ModFunc._createLocsOnCurve(self.lipLowerCrv,lowerPos,self.lipLowerLocGrp)
         lowerLocs = MouthFunc._lipLocsNamer(lowerLocs, prefix='lip_lower')
         
         self.lipLocs = upperLocs + lowerLocs
@@ -405,7 +307,7 @@ class AutoRigFace():
     
     def _createLidLocs(self):
         upperRPos = ModFunc._getPosListFromVerts(self.lidUpperRVerts)
-        upperRLocs = ModFunc._createLocsOnCurve(self.lidUpperRCurv, upperRPos, self.lidRLocGrp)
+        upperRLocs = ModFunc._createLocsOnCurve(self.lidUpperRCrv, upperRPos, self.lidRLocGrp)
         upperRLocs = EyeFunc._eyeLocsNamer(upperRLocs, prefix='lid_upper_r')
         
         upperLPos = ModFunc._mirrorPosX(upperRPos)
@@ -413,7 +315,7 @@ class AutoRigFace():
         upperLLocs = EyeFunc._eyeLocsNamer(upperLLocs, prefix='lid_upper_l')
         
         lowerRPos = ModFunc._getPosListFromVerts(self.lidLowerRVerts)
-        lowerRLocs = ModFunc._createLocsOnCurve(self.lidLowerRCurv, lowerRPos, self.lidRLocGrp, newGrp=False)
+        lowerRLocs = ModFunc._createLocsOnCurve(self.lidLowerRCrv, lowerRPos, self.lidRLocGrp, newGrp=False)
         lowerRLocs = EyeFunc._eyeLocsNamer(lowerRLocs, prefix='lid_lower_r')
         
         lowerLPos = ModFunc._mirrorPosX(lowerRPos)
@@ -423,13 +325,6 @@ class AutoRigFace():
         self.lidRLocs = upperRLocs + lowerRLocs
         self.lidLLocs = upperLLocs + lowerLLocs
              
-        
-    def _createMouthDrivers(self):
-        driverList = ModFunc._createJntsOnCVs(self.mouthCurv,self.mouthDriverGrp) 
-        driverList = driverList[-1:] + driverList[:-1] #param 0 attachs to cv[1] for somehow, so I shifted last element to first position in list.
-        
-        self.mouthDrivers = MouthFunc._mouthRigNamer(driverList, prefix='mouth',suffix='_driver')
-
         
     def _createMouthCtls(self):
         #lip ctrls
@@ -467,7 +362,7 @@ class AutoRigFace():
                 
         
     def _attachJawCls(self):
-        #We're gonna parent constraint jawClusters directly to the mouth macro controllers
+        #We're gonna parent constraint jawClusters to the mouth macro controllers
         for clus in self.jawCls:
             if '0' not in clus: #corner or mid
                 parent1=self.faceLowerBind
@@ -488,11 +383,7 @@ class AutoRigFace():
             #set mouth constraint weight value
             MouthFunc._setWeightVal(clus, parent1,parent2)
     
-    def _createLipCvCls(self):
-        ctlList = [d['ctl'] for d in self.lipCtls]
-        self.lipCvCls = MouthFunc._2CurvCvCls(self.lipUpperCurv, self.lipLowerCurv, ctlList)
 
-    
     def _setMouthCornerCtls(self):
         cornerCtl = [d['ctl'] for d in self.mCornerCtls]
         cornerCls = [d for d in self.jawCls if '_corner_' in d] #left, right
@@ -517,15 +408,10 @@ class AutoRigFace():
             cmds.setAttr(ctl+'.lipTwoPull', 0.95)
         
         
-
-    def _duplicateMouthCurves(self,_):
-        newCurv=cmds.duplicate(self.mouthCurv)
-        cmds.select(newCurv)
-        
-
+    
 ###-----------------------------------------------------EXECUTE---------------------------------------------------------------
-run=AutoRigFace()
-
+run01=AutoRigFace()
+UI.createWindow(run01)
 ### 3. orient edit mode (unparent the clusters - edit orient - reparent the clusters)
 
 
