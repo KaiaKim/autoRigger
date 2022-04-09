@@ -250,15 +250,28 @@ class AutoRigFace():
     def BuildMouthBlendshapes01(self,_):
         self.mouthBlendCrvs = MouthFunc._createBlendshapeCrv(self.mouthCrv,self.mouthBlendCrvGrp)
         
-        for targ in self.mouthBlendCrvs:
-            cmds.blendShape(targ,self.mouthCrv)
-    
+        bls = cmds.blendShape(self.mouthCrv, n='mouth_curve_blend', o='local') #o is origin
+        for num,targ in enumerate(self.mouthBlendCrvs):
+            cmds.blendShape(bls, e=True, t=(self.mouthCrv, num, targ, 1.0) )
+            
     def BuildEyeBlendshapes01(self,_):
-        upperR = EyeFunc._createBlendshapeCrv(self.lidUpperRCrv)
-        lowerR = EyeFunc._createBlendshapeCrv(self.lidLowerRCrv)
+        ###right
+        upperR = EyeFunc._createBlendshapeCrv(self.lidUpperRCrv,'temp1')
+        lowerR = EyeFunc._createBlendshapeCrv(self.lidLowerRCrv,'temp2')
+        
+        for num,targ in enumerate(upperR):
+            bls1 = cmds.blendShape(self.lidUpperRCrv, n='blend%d'%num, o='local')
+            cmds.blendShape(bls1, e=True, t=(self.lidUpperRCrv, num, targ, 1.0))
+            
+        for num,targ in enumerate(lowerR):
+            bls2 = cmds.blendShape(self.lidLowerRCrv, n='blend%d'%num, o='local')
+            cmds.blendShape(bls2, e=True, t=(self.lidLowerRCrv, num, targ, 1.0))
         
         self.eyeBlendRCrvs = upperR+lowerR
-        self.eyeBlendLCrvs = ModFunc._mirrorIterate(self.eyeBlendRCrvs)
+        ###left
+        #self.eyeBlendLCrvs = ModFunc._mirrorIterate(self.eyeBlendRCrvs)
+        
+        
 
     
     def createGrps(self):

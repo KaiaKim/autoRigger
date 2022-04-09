@@ -83,15 +83,15 @@ def createWindow(arg1):
     cmds.button(l='Build Mouth Rig 02',c=arg1.buildMouthRig02)
     cmds.button(l='Build Eye Rig 02')
     
-    cmds.setParent('..')
-    cmds.setParent('..')
-    ###
-    cmds.frameLayout( l='Blendshapes', collapsable=True, collapse=False)
-    cmds.columnLayout( rowSpacing = 10 )
-
-    cmds.text(l='Create duplicate curves for blendshapes?')
     cmds.button(l='Build Mouth Blendshapes 01', c=arg1.BuildMouthBlendshapes01)
     cmds.button(l='Build Eye Blendshapes 01', c=arg1.BuildEyeBlendshapes01)
+    
+    cmds.rowLayout(numberOfColumns=4)
+    cmds.text( l='Blend curv CVs: ')
+    cmds.button( l='mirror R to L', c=arg1.mirrorOrient)
+    cmds.button( l='save', c=arg1.saveOrient )
+    cmds.button( l='load', c=arg1.loadOrient )
+    cmds.setParent('..')
     
     cmds.setParent('..')
     cmds.setParent('..')
