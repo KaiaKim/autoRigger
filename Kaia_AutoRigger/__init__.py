@@ -164,8 +164,8 @@ class AutoRigFace():
             #write json file
             with open(self.mayascripts+'/Kaia_AutoRigger/json/latticePtPos.json', "w") as wfile:
                 json.dump(ptPos, wfile)
-
-    def blendCrvData(self,flag=''): #only mouth
+                
+    def blendCrvData(self,flag=''):
         if flag=='load':
             #read json file
             with open(self.mayascripts+'/Kaia_AutoRigger/json/blendCrv.json',"r") as rfile:
@@ -173,18 +173,12 @@ class AutoRigFace():
         
         if flag=='save':
             #get transform
+            allCrv = self.mouthBlendCrvs + self.eyeBlendCrvs
             allCVs = []
-            for i in self.mouthBlendCrvs:
+            for i in allCrv:
                 CVs = ModFunc._getCVs(i)
                 allCVs += CVs
             cvPos = ModFunc._getTransformData(allCVs, t=True, r=False, os=True)
-
-        if flag=='mirror':
-            #modify data
-            cvPos = MouthFunc._symmetricMouthCrv(self.mouthBlendCrvs)
-            ModFunc._applyTransformData(cvPos, os=True)
-            newPos = MouthFunc._matchCrvRtoL(cvPos)
-            ModFunc._applyTransformData(newPos, os=True)
 
         if flag=='load':
             #apply transform
@@ -194,6 +188,29 @@ class AutoRigFace():
             #write json file
             with open(self.mayascripts+'/Kaia_AutoRigger/json/blendCrv.json', "w") as wfile:
                 json.dump(cvPos, wfile)
+                
+    def mirrorBlendCrvMouth(self,_):
+        #modify data mouth
+        cvPos2 = MouthFunc._symmetricMouthCrv(self.mouthBlendCrvs)
+        ModFunc._applyTransformData(cvPos2, os=True)
+        cvPos3 = MouthFunc._matchCrvRtoL(cvPos2)
+        ModFunc._applyTransformData(cvPos3, os=True)
+        
+    def mirrorBlendCrvEyes(self,_):
+        #modify data eyes
+        allCVs = []
+        for i in self.eyeBlendCrvs:
+            CVs = ModFunc._getCVs(i)
+            allCVs += CVs
+            
+        cvPos = ModFunc._getTransformData(allCVs, t=True, r=False, os=True)
+        cvPos5 = EyeFunc._mirrorCVs(cvPos)
+        ModFunc._applyTransformData(cvPos5, os=True)
+        
+        cvPos = ModFunc._getTransformData(allCVs, t=True, r=False, os=True)
+        cvPos4 = EyeFunc._matchCloseCrv(cvPos)
+        ModFunc._applyTransformData(cvPos4, os=True)
+
 
     def buildMouthRig01(self,_):
         #0:Create Groups

@@ -241,8 +241,8 @@ def _matchCrvRtoL(posList):
     #actually, mouth_curve_r_wide & mouth_curve_l_wide are identical.
     #It doesn't mirror, it match CVs
     rPos = [d for d in posList if '_r_' in d['name']]
-    lPos = rPos
-    for i in lPos:
-        i['name'] = i['name'].replace('_r_','_l_')
+    lPos = [d for d in posList if '_l_' in d['name']]
+    for r,l in zip(rPos,lPos):
+        l['pos'] = r['pos']
     outList = rPos+lPos
     return outList

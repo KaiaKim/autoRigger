@@ -86,9 +86,10 @@ def createWindow(arg1):
     cmds.button(l='Build Mouth Blendshapes 01', c=arg1.BuildMouthBlendshapes01)
     cmds.button(l='Build Eye Blendshapes 01', c=arg1.BuildEyeBlendshapes01)
     
-    cmds.rowLayout(numberOfColumns=4)
+    cmds.rowLayout(numberOfColumns=5)
     cmds.text( l='Blend curv CVs: ')
-    cmds.button( l='mirror R to L', c=lambda _:arg1.blendCrvData('mirror'))
+    cmds.button( l='mirror Mouth', c=arg1.mirrorBlendCrvMouth)
+    cmds.button( l='mirror Eyes', c=arg1.mirrorBlendCrvEyes)
     cmds.button( l='save', c=lambda _:arg1.blendCrvData('save'))
     cmds.button( l='load', c=lambda _:arg1.blendCrvData('load'))
     cmds.setParent('..')
