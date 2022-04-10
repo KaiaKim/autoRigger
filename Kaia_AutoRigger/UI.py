@@ -17,11 +17,11 @@ def createWindow(arg1):
     
     cmds.gridLayout( numberOfColumns=2, cellWidthHeight=(150, 20))
     cmds.text( l='Face Bind Joints')
-    cmds.button( l='Import',c=lambda x:cmds.file(mayascripts+'/Kaia_AutoRigger/templateFiles/faceBindJoints.ma',i=True))
+    cmds.button( l='Import',c=lambda x:cmds.file(arg1.mayascripts+'/Kaia_AutoRigger/templateFiles/faceBindJoints.ma',i=True))
     cmds.text( l='Lip Curves')
-    cmds.button( l='Import',c=lambda x:cmds.file(mayascripts+'/Kaia_AutoRigger/templateFiles/lipCurves.ma',i=True))
+    cmds.button( l='Import',c=lambda x:cmds.file(arg1.mayascripts+'/Kaia_AutoRigger/templateFiles/lipCurves.ma',i=True))
     cmds.text( l='Eye Curves')
-    cmds.button( l='Import',c=lambda x:cmds.file(mayascripts+'/Kaia_AutoRigger/templateFiles/eyeCurves.ma',i=True))
+    cmds.button( l='Import',c=lambda x:cmds.file(arg1.mayascripts+'/Kaia_AutoRigger/templateFiles/eyeCurves.ma',i=True))
 
     cmds.setParent('..')
     cmds.setParent('..')
@@ -59,9 +59,9 @@ def createWindow(arg1):
     
     cmds.rowLayout(numberOfColumns=4)
     cmds.text(l='eye lattice points: ')
-    cmds.button( l='mirror R to L', c=arg1.mirrorLattice)
-    cmds.button( l='save', c=arg1.saveLattice )
-    cmds.button( l='load', c=arg1.loadLattice )
+    cmds.button( l='mirror R to L', c=lambda _:arg1.latticeData('mirror'))
+    cmds.button( l='save', c=lambda _:arg1.latticeData('save'))
+    cmds.button( l='load', c=lambda _:arg1.latticeData('load'))
     cmds.setParent('..')
     
     cmds.setParent('..')
@@ -75,9 +75,9 @@ def createWindow(arg1):
     
     cmds.rowLayout(numberOfColumns=4)
     cmds.text( l='Ctrl orients: ')
-    cmds.button( l='mirror R to L', c=arg1.mirrorOrient)
-    cmds.button( l='save', c=arg1.saveOrient )
-    cmds.button( l='load', c=arg1.loadOrient )
+    cmds.button( l='mirror R to L', c=lambda _:arg1.orientData('mirror'))
+    cmds.button( l='save', c=lambda _:arg1.orientData('save'))
+    cmds.button( l='load', c=lambda _:arg1.orientData('load'))
     cmds.setParent('..')
     
     cmds.button(l='Build Mouth Rig 02',c=arg1.buildMouthRig02)
@@ -88,9 +88,9 @@ def createWindow(arg1):
     
     cmds.rowLayout(numberOfColumns=4)
     cmds.text( l='Blend curv CVs: ')
-    cmds.button( l='mirror R to L', c=arg1.mirrorOrient)
-    cmds.button( l='save', c=arg1.saveOrient )
-    cmds.button( l='load', c=arg1.loadOrient )
+    cmds.button( l='mirror R to L', c=lambda _:arg1.blendCrvData('mirror'))
+    cmds.button( l='save', c=lambda _:arg1.blendCrvData('save'))
+    cmds.button( l='load', c=lambda _:arg1.blendCrvData('load'))
     cmds.setParent('..')
     
     cmds.setParent('..')

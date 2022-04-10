@@ -219,7 +219,30 @@ def _createBlendshapeCrv(orig,grpName):
         crv2 = cmds.duplicate(orig, n=orig+'_l'+i)[0]
         outList.append(crv2)
         cmds.parent(crv1,crv2,grp)
+    return outList
 
+def _symmetricMouthCrv(crvList):
+    outList = []
+    for crv in crvList:
+        CVs = ModFunc._getCVs(crv)
+        posList = ModFunc._getTransformData(CVs, t=True, r=False, os=True)
+        for num,i in enumerate(posList):
+            if num<len(CVs)/4:
+                x,y,z = i['pos']
+                posList[len(CVs)//2-num]['pos']=(-x,y,z)
+            elif len(CVs)*3/4<num:
+                x,y,z = i['pos']
+                posList[len(CVs)*3//2-num]['pos']=(-x,y,z)
+        outList += posList
     return outList
 
 
+def _matchCrvRtoL(posList):
+    #actually, mouth_curve_r_wide & mouth_curve_l_wide are identical.
+    #It doesn't mirror, it match CVs
+    rPos = [d for d in posList if '_r_' in d['name']]
+    lPos = rPos
+    for i in lPos:
+        i['name'] = i['name'].replace('_r_','_l_')
+    outList = rPos+lPos
+    return outList

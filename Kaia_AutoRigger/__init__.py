@@ -16,14 +16,10 @@ importlib.reload(EyeFunc)
 class AutoRigFace():
     def __init__(self):
         self.usd = cmds.internalVar(usd=True) #result: C:/Users/user/Documents/maya/2022/scripts/
-        self.mayascripts = '%s/%s' % (usd.rsplit('/', 3)[0], 'scripts') #result: C:/Users/user/Documents/maya/scripts
+        self.mayascripts = '%s/%s' % (self.usd.rsplit('/', 3)[0], 'scripts') #result: C:/Users/user/Documents/maya/scripts
         
         self.winTitle = 'Kaia\'s auto rigger' #this is the title of the window #display name
         self.winName = 'kaiaAutoRigFace' #this needs to be ac word that has no spaces or it won't work! #node name
-        
-        ###orient data
-        self.orientJsonPath = self.mayascripts+'/Kaia_AutoRigger/data/'
-        self.orientData = None
         
         ###
         self.faceRoot = 'face_root'
@@ -39,6 +35,8 @@ class AutoRigFace():
         
         self.lidUpperRCrv = 'upper_lid_r_curve' #No change this!
         self.lidLowerRCrv = 'lower_lid_r_curve' #No change this!
+        self.lidUpperLCrv = self.lidUpperRCrv.replace('_r_','_l_') #No change this!
+        self.lidLowerLCrv = self.lidLowerRCrv.replace('_r_','_l_')
         
         self.lipUpperCrv = 'lip_upper_curve' #No change this!
         self.lipLowerCrv = 'lip_lower_curve' #No change this!
@@ -83,14 +81,12 @@ class AutoRigFace():
         self.mouthCtls = []
         self.mCornerCtlGrp = 'mouth_corner_ctl_grp'
         self.mCornerCtls = []
-        self.lipCvCls = [] #we need offset groups & hard parenting under lip Ctrl curv
+        self.lipCvCls = []
         
         self.mouthBlendCrvGrp = 'mouth_blend_crv_grp'
         self.mouthBlendCrvs = []
-        self.eyeBlendRCrvGrp = 'eye_blend_r_crv_grp'
-        self.eyeBlendRCrvs = []
-        self.eyeBlendLCrvGrp = 'eye_blend_l_crv_grp'
-        self.eyeBlendLCrvs = []
+        self.eyeBlendCrvGrp = 'eye_blend_crv_grp'
+        self.eyeBlendCrvs = []
         
         self.eyeLoft = None
         
@@ -108,77 +104,97 @@ class AutoRigFace():
         elif flag=='del':
             data=None
     
-    def mirrorOrient(self,_):
-        #get transform
-        allCtls = self.lipCtls + self.mouthCtls + self.mCornerCtls
-        orients = [d['ori'] for d in allCtls]
-        orientData = ModFunc._getTransformData(orients)
-        rightOrientData = [d for d in orientData if '_r_' in d['name']]
+    def orientData(self,flag=''):
+        if flag=='load':
+            #read json file
+            with open(self.mayascripts+'/Kaia_AutoRigger/json/ctlOrient.json',"r") as rfile:
+                data = json.load(rfile)
         
-        #modify data
-        mirrorData = rightOrientData
-        for i in mirrorData:
-            i['name'] = i['name'].replace('_r_','_l_')
-            (rx,ry,rz) = i['rot']
-            ry = -ry
-            rz = -rz
-            i['rot'] = (rx,ry,rz)
+        if flag=='mirror' or flag=='save':
+            #get transform
+            allCtls = self.lipCtls + self.mouthCtls + self.mCornerCtls
+            orients = [d['ori'] for d in allCtls]
+            data = ModFunc._getTransformData(orients, t=False, r=True)
         
-        #apply transform
-        ModFunc._applyTransformData(mirrorData)
+        if flag=='mirror':
+            #modify data
+            rightData = [d for d in data if '_r_' in d['name']]
+            mirrorData = rightData
+            for i in mirrorData:
+                i['name'] = i['name'].replace('_r_','_l_')
+                (rx,ry,rz) = i['rot']
+                i['rot'] = (rx,-ry,-rz)
+            ModFunc._applyTransformData(mirrorData)
         
-    def saveOrient(self,_):
-        #get transform
-        allCtls = self.lipCtls + self.mouthCtls + self.mCornerCtls
-        orients = [d['ori'] for d in allCtls]
-        orientData = ModFunc._getTransformData(orients, r=True)
+        if flag=='load':
+            #apply transform
+            ModFunc._applyTransformData(data)
         
-        #write json file
-        with open(self.orientJsonPath+'ctlOrient.json', "w") as outfile:
-            json.dump(orientData, outfile)
+        if flag=='save':
+            #write json file
+            with open(self.mayascripts+'/Kaia_AutoRigger/json/ctlOrient.json', "w") as wfile:
+                json.dump(data, wfile)
 
-    def loadOrient(self,_):
-        #read json file
-        with open(self.orientJsonPath+'ctlOrient.json',"r") as read_file:
-            orientData = json.load(read_file)
-            
-        #apply transform
-        ModFunc._applyTransformData(orientData, r=True)
 
-    def mirrorLattice(self,_): #mirror lattice point pos
-        #get pos
-        ltsPt = cmds.ls(self.eyeballRLtc + 'Lattice' + '.pt[*][*][*]', fl=1)
-        ptPos = ModFunc._getTransformData(ltsPt, wpos=True)
+    def latticeData(self,flag=''): #mirror lattice point pos
+        if flag=='load':
+            #read json file
+            with open(self.mayascripts+'/Kaia_AutoRigger/json/latticePtPos.json',"r") as rfile:
+                ptPos = json.load(rfile)
         
-        #modify data
-        mirrorPos = ptPos
-        for i in mirrorPos:
-            i['name'] = i['name'].replace('_r_','_l_')
-            x,y,z = i['pos']
-            i['pos'] = (-x,y,z)
-            
-        #apply transform
-        ModFunc._applyTransformData(mirrorPos, wpos=True, opos=False)
-        pass
+        if flag=='mirror' or flag=='save':
+            #get transform
+            ltsPt = cmds.ls(self.eyeballRLtc + 'Lattice' + '.pt[*][*][*]', fl=1)
+            ptPos = ModFunc._getTransformData(ltsPt, t=True, r=False, ws=True)
         
-    def saveLattice(self,_): #save lattice point pos
-        #get transform
+        if flag=='mirror':
+            #modify data
+            mirrorPos = ptPos
+            for i in mirrorPos:
+                i['name'] = i['name'].replace('_r_','_l_')
+                x,y,z = i['pos']
+                i['pos'] = (-x,y,z)
+            ModFunc._applyTransformData(mirrorPos)
         
-        ltsPt = cmds.ls(self.eyeballRLtc + 'Lattice' + '.pt[*][*][*]', fl=1)
-        ptPos = ModFunc._getTransformData(ltsPt, wpos=True)
-            
-        #write json file
-        with open(self.orientJsonPath+'latticePtPos.json', "w") as outfile:
-            json.dump(ptPos, outfile)
+        if flag=='load':
+            #apply transform
+            ModFunc._applyTransformData(ptPos, ws=True)
+        
+        if flag=='save':    
+            #write json file
+            with open(self.mayascripts+'/Kaia_AutoRigger/json/latticePtPos.json', "w") as wfile:
+                json.dump(ptPos, wfile)
 
-    def loadLattice(self,_): #load lattice point pos
-        #read json file
-        with open(self.orientJsonPath+'latticePtPos.json',"r") as read_file:
-            ptPos = json.load(read_file)
-            
-        #apply transform
-        ModFunc._applyTransformData(ptPos, wpos=True, opos=False)
+    def blendCrvData(self,flag=''): #only mouth
+        if flag=='load':
+            #read json file
+            with open(self.mayascripts+'/Kaia_AutoRigger/json/blendCrv.json',"r") as rfile:
+                cvPos = json.load(rfile)
         
+        if flag=='save':
+            #get transform
+            allCVs = []
+            for i in self.mouthBlendCrvs:
+                CVs = ModFunc._getCVs(i)
+                allCVs += CVs
+            cvPos = ModFunc._getTransformData(allCVs, t=True, r=False, os=True)
+
+        if flag=='mirror':
+            #modify data
+            cvPos = MouthFunc._symmetricMouthCrv(self.mouthBlendCrvs)
+            ModFunc._applyTransformData(cvPos, os=True)
+            newPos = MouthFunc._matchCrvRtoL(cvPos)
+            ModFunc._applyTransformData(newPos, os=True)
+
+        if flag=='load':
+            #apply transform
+            ModFunc._applyTransformData(cvPos, os=True)
+        
+        if flag=='save':    
+            #write json file
+            with open(self.mayascripts+'/Kaia_AutoRigger/json/blendCrv.json', "w") as wfile:
+                json.dump(cvPos, wfile)
+
     def buildMouthRig01(self,_):
         #0:Create Groups
         self.createGrps() 
@@ -256,20 +272,13 @@ class AutoRigFace():
             
     def BuildEyeBlendshapes01(self,_):
         ###right
-        upperR = EyeFunc._createBlendshapeCrv(self.lidUpperRCrv,'temp1')
-        lowerR = EyeFunc._createBlendshapeCrv(self.lidLowerRCrv,'temp2')
-        
-        for num,targ in enumerate(upperR):
-            bls1 = cmds.blendShape(self.lidUpperRCrv, n='blend%d'%num, o='local')
-            cmds.blendShape(bls1, e=True, t=(self.lidUpperRCrv, num, targ, 1.0))
-            
-        for num,targ in enumerate(lowerR):
-            bls2 = cmds.blendShape(self.lidLowerRCrv, n='blend%d'%num, o='local')
-            cmds.blendShape(bls2, e=True, t=(self.lidLowerRCrv, num, targ, 1.0))
-        
-        self.eyeBlendRCrvs = upperR+lowerR
+        upperR = EyeFunc._createBlendshapeCrv(self.lidUpperRCrv,self.eyeBlendCrvGrp)
+        lowerR = EyeFunc._createBlendshapeCrv(self.lidLowerRCrv,self.eyeBlendCrvGrp,newGrp=False)
         ###left
-        #self.eyeBlendLCrvs = ModFunc._mirrorIterate(self.eyeBlendRCrvs)
+        upperL = EyeFunc._createBlendshapeCrv(self.lidUpperLCrv,self.eyeBlendCrvGrp,newGrp=False)
+        lowerL = EyeFunc._createBlendshapeCrv(self.lidLowerLCrv,self.eyeBlendCrvGrp,newGrp=False)
+        
+        self.eyeBlendCrvs = upperR+lowerR+upperL+lowerL
         
         
 
