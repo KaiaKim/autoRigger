@@ -179,11 +179,25 @@ def _createCtrlGrp(drivenList, nameList, grpName, shape='circle'):
         counter += 1
     return ctlDicList
 
-def _moveOffset(ctlDicList, offset=(0,0,0)):
+def _setOffset(ctlDicList, t=(0,0,0), r=(0,0,0)):
     for i in ctlDicList:
-        cmds.move(offset[0],offset[1],offset[2], i['off'], r=True)
+        cmds.move(t[0],t[1],t[2], i['off'], r=True)
+        cmds.rotate(r[0],r[1],r[2], i['off'], r=True)
     
-    
+def _normalizeCtls(ctls,val=(1,1,1)):
+    val = list(val)
+    for i in ctls:
+        cmds.scale(1/val[0], 1/val[1], 1/val[2],i['ctl'])
+        
+        x,y,z = cmds.getAttr(i['ori']+'.s')[0]
+        if x<0: val[0] = -val[0]
+        if y<0: val[1] = -val[1]
+        if z<0: val[2] = -val[2]
+        cmds.scale(val[0], val[1], val[2], i['ori'])
+        
+        #cmds.makeIdentity(i['ctl'], apply=True)
+        #cmds.delete(i['ctl'], constructionHistory=True)
+
 def _parentConstIterate(parents,childs):
     for parent,child in zip(parents,childs):
         cmds.parentConstraint(parent,child,mo=True)
@@ -211,14 +225,14 @@ def _getCVs(crv):
     
 def _customNURBScircle(shape,name):
     if shape=='circle':
-        ctl = cmds.circle(n=name, normal=(0,1,0), r=.3, d=1)[0] #degree=1(linear)
+        ctl = cmds.circle(n=name, r=.3, d=1)[0] #degree=1(linear)
     elif shape=='square':
-        ctl = cmds.circle(n=name, normal=(0,1,0), r=.5, sections=4, d=1)[0]
+        ctl = cmds.circle(n=name, r=.5, sections=4, d=1)[0]
     elif shape=='triangle':
-        ctl = cmds.circle(n=name, normal=(0,1,0), r=.5, sections=3, d=1)[0]
+        ctl = cmds.circle(n=name, r=.5, sections=3, d=1)[0]
         CVs = _getCVs(ctl)
-        cmds.rotate(0,30,0,CVs)
-    
+        cmds.rotate(0,0,30,CVs)
+
     cmds.delete(ctl, constructionHistory=True)
     return ctl
 
@@ -252,13 +266,11 @@ def _applyTransformData(inData, ws=False, os=False):
             cmds.scale(scl[0],scl[1],scl[2],i['name'])
             
 def _mirrorObj(right):
-
     left = cmds.duplicate(right)[0]
     left = cmds.rename(left,right.replace('_r_','_l_'))
     cmds.scale(-1,1,1,left)
     cmds.makeIdentity(left, apply=True)
     cmds.delete(left, constructionHistory=True)
-
     return left
 
 def _mirrorIterate(rightList):

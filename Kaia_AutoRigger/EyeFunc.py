@@ -11,7 +11,7 @@ def _eyeLocsNamer(locs, side='', prefix=''):
         outList.append(name) #append the loc name to self.lipLocs list
     return outList
     
-def _createBlendshapeCrv(orig,grpName,newGrp=True):
+def _createBsCrv(orig,grpName,newGrp=True):
     outList = []
     if newGrp==True:
         grp = cmds.group(em=True,n=grpName)
@@ -46,6 +46,9 @@ def _mirrorCVs(posList):
     outList = rPos+lPos
     return outList
 
+def _createBlinkCtrl(ctlName,grpName):
+    pass
+    
 def _createLoftBall():
     pass
     

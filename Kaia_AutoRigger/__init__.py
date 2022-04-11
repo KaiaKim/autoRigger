@@ -83,6 +83,9 @@ class AutoRigFace():
         self.mCornerCtls = []
         self.lipCvCls = []
         
+        self.blinkCtlGrp = 'blink_ctl_grp'
+        self.blinkCtls = []
+        
         self.mouthBlendCrvGrp = 'mouth_blend_crv_grp'
         self.mouthBlendCrvs = []
         self.eyeBlendCrvGrp = 'eye_blend_crv_grp'
@@ -92,11 +95,14 @@ class AutoRigFace():
         
     def quickTestData(self,_):
         #some hard coded data for quick testing
-        self.lipUpperVerts=['baseBody.vtx[7885]', 'baseBody.vtx[7886]', 'baseBody.vtx[7888]', 'baseBody.vtx[7891]', 'baseBody.vtx[7892]', 'baseBody.vtx[7893]', 'baseBody.vtx[7896]', 'baseBody.vtx[7897]', 'baseBody.vtx[7898]', 'baseBody.vtx[7902]', 'baseBody.vtx[7903]', 'baseBody.vtx[7906]', 'baseBody.vtx[7908]', 'baseBody.vtx[8066]', 'baseBody.vtx[8571]', 'baseBody.vtx[8850]', 'baseBody.vtx[9135]', 'baseBody.vtx[9424]', 'baseBody.vtx[9723]', 'baseBody.vtx[9999]', 'baseBody.vtx[10166]', 'baseBody.vtx[10327]', 'baseBody.vtx[10463]', 'baseBody.vtx[10598]', 'baseBody.vtx[10733]', 'baseBody.vtx[10868]', 'baseBody.vtx[10989]']
-        self.lipLowerVerts=['baseBody.vtx[7884]', 'baseBody.vtx[7887]', 'baseBody.vtx[7889]', 'baseBody.vtx[7890]', 'baseBody.vtx[7894]', 'baseBody.vtx[7895]', 'baseBody.vtx[7898]', 'baseBody.vtx[7899]', 'baseBody.vtx[7900]', 'baseBody.vtx[7901]', 'baseBody.vtx[7904]', 'baseBody.vtx[7905]', 'baseBody.vtx[7907]', 'baseBody.vtx[8065]', 'baseBody.vtx[8482]', 'baseBody.vtx[8790]', 'baseBody.vtx[9079]', 'baseBody.vtx[9372]', 'baseBody.vtx[9675]', 'baseBody.vtx[9955]', 'baseBody.vtx[10126]', 'baseBody.vtx[10291]', 'baseBody.vtx[10431]', 'baseBody.vtx[10570]', 'baseBody.vtx[10709]', 'baseBody.vtx[10848]', 'baseBody.vtx[10989]']
-        self.lidUpperRVerts=['baseBody.vtx[11499]', 'baseBody.vtx[11500]', 'baseBody.vtx[11501]', 'baseBody.vtx[11502]', 'baseBody.vtx[11503]', 'baseBody.vtx[11504]', 'baseBody.vtx[11505]', 'baseBody.vtx[11506]', 'baseBody.vtx[11507]', 'baseBody.vtx[11508]', 'baseBody.vtx[11509]', 'baseBody.vtx[11510]', 'baseBody.vtx[11511]', 'baseBody.vtx[11512]', 'baseBody.vtx[11514]', 'baseBody.vtx[11554]', 'baseBody.vtx[11595]']
-        self.lidLowerRVerts=['baseBody.vtx[11487]', 'baseBody.vtx[11488]', 'baseBody.vtx[11489]', 'baseBody.vtx[11490]', 'baseBody.vtx[11491]', 'baseBody.vtx[11492]', 'baseBody.vtx[11493]', 'baseBody.vtx[11494]', 'baseBody.vtx[11495]', 'baseBody.vtx[11496]', 'baseBody.vtx[11497]', 'baseBody.vtx[11498]', 'baseBody.vtx[11499]', 'baseBody.vtx[11525]', 'baseBody.vtx[11561]', 'baseBody.vtx[11595]', 'baseBody.vtx[11596]']
-        
+        self.lipUpperVerts=['forBody.vtx[3314]', 'forBody.vtx[3315]', 'forBody.vtx[3317]', 'forBody.vtx[3320]', 'forBody.vtx[3321]', 'forBody.vtx[3322]', 'forBody.vtx[3325]', 'forBody.vtx[3326]', 'forBody.vtx[3327]', 'forBody.vtx[3331]', 'forBody.vtx[3332]', 'forBody.vtx[3335]', 'forBody.vtx[3337]', 'forBody.vtx[3495]', 'forBody.vtx[3818]', 'forBody.vtx[4010]', 'forBody.vtx[4200]', 'forBody.vtx[4386]', 'forBody.vtx[4574]', 'forBody.vtx[4751]', 'forBody.vtx[4918]', 'forBody.vtx[5079]', 'forBody.vtx[5215]', 'forBody.vtx[5350]', 'forBody.vtx[5485]', 'forBody.vtx[5620]', 'forBody.vtx[5741]']
+
+        self.lipLowerVerts=['forBody.vtx[3313]', 'forBody.vtx[3316]', 'forBody.vtx[3318]', 'forBody.vtx[3319]', 'forBody.vtx[3323]', 'forBody.vtx[3324]', 'forBody.vtx[3327]', 'forBody.vtx[3328]', 'forBody.vtx[3329]', 'forBody.vtx[3330]', 'forBody.vtx[3333]', 'forBody.vtx[3334]', 'forBody.vtx[3336]', 'forBody.vtx[3494]', 'forBody.vtx[3729]', 'forBody.vtx[3950]', 'forBody.vtx[4144]', 'forBody.vtx[4334]', 'forBody.vtx[4526]', 'forBody.vtx[4707]', 'forBody.vtx[4878]', 'forBody.vtx[5043]', 'forBody.vtx[5183]', 'forBody.vtx[5322]', 'forBody.vtx[5461]', 'forBody.vtx[5600]', 'forBody.vtx[5741]']
+
+        self.lidUpperRVerts=['forBody.vtx[6251]', 'forBody.vtx[6252]', 'forBody.vtx[6253]', 'forBody.vtx[6254]', 'forBody.vtx[6255]', 'forBody.vtx[6256]', 'forBody.vtx[6257]', 'forBody.vtx[6258]', 'forBody.vtx[6259]', 'forBody.vtx[6260]', 'forBody.vtx[6261]', 'forBody.vtx[6262]', 'forBody.vtx[6263]', 'forBody.vtx[6264]', 'forBody.vtx[6266]', 'forBody.vtx[6306]', 'forBody.vtx[6347]']
+
+        self.lidLowerRVerts=['forBody.vtx[6239]', 'forBody.vtx[6240]', 'forBody.vtx[6241]', 'forBody.vtx[6242]', 'forBody.vtx[6243]', 'forBody.vtx[6244]', 'forBody.vtx[6245]', 'forBody.vtx[6246]', 'forBody.vtx[6247]', 'forBody.vtx[6248]', 'forBody.vtx[6249]', 'forBody.vtx[6250]', 'forBody.vtx[6251]', 'forBody.vtx[6277]', 'forBody.vtx[6313]', 'forBody.vtx[6347]', 'forBody.vtx[6348]']
+
     def assignDelete(self,data,flag):
         if flag=='ass':
             data=cmds.ls(sl=True,fl=True)
@@ -210,8 +216,8 @@ class AutoRigFace():
         cvPos = ModFunc._getTransformData(allCVs, t=True, r=False, os=True)
         cvPos4 = EyeFunc._matchCloseCrv(cvPos)
         ModFunc._applyTransformData(cvPos4, os=True)
-
-
+        
+    
     def buildMouthRig01(self,_):
         #0:Create Groups
         self.createGrps() 
@@ -220,7 +226,15 @@ class AutoRigFace():
         self.mouthCrv = MouthFunc._createMouthCrv(self.lipUpperCrv, self.lipLowerCrv)
         
         #1: Create lip_locs on lip verts & connect to lip_curves
-        self._createLipLocs()
+        upperPos = ModFunc._getPosListFromVerts(self.lipUpperVerts)
+        upperLocs = ModFunc._createLocsOnCurve(self.lipUpperCrv,upperPos,self.lipUpperLocGrp)
+        upperLocs = MouthFunc._lipLocsNamer(upperLocs, prefix='lip_upper')
+        
+        lowerPos = ModFunc._getPosListFromVerts(self.lipLowerVerts)
+        lowerLocs = ModFunc._createLocsOnCurve(self.lipLowerCrv,lowerPos,self.lipLowerLocGrp)
+        lowerLocs = MouthFunc._lipLocsNamer(lowerLocs, prefix='lip_lower')
+        
+        self.lipLocs = upperLocs + lowerLocs
         
         #2: Aim constraint lip_locs to jaw_bind
         ModFunc._aimConstLocs(self.lipLocs, self.jawBind, upObj=self.faceLowerBind)
@@ -242,27 +256,81 @@ class AutoRigFace():
         #4: Create Clusters on Bindmeshes
         self.jawCls = ModFunc._createClsOnBindmeshes(self.mouthBindmeshes,self.jawClsGrp)
         
-        #4: Create Lip Micro Ctrls
-        self._createMouthCtls()
+        #4: Create Ctrls
+            #lip ctrls
+        microNames = [d.replace('fol','ctl').replace('mouth','lip') for d in self.mouthFols]
+        
+        self.lipCtls = ModFunc._createCtrlGrp(self.mouthFols,microNames,self.lipCtlGrp)
+        ModFunc._setOffset(self.lipCtls, t=(0,0,1), r=(90,0,0))
+        MouthFunc._scaleOrient(self.lipCtls)
+        ModFunc._overrideColor(microNames, color=(1,1,0))
+            
+            #mouth ctrls
+        macroFols = [d for d in self.mouthFols if '_m_' in d] #'mouth_upper_m_fol','mouth_lower_m_fol'
+        macroNames = [d.replace('fol','ctl') for d in macroFols]
+        
+        self.mouthCtls = ModFunc._createCtrlGrp(macroFols, macroNames, self.mouthCtlGrp, shape='square')
+        ModFunc._setOffset(self.mouthCtls, t=(0,0,1.5), r=(90,0,0))
+        MouthFunc._scaleOrient(self.mouthCtls)
+        ModFunc._overrideColor(macroNames, color=(1,1,0))
+        
+            #corner ctrls
+        cornerFols = [d for d in self.mouthFols if '_corner_' in d]
+        cornerNames = [d.replace('fol','ctl') for d in cornerFols]
+        
+        self.mCornerCtls = ModFunc._createCtrlGrp(cornerFols, cornerNames, self.mCornerCtlGrp, shape='triangle')
+        ModFunc._setOffset(self.mCornerCtls, t=(0,0,1), r=(90,0,0))
+        MouthFunc._scaleOrient(self.mCornerCtls)
+        ModFunc._overrideColor(cornerNames, color=(1,0,0))
+        
+        #5: Parent constraint micro nul2 group to macro ctl
+        MouthFunc.constMicroToMacro(self.lipCtls)
+        
+        #6: Normalize Corner Ctls
+        ModFunc._normalizeCtls(self.mCornerCtls,val=(1,1,1))
     
     def buildMouthRig02(self,_):
         #7: Attach Jaw Clusters to Jaw
-        self._attachJawCls()
+        MouthFunc.attachJawCls(self.jawCls, self.mouthCtls, self.faceLowerBind, self.jawBind)
         
         #8: Create lipCV Clusters on lip_curves
         ctlList = [d['ctl'] for d in self.lipCtls]
         self.lipCvCls = MouthFunc._2CurvCvCls(self.lipUpperCrv, self.lipLowerCrv, ctlList)
         
         #10: Corner pin, Lip pull
-        self._setMouthCornerCtls()
+        MouthFunc.setMouthCornerCtls(self.mCornerCtls, self.mouthCtls, self.jawCls, self.faceLowerBind,self.jawBind)
+        
+        #set lip pull attribute
+        for i in self.mCornerCtls:
+            cmds.setAttr(i['ctl']+'.lipOnePull', 0.7)
+            cmds.setAttr(i['ctl']+'.lipTwoPull', 0.9)
     
         
     def buildEyeRig01(self,_):
         #1: Mirror Lid Curves
         self.lidUpperLCurv = ModFunc._mirrorObj(self.lidUpperRCrv)
         self.lidLowerLCurv = ModFunc._mirrorObj(self.lidLowerRCrv)
+        
         #2: Create lid locs on lid verts & connect to lid curves
-        self._createLidLocs()
+        upperRPos = ModFunc._getPosListFromVerts(self.lidUpperRVerts)
+        upperRLocs = ModFunc._createLocsOnCurve(self.lidUpperRCrv, upperRPos, self.lidRLocGrp)
+        upperRLocs = EyeFunc._eyeLocsNamer(upperRLocs, prefix='lid_upper_r')
+        
+        upperLPos = ModFunc._mirrorPosX(upperRPos)
+        upperLLocs = ModFunc._createLocsOnCurve(self.lidUpperLCurv, upperLPos, self.lidLLocGrp)
+        upperLLocs = EyeFunc._eyeLocsNamer(upperLLocs, prefix='lid_upper_l')
+        
+        lowerRPos = ModFunc._getPosListFromVerts(self.lidLowerRVerts)
+        lowerRLocs = ModFunc._createLocsOnCurve(self.lidLowerRCrv, lowerRPos, self.lidRLocGrp, newGrp=False)
+        lowerRLocs = EyeFunc._eyeLocsNamer(lowerRLocs, prefix='lid_lower_r')
+        
+        lowerLPos = ModFunc._mirrorPosX(lowerRPos)
+        lowerLLocs = ModFunc._createLocsOnCurve(self.lidLowerLCurv, lowerLPos, self.lidLLocGrp, newGrp=False)
+        lowerLLocs = EyeFunc._eyeLocsNamer(lowerLLocs, prefix='lid_lower_l')
+        
+        self.lidRLocs = upperRLocs + lowerRLocs
+        self.lidLLocs = upperLLocs + lowerLLocs
+        
         #3: Aim constraint lid locs to eye socket bind
         ModFunc._aimConstLocs(self.lidRLocs,self.eyeSocketBindR)
         ModFunc._aimConstLocs(self.lidLLocs,self.eyeSocketBindL)
@@ -272,6 +340,14 @@ class AutoRigFace():
         #5: Constraint to lid locs
         ModFunc._parentConstIterate(self.lidRLocs,self.lidRBinds)
         ModFunc._parentConstIterate(self.lidLLocs,self.lidLBinds)
+        
+        #4: Create Ctrls
+            #blink ctrls
+        blinkNames = []
+        
+        self.blinkCtls = EyeFunc._createBlinkCtrl(blinkNames,self.blinkCtlGrp)
+        #EyeFunc._scaleOrient(self.blinkCtls)
+        #ModFunc._overrideColor(microNames, color=(1,0,0))
         '''
         ModFunc._createClsOn2Curv()
         ModFunc._createCtrlGrp()
@@ -281,23 +357,27 @@ class AutoRigFace():
         '''
         
     def BuildMouthBlendshapes01(self,_):
-        self.mouthBlendCrvs = MouthFunc._createBlendshapeCrv(self.mouthCrv,self.mouthBlendCrvGrp)
+        #Duplicate orig curve
+        self.mouthBlendCrvs = MouthFunc._createBsCrv(self.mouthCrv,self.mouthBlendCrvGrp)
+        #Create Blendshape Node
+        bsNode = MouthFunc._createBsNode(self.mouthCrv, self.mouthBlendCrvs)
+        #Set blendshape cv weight(sepereate left & right weight)
+        MouthFunc._setBsCvWeight(bsNode)
+        #Connect Blendshape weight to translate value of mouth corner ctrls
+        MouthFunc._connectCornerCtrl(self.mCornerCtls, self.mouthBlendCrvs, bsNode)
         
-        bls = cmds.blendShape(self.mouthCrv, n='mouth_curve_blend', o='local') #o is origin
-        for num,targ in enumerate(self.mouthBlendCrvs):
-            cmds.blendShape(bls, e=True, t=(self.mouthCrv, num, targ, 1.0) )
+        
+            
             
     def BuildEyeBlendshapes01(self,_):
         ###right
-        upperR = EyeFunc._createBlendshapeCrv(self.lidUpperRCrv,self.eyeBlendCrvGrp)
-        lowerR = EyeFunc._createBlendshapeCrv(self.lidLowerRCrv,self.eyeBlendCrvGrp,newGrp=False)
+        upperR = EyeFunc._createBsCrv(self.lidUpperRCrv,self.eyeBlendCrvGrp)
+        lowerR = EyeFunc._createBsCrv(self.lidLowerRCrv,self.eyeBlendCrvGrp,newGrp=False)
         ###left
-        upperL = EyeFunc._createBlendshapeCrv(self.lidUpperLCrv,self.eyeBlendCrvGrp,newGrp=False)
-        lowerL = EyeFunc._createBlendshapeCrv(self.lidLowerLCrv,self.eyeBlendCrvGrp,newGrp=False)
+        upperL = EyeFunc._createBsCrv(self.lidUpperLCrv,self.eyeBlendCrvGrp,newGrp=False)
+        lowerL = EyeFunc._createBsCrv(self.lidLowerLCrv,self.eyeBlendCrvGrp,newGrp=False)
         
         self.eyeBlendCrvs = upperR+lowerR+upperL+lowerL
-        
-        
 
     
     def createGrps(self):
@@ -331,120 +411,39 @@ class AutoRigFace():
                 self.lipCtlGrp, self.mouthCtlGrp,
                 self.animGrp)
         except: print('anim_grp parent skipped')
-    
-    def _createLipLocs(self):
-        upperPos = ModFunc._getPosListFromVerts(self.lipUpperVerts)###if I rearrange the list according to xpos in the first place
-        upperLocs = ModFunc._createLocsOnCurve(self.lipUpperCrv,upperPos,self.lipUpperLocGrp)###I don't have to use stupid dicList
-        upperLocs = MouthFunc._lipLocsNamer(upperLocs, prefix='lip_upper')###But I also have to fix this
         
-        lowerPos = ModFunc._getPosListFromVerts(self.lipLowerVerts)
-        lowerLocs = ModFunc._createLocsOnCurve(self.lipLowerCrv,lowerPos,self.lipLowerLocGrp)
-        lowerLocs = MouthFunc._lipLocsNamer(lowerLocs, prefix='lip_lower')
-        
-        self.lipLocs = upperLocs + lowerLocs
-    
-    
-    def _createLidLocs(self):
-        upperRPos = ModFunc._getPosListFromVerts(self.lidUpperRVerts)
-        upperRLocs = ModFunc._createLocsOnCurve(self.lidUpperRCrv, upperRPos, self.lidRLocGrp)
-        upperRLocs = EyeFunc._eyeLocsNamer(upperRLocs, prefix='lid_upper_r')
-        
-        upperLPos = ModFunc._mirrorPosX(upperRPos)
-        upperLLocs = ModFunc._createLocsOnCurve(self.lidUpperLCurv, upperLPos, self.lidLLocGrp)
-        upperLLocs = EyeFunc._eyeLocsNamer(upperLLocs, prefix='lid_upper_l')
-        
-        lowerRPos = ModFunc._getPosListFromVerts(self.lidLowerRVerts)
-        lowerRLocs = ModFunc._createLocsOnCurve(self.lidLowerRCrv, lowerRPos, self.lidRLocGrp, newGrp=False)
-        lowerRLocs = EyeFunc._eyeLocsNamer(lowerRLocs, prefix='lid_lower_r')
-        
-        lowerLPos = ModFunc._mirrorPosX(lowerRPos)
-        lowerLLocs = ModFunc._createLocsOnCurve(self.lidLowerLCurv, lowerLPos, self.lidLLocGrp, newGrp=False)
-        lowerLLocs = EyeFunc._eyeLocsNamer(lowerLLocs, prefix='lid_lower_l')
-        
-        self.lidRLocs = upperRLocs + lowerRLocs
-        self.lidLLocs = upperLLocs + lowerLLocs
-             
-        
-    def _createMouthCtls(self):
-        #lip ctrls
-        microNames = [d.replace('fol','ctl').replace('mouth','lip') for d in self.mouthFols]
-        
-        self.lipCtls = ModFunc._createCtrlGrp(self.mouthFols,microNames,self.lipCtlGrp)
-        ModFunc._moveOffset(self.lipCtls, offset=(0,0,1))
-        MouthFunc._scaleOrient(self.lipCtls)
-        ModFunc._overrideColor(microNames, color=(1,1,0))
-            
-        #mouth ctrls
-        macroFols = [d for d in self.mouthFols if '_m_' in d] #'mouth_upper_m_fol','mouth_lower_m_fol'
-        macroNames = [d.replace('fol','ctl') for d in macroFols]
-        
-        self.mouthCtls = ModFunc._createCtrlGrp(macroFols, macroNames, self.mouthCtlGrp, shape='square')
-        ModFunc._moveOffset(self.mouthCtls, offset=(0,0,1.5))
-        MouthFunc._scaleOrient(self.mouthCtls)
-        ModFunc._overrideColor(macroNames, color=(1,1,0))
-        
-        #corner ctrls
-        cornerFols = [d for d in self.mouthFols if '_corner_' in d]
-        cornerNames = [d.replace('fol','ctl') for d in cornerFols]
-        
-        self.mCornerCtls = ModFunc._createCtrlGrp(cornerFols, cornerNames, self.mCornerCtlGrp, shape='triangle')
-        ModFunc._moveOffset(self.mCornerCtls, offset=(0,0,1.5))
-        MouthFunc._scaleOrient(self.mCornerCtls)
-        ModFunc._overrideColor(cornerNames, color=(1,0,0))
-        
-        #parent constraint micro nul2 group to macro ctl
-        for i in self.lipCtls:
-            if '_m_' in i['ctl']:
-                i['nul2'] = cmds.group(i['ori'],n=i['nul']+'2') #create nul2 grp
-                macro = i['ctl'].replace('lip','mouth') #micro_mouth_lower_m_ctl
-                cmds.parentConstraint(macro,i['nul2'],mo=True)
-                
-        
-    def _attachJawCls(self):
-        #We're gonna parent constraint jawClusters to the mouth macro controllers
-        for clus in self.jawCls:
-            if '0' not in clus: #corner or mid
-                parent1=self.faceLowerBind
-                parent2=self.jawBind
-            
-            elif '0' in clus: #inbetween
-                if 'upper' in clus:
-                    parent1=self.mouthCtls[0]['ctl'] #macro_mouth_upper_ctl
-                elif 'lower' in clus:
-                    parent1=self.mouthCtls[1]['ctl'] #macro_mouth_lower_ctl
-                
-                if '_r_' in clus:
-                    parent2=self.jawCls[0] #mouth_corner_r_cls
-                if '_l_' in clus:
-                    parent2=self.jawCls[len(self.jawCls)//2] #mouth_corner_l_cls
-                
-            cmds.parentConstraint(parent1,parent2,clus,mo=True)
-            #set mouth constraint weight value
-            MouthFunc._setWeightVal(clus, parent1,parent2)
-    
+    def enterOrientEdit(self,_):
+        print('### enter orient edit mode ###')
+        ###lip ctrl
+        #unparent lipCvClsoffset from lip ctrl
+        for j in self.lipCvCls:
+            offGrp = j+'_offset'
+            cmds.parent(offGrp, w=True) #parent to world
 
-    def _setMouthCornerCtls(self):
-        cornerCtl = [d['ctl'] for d in self.mCornerCtls]
-        cornerCls = [d for d in self.jawCls if '_corner_' in d] #left, right
-        midCtl = [d['ctl'] for d in self.mouthCtls] #upper, lower
-        inbetweenCls = [d for d in self.jawCls if re.findall('[0-9]+',d)!=[] ]
+        ###mouth ctrl
+        #delete parent constraint of jaw clusters
+        #delete parent constraint of lip ctrl nuls
         
-        #set corner pin
-        MouthFunc._setCornerPin(cornerCtl[0], cornerCls[0], self.faceLowerBind,self.jawBind)
-        MouthFunc._setCornerPin(cornerCtl[1], cornerCls[1], self.faceLowerBind,self.jawBind)
+        ###mCorner ctrl
+        #don't need anything
 
-        #add attribute
-        for ctl in cornerCtl:
-            cmds.addAttr(ctl, shortName='lipOnePull', defaultValue=0, minValue=0, maxValue=1)
-            cmds.addAttr(ctl, shortName='lipTwoPull', defaultValue=0, minValue=0, maxValue=1)
+    
+    def exitOrientEdit(self,_):
+        print('### exit orient edit mode ###')
+        for i,j in zip(self.lipCtls,self.lipCvCls):
+            ctl = i['ctl']
+            offGrp = j+'_offset'
+            cmds.parent(offGrp,ctl)
+
+
+    def changeCornerN(self,x,y,z):
+        ModFunc._normalizeCtls(self.mCornerCtls,val=(x,y,z))
         
-        ###--------------------MouthFunc._setLipPull()
-        MouthFunc._connectLipPull(cornerCtl,inbetweenCls,midCtl,cornerCls)
+    def changeLipPull(self,one,two):
+        for i in self.mCornerCtls:
+            cmds.setAttr(i['ctl']+'.lipOnePull', one)
+            cmds.setAttr(i['ctl']+'.lipTwoPull', two)
         
-        #set lip pull attribute
-        for ctl in cornerCtl:
-            cmds.setAttr(ctl+'.lipOnePull', 0.7)
-            cmds.setAttr(ctl+'.lipTwoPull', 0.95)
         
         
     
@@ -455,3 +454,7 @@ UI.createWindow(run01)
 
 
 ###DQ skin > attibute editor > support Non-rigid transformation ON
+
+#mouth corner ctl > (translate x, y) > (input R, input G) > clamp node 
+#multDoubleLinear
+#> weight-(mouth wide curve, mouth small curve ) mouth curve blend

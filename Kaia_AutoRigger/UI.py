@@ -1,6 +1,11 @@
 import maya.cmds as cmds
 from functools import partial
 
+###------------------------------------------Global Variables-------------------------------------------------
+
+
+
+###---------------------------------------------Function------------------------------------------------------
 def createWindow(arg1):
     #test to see if the window exists
     if cmds.window(arg1.winName, exists=True):
@@ -44,9 +49,13 @@ def createWindow(arg1):
     cmds.button( l='assign', c=lambda _:arg1.assignDelete('arg1.lipLowerVerts','ass') )
     cmds.button( l='delete', c=lambda _:arg1.assignDelete('arg1.lipLowerVerts','del') )
 
-    cmds.text( l='Upper Eye Verts R')
+    cmds.text( l='Upper Eye Verts Right')
     cmds.button( l='assign', c=lambda _:arg1.assignDelete('arg1.lidUpperRVerts','ass') )
     cmds.button( l='delete', c=lambda _:arg1.assignDelete('arg1.lidUpperRVerts','del') )
+
+    cmds.text( l='Lower Eye Verts Right')
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('arg1.lidLowerRVerts','ass') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('arg1.lidLowerRVerts','del') )
 
     cmds.setParent('..')
     cmds.setParent('..')
@@ -81,19 +90,36 @@ def createWindow(arg1):
     cmds.setParent('..')
     
     cmds.button(l='Build Mouth Rig 02',c=arg1.buildMouthRig02)
-    cmds.button(l='Build Eye Rig 02')
     
     cmds.button(l='Build Mouth Blendshapes 01', c=arg1.BuildMouthBlendshapes01)
     cmds.button(l='Build Eye Blendshapes 01', c=arg1.BuildEyeBlendshapes01)
     
-    cmds.rowLayout(numberOfColumns=5)
-    cmds.text( l='Blend curv CVs: ')
+    cmds.setParent('..')
+    cmds.setParent('..')
+    ###
+    cmds.frameLayout( l='Adjust', collapsable=True, collapse=False)
+    cmds.columnLayout( rowSpacing = 5 )
+    
+    cmds.rowLayout(numberOfColumns=3)
+    cmds.text( l ='Edit Orient Mode')
+    cmds.button( l='Enter', c=arg1.enterOrientEdit)
+    cmds.button( l='Exit', c=arg1.exitOrientEdit)
+    cmds.setParent('..')
+    
+    cmds.text( l='BlendShape Curve: ')
+    cmds.rowLayout(numberOfColumns=4)
     cmds.button( l='mirror Mouth', c=arg1.mirrorBlendCrvMouth)
     cmds.button( l='mirror Eyes', c=arg1.mirrorBlendCrvEyes)
     cmds.button( l='save', c=lambda _:arg1.blendCrvData('save'))
     cmds.button( l='load', c=lambda _:arg1.blendCrvData('load'))
     cmds.setParent('..')
     
+    cmds.text( l='Normalize Mouth Corner: ')
+    cmds.floatFieldGrp( numberOfFields=3, label='Scale', v1=1, v2=1, v3=1, cw=(1,1), cc=arg1.changeCornerN )
+    
+    cmds.text( l='Lip Pull: ')
+    cmds.floatFieldGrp( numberOfFields=2, label='lipPull', v1=.7, v2=.95, cw=(1,1), cc=arg1.changeLipPull )
+
     cmds.setParent('..')
     cmds.setParent('..')
     ###
@@ -104,3 +130,5 @@ def createWindow(arg1):
     cmds.button(l='select Jaw Bind',c=lambda _:cmds.select(arg1.jawBind))
 
     cmds.showWindow()
+    
+###---------------------------------------------------------------------------

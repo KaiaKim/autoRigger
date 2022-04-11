@@ -16,6 +16,7 @@ def _createMouthCrv(upperCrv, lowerCrv):
     
     cmds.makeIdentity(mouthCrv, apply=True) #freeze transformation
     cmds.xform(mouthCrv, piv=(0,0,0), ws=True) #set pivot to 0,0,0
+    cmds.delete(mouthCrv,constructionHistory=True)
     
     counter = 0 #this is a counter
     for i in range(sectionCount): #We're going to iterate through mouth curv(CVs)
@@ -106,13 +107,42 @@ def _2CurvCvCls(upCurv,loCurv,ctlList):
     
     for cv,ctl in zip(cvList,ctlList):
         name = ctl.replace('lip_','lipCv_').replace('_ctl','_cls') #ex) lipCV_corner_r_cls
-        clus = cmds.cluster(cv, n=name)[1] #[1] gets trans node
-        clsList.append(clus)
+        clus = cmds.cluster(cv, n=name)[1] #[1] gets trans node #lipCv_lower_r_00_clsHandle
+        clsList.append(name)
         offGrp = cmds.group(clus,n=name+'_offset')
 
         cmds.parent(offGrp, ctl) #(child, parent)
     
     return clsList
+
+def constMicroToMacro(inList):
+    for i in inList:
+        if '_m_' in i['ctl']:
+            i['nul2'] = cmds.group(i['ori'],n=i['nul']+'2') #create nul2 grp
+            macro = i['ctl'].replace('lip','mouth') #micro_mouth_lower_m_ctl
+            cmds.parentConstraint(macro,i['nul2'],mo=True)
+
+def attachJawCls(jawCls, mouthCtls, faceLowerBind, jawBind):
+    #We're gonna parent constraint jawClusters to the mouth macro controllers
+    for clus in jawCls:
+        if '0' not in clus: #corner or mid
+            parent1=faceLowerBind
+            parent2=jawBind
+        
+        elif '0' in clus: #inbetween
+            if 'upper' in clus:
+                parent1=mouthCtls[0]['ctl'] #macro_mouth_upper_ctl
+            elif 'lower' in clus:
+                parent1=mouthCtls[1]['ctl'] #macro_mouth_lower_ctl
+            
+            if '_r_' in clus:
+                parent2=jawCls[0] #mouth_corner_r_cls
+            if '_l_' in clus:
+                parent2=jawCls[len(jawCls)//2] #mouth_corner_l_cls
+            
+        cmds.parentConstraint(parent1,parent2,clus,mo=True)
+        #set mouth constraint weight value
+        _setWeightVal(clus, parent1,parent2)
 
 def _setWeightVal(child, parent00, parent01):
     #should I hard coad weight values? maybe I could set up a set driven key
@@ -141,6 +171,26 @@ def _scaleOrient(ctlDicList):
             scaleVal[0] = -1 #X value is -1
         
         cmds.scale(scaleVal[0],scaleVal[1],scaleVal[2],i['ori'])
+
+
+def setMouthCornerCtls(mCornerCtls, mouthCtls, jawCls, faceLowerBind,jawBind):
+    cornerCtl = [d['ctl'] for d in mCornerCtls]
+    cornerCls = [d for d in jawCls if '_corner_' in d] #left, right
+    midCtl = [d['ctl'] for d in mouthCtls] #upper, lower
+    #inbetweenCls = [d for d in jawCls if re.findall('[0-9]+',d)!=[] ]
+    inbetweenCls = [d for d in jawCls if '0' in d ]
+    
+    #set corner pin
+    _setCornerPin(cornerCtl[0], cornerCls[0], faceLowerBind,jawBind)
+    _setCornerPin(cornerCtl[1], cornerCls[1], faceLowerBind,jawBind)
+
+    #add attribute
+    for ctl in cornerCtl:
+        cmds.addAttr(ctl, shortName='lipOnePull', defaultValue=0, minValue=0, maxValue=1)
+        cmds.addAttr(ctl, shortName='lipTwoPull', defaultValue=0, minValue=0, maxValue=1)
+    
+    ###--------------------MouthFunc._setLipPull()
+    _connectLipPull(cornerCtl,inbetweenCls,midCtl,cornerCls)
 
 
 def _setCornerPin(ctl,clus,parent1,parent2):
@@ -209,7 +259,7 @@ def _connectLipPull(cornerCtl,clsList,midCtl,cornerCls):
         cmds.connectAttr(ctl+attr,revNode2+'.inputX')
         cmds.connectAttr(revNode2+'.outputX',clus+'_parentConstraint1.'+parent4+'W1')
         
-def _createBlendshapeCrv(orig,grpName):
+def _createBsCrv(orig,grpName):
     outList = []
     grp = cmds.group(em=True,n=grpName)
     suffixList = ['_wide','_small','_smile','_frown']
@@ -221,6 +271,29 @@ def _createBlendshapeCrv(orig,grpName):
         cmds.parent(crv1,crv2,grp)
     return outList
 
+def _createBsNode(orig,  targList):
+    bs = cmds.blendShape(orig, n='mouth_curve_blend', o='local')[0] #o is origin
+    for num,targ in enumerate(targList):
+        cmds.blendShape(bs, e=True, t=(orig, num, targ, 1.0) )
+    return bs
+
+def _setBsCvWeight(bs):
+    for i in range(8):
+        for j in range(12):
+            val=1
+            if j in [3,9]: #middle vertex
+                val=.5
+            elif j in [0,1,2,10,11]: #left side vertex
+                if i%2==1: #i is 1,3,5,7. left side target
+                    val=0
+            elif j in [4,5,6,7,8]: #right side vertex
+                if i%2==0: #i is 0,2,4,6. right side target
+                    val=0
+            cmds.setAttr(bs+'.inputTarget[0].inputTargetGroup[%d].targetWeights[%d]'%(i,j), val)
+            #myVal = cmds.getAttr('mouth_curve_blend.inputTarget[0].inputTargetGroup[%d].targetWeights[%d]'%(i,j))
+            #print('targetGrp:',i, 'targetW:', j, myVal)
+            
+            
 def _symmetricMouthCrv(crvList):
     outList = []
     for crv in crvList:
@@ -236,13 +309,44 @@ def _symmetricMouthCrv(crvList):
         outList += posList
     return outList
 
-
+def _connectCornerCtrl(mCornerCtls, blendCrvs, bs):
+    #rCtl = mCornerCtls[0]['ctl']
+    #lCtl = mCornerCtls[1]['ctl']
+    #blendCrvs = 
+    #[ wideR wideL smallR smallL smileR smileL frownR frownL ]
+    #[ 0     1     2      3      4      5      6      7      ]
+    for num,i in enumerate(mCornerCtls):
+        ctl=i['ctl']
+        ###
+        clp = cmds.createNode('clamp')
+        cmds.setAttr(clp+'.maxR',10)
+        cmds.setAttr(clp+'.minG',-10)
+        cmds.connectAttr(ctl+'.tx',clp+'.inputR')
+        cmds.connectAttr(ctl+'.tx',clp+'.inputG')
+        cmds.connectAttr(clp+'.outputR',bs+'.'+blendCrvs[0+num]) #0 or 1
+        
+        mul = cmds.createNode('multDoubleLinear')
+        cmds.setAttr(mul+'.input2',-1)
+        cmds.connectAttr(clp+'.outputG',mul+'.input1')
+        cmds.connectAttr(mul+'.output',bs+'.'+blendCrvs[2+num]) #2 or 3
+        ###
+        rng = cmds.createNode('setRange')
+        cmds.setAttr(rng+'.minX',10)
+        cmds.setAttr(rng+'.oldMinX',-10)
+        cmds.setAttr(rng+'.maxY',10)
+        cmds.setAttr(rng+'.oldMaxY',10)
+        cmds.connectAttr(ctl+'.ty',rng+'.valueX')
+        cmds.connectAttr(ctl+'.ty',rng+'.valueY')
+        cmds.connectAttr(rng+'.outValueX',bs+'.'+blendCrvs[6+num]) #6 or 7
+        cmds.connectAttr(rng+'.outValueY',bs+'.'+blendCrvs[4+num]) #4 or 5
+        
+    
 def _matchCrvRtoL(posList):
     #actually, mouth_curve_r_wide & mouth_curve_l_wide are identical.
     #It doesn't mirror, it match CVs
-    rPos = [d for d in posList if '_r_' in d['name']]
-    lPos = [d for d in posList if '_l_' in d['name']]
-    for r,l in zip(rPos,lPos):
+    rPosList = [d for d in posList if '_r_' in d['name']]
+    lPosList = [d for d in posList if '_l_' in d['name']]
+    for r,l in zip(rPosList,lPosList):
         l['pos'] = r['pos']
-    outList = rPos+lPos
+    outList = rPosList+lPosList
     return outList
