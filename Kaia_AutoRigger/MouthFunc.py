@@ -160,17 +160,6 @@ def _setWeightVal(child, parent00, parent01):
     cmds.setAttr(constraint+'.'+parent00+'W0', W0)
     cmds.setAttr(constraint+'.'+parent01+'W1',W1)
     cmds.setAttr(constraint+'.interpType',2) #Interpolation Type: Shortest
-    
-
-def _scaleOrient(ctlDicList):
-    for i in ctlDicList:    
-        scaleVal = [1,1,1]
-        if '_lower_' in i['ctl']:
-            scaleVal[2] = -1 #Z value is -1 
-        if '_l_' in i['ctl']:
-            scaleVal[0] = -1 #X value is -1
-        
-        cmds.scale(scaleVal[0],scaleVal[1],scaleVal[2],i['ori'])
 
 
 def setMouthCornerCtls(mCornerCtls, mouthCtls, jawCls, faceLowerBind,jawBind):
@@ -271,7 +260,7 @@ def _createBsCrv(orig,grpName):
         cmds.parent(crv1,crv2,grp)
     return outList
 
-def _createBsNode(orig,  targList):
+def _createBsNode(orig, targList):
     bs = cmds.blendShape(orig, n='mouth_curve_blend', o='local')[0] #o is origin
     for num,targ in enumerate(targList):
         cmds.blendShape(bs, e=True, t=(orig, num, targ, 1.0) )

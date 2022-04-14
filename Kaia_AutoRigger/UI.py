@@ -35,7 +35,7 @@ def createWindow(arg1):
 
     cmds.columnLayout()
     cmds.text(l='Assign vertices from selection')
-    cmds.button(l='Quick Test Data',c=arg1.quickTestData )
+    cmds.button(l='Quick Test Data',c=arg1.quickTest )
 
     cmds.setParent('..')
 
@@ -49,11 +49,11 @@ def createWindow(arg1):
     cmds.button( l='assign', c=lambda _:arg1.assignDelete('arg1.lipLowerVerts','ass') )
     cmds.button( l='delete', c=lambda _:arg1.assignDelete('arg1.lipLowerVerts','del') )
 
-    cmds.text( l='Upper Eye Verts Right')
+    cmds.text( l='Upper R Eye Verts')
     cmds.button( l='assign', c=lambda _:arg1.assignDelete('arg1.lidUpperRVerts','ass') )
     cmds.button( l='delete', c=lambda _:arg1.assignDelete('arg1.lidUpperRVerts','del') )
 
-    cmds.text( l='Lower Eye Verts Right')
+    cmds.text( l='Lower R Eye Verts')
     cmds.button( l='assign', c=lambda _:arg1.assignDelete('arg1.lidLowerRVerts','ass') )
     cmds.button( l='delete', c=lambda _:arg1.assignDelete('arg1.lidLowerRVerts','del') )
 
@@ -101,7 +101,7 @@ def createWindow(arg1):
     cmds.columnLayout( rowSpacing = 5 )
     
     cmds.rowLayout(numberOfColumns=3)
-    cmds.text( l ='Edit Orient Mode')
+    cmds.text( l ='Edit Orient Mode: ')
     cmds.button( l='Enter', c=arg1.enterOrientEdit)
     cmds.button( l='Exit', c=arg1.exitOrientEdit)
     cmds.setParent('..')

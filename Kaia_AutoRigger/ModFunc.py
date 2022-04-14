@@ -156,28 +156,35 @@ def _createFolsOnBindmeshes(bindmeshes,grpName):
         folList.append(folTrans)
     return folList
 
-def _createCtrlGrp(drivenList, nameList, grpName, shape='circle'):
-    #Create lip controllers on given drivers.
-    #Nurv curves, orient group, nul group
-    #lower lip controllers has scale -1 on orient groups
-   
+def _createCtlGrp(drivenList, nameList, grpName, shape='circle', size=1, const=True):
+    #Nurv curves, orient group, offset group, nul group
     ctlDicList = []
     bigGrp = cmds.group(em=True, n=grpName)
-    counter = 0
-    for driven in drivenList:
-        name = nameList[counter]
-        ctl = _customNURBScircle(shape,name)
+    
+    for name,driven in zip(nameList,drivenList):
+        ctl = _customNURBScircle(shape, size, name)
         
         nulGrp = cmds.group(ctl, n = ctl+'_nul')
         orientGrp = cmds.group(ctl, n=ctl+'_orient')
         offsetGrp = cmds.group(ctl, n=ctl+'_offset')
-        cmds.parentConstraint(driven, nulGrp, mo=False)
+        constNode = cmds.parentConstraint(driven, nulGrp, mo=False)
+        if const==False:
+            cmds.delete(constNode)
         
         cmds.parent(nulGrp,bigGrp)
         ctlDicList.append( {'nul':nulGrp,'ori':orientGrp, 'off':offsetGrp,'ctl':ctl} ) #return list of mini dictionaries
         
-        counter += 1
     return ctlDicList
+
+def _scaleOrient(ctlDicList):
+    for i in ctlDicList:
+        scaleVal = [1,1,1]
+        if '_lower_' in i['ctl']:
+            scaleVal[2] = -1 #Z value is -1 
+        if '_l_' in i['ctl']:
+            scaleVal[0] = -1 #X value is -1
+        
+        cmds.scale(scaleVal[0],scaleVal[1],scaleVal[2],i['ori'])
 
 def _setOffset(ctlDicList, t=(0,0,0), r=(0,0,0)):
     for i in ctlDicList:
@@ -223,13 +230,13 @@ def _getCrvShape(crv):
 def _getCVs(crv):
     return cmds.ls(crv + '.cv[*]', fl=1)
     
-def _customNURBScircle(shape,name):
+def _customNURBScircle(shape, size, name):
     if shape=='circle':
-        ctl = cmds.circle(n=name, r=.3, d=1)[0] #degree=1(linear)
+        ctl = cmds.circle(n=name, r=size, d=1)[0] #degree=1(linear)
     elif shape=='square':
-        ctl = cmds.circle(n=name, r=.5, sections=4, d=1)[0]
+        ctl = cmds.circle(n=name, r=size, sections=4, d=1)[0]
     elif shape=='triangle':
-        ctl = cmds.circle(n=name, r=.5, sections=3, d=1)[0]
+        ctl = cmds.circle(n=name, r=size, sections=3, d=1)[0]
         CVs = _getCVs(ctl)
         cmds.rotate(0,0,30,CVs)
 
