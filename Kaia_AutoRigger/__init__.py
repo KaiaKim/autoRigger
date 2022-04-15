@@ -180,7 +180,9 @@ class AutoRigFace(Builder.BuildRig):
         for i in self.mCornerCtls:
             cmds.setAttr(i['ctl']+'.lipOnePull', one)
             cmds.setAttr(i['ctl']+'.lipTwoPull', two)
-        
+    
+    def saveNames(self,_):
+        pass
         
         
     

@@ -18,7 +18,7 @@ class BuildRig():
         pass
     
     def names(self):
-        ###
+        self.names = {}
         self.faceRoot = 'face_root'
         self.animGrp = 'anim_grp'
         self.rigGrp = 'rig_grp'
@@ -39,6 +39,7 @@ class BuildRig():
         self.lipLowerCrv = 'lip_lower_curve' #No change this!
         self.mouthCrv = None
         
+        self.headVerts = None
         self.lipUpperVerts = None
         self.lipLowerVerts = None
         self.lidUpperRVerts = None
@@ -115,7 +116,8 @@ class BuildRig():
         ModFunc._aimConstLocs(self.lipLocs, self.jawBind, upObj=self.faceLowerBind)
         
         #2: Create lip_bind_jnts && constraint to lip_locs
-        self.lipBinds = ModFunc._createJntsOnLocs(self.lipLocs,self.faceLowerBind)
+        self.lipBinds = [d.replace('_loc', '_bind') for d in self.lipLocs]
+        ModFunc._createJntsOnLocs(self.lipLocs,self.lipBinds,self.faceLowerBind)
         
         #2: Create mouth drivers
         driverList = ModFunc._createJntsOnCVs(self.mouthCrv,self.mouthDriverGrp) 
@@ -212,8 +214,11 @@ class BuildRig():
         ModFunc._aimConstLocs(self.lidRLocs,self.eyeSocketBindR)
         ModFunc._aimConstLocs(self.lidLLocs,self.eyeSocketBindL)
         #4: Create lid bind jnts
-        self.lidRBinds = ModFunc._createJntsOnLocs(self.lidRLocs,self.eyeSocketBindR)
-        self.lidRBinds = ModFunc._createJntsOnLocs(self.lidLLocs,self.eyeSocketBindL)
+        self.lidRBinds = [d.replace('_loc', '_bind') for d in self.lidRLocs]
+        ModFunc._createJntsOnLocs(self.lidRLocs,self.lidRBinds,self.eyeSocketBindR)
+        
+        self.lidLBinds = [d.replace('_loc', '_bind') for d in self.lidLLocs]
+        ModFunc._createJntsOnLocs(self.lidLLocs,self.lidLBinds,self.eyeSocketBindL)
         #5: Constraint to lid locs
         ModFunc._parentConstIterate(self.lidRLocs,self.lidRBinds)
         ModFunc._parentConstIterate(self.lidLLocs,self.lidLBinds)

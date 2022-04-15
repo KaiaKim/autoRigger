@@ -8,6 +8,7 @@ def _getPosListFromVerts(verts):
     return posList
 
 def _createLocsOnCurve(curv,posList,grpName,newGrp=True):
+    ###no create locator when there's already one
     locDicList = []
     if newGrp==True:
         grp = cmds.group(em=True, n=grpName)
@@ -60,22 +61,14 @@ def _aimConstLocs(locs,targ,upObj=None):
         else:
             cmds.aimConstraint(targ, loc, aimVector=[0,0,-1], upVector=[0,1,0], worldUpType='objectrotation', worldUpVector=[0,1,0] , worldUpObject=upObj )
 
-def _createJntsOnLocs(locs,parJnt): #parJnt means parent joint
-    jntList = []
-    for loc in locs:
+def _createJntsOnLocs(locs,names,parent): #parent should be a joint
+    for loc,name in zip(locs,names):
         cmds.select(cl=True)
-        jntName = loc.replace('_loc', '_bind')
-        jnt = cmds.joint( n=jntName, rad=.1 )
+        jnt = cmds.joint( n=name, rad=.1 )
         const = cmds.parentConstraint(loc, jnt, mo=False)[0]
-        '''
-        #fuck I don know I'm sorry!?>>???
-        cmds.delete(const)
-        cmds.makeIdentity(loc) ###why this is here??? XXX
-        cmds.makeIdentity(jnt)  ###why orient not applyed??? XXX
-        cmds.parentConstraint(loc, jnt, mo=False)
-        '''
-        cmds.parent(jnt,parJnt)
-    return jntList
+
+        cmds.parent(jnt,parent)
+
 
 
 def _createJntsOnCVs(curv,grpName):

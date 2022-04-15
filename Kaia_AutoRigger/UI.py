@@ -15,6 +15,22 @@ def createWindow(arg1):
     cmds.scrollLayout( 'scorllLayout', width=320) #makes your entire layout scrollable #first - main layout
     cmds.columnLayout( adjustableColumn=True ) #second layout - attaches to the main layout
     ###
+    cmds.frameLayout( l='Prepare', collapsable=True, collapse=True)
+    cmds.columnLayout( rowSpacing = 10 )
+
+    cmds.text( l='! eye cluster name: eye_r_cls')
+    cmds.text( l='! eye lattice name: eye_r_ffd1')
+    
+    cmds.rowLayout(numberOfColumns=4)
+    cmds.text(l='eye lattice points: ')
+    cmds.button( l='mirror R to L', c=lambda _:arg1.latticeData('mirror'))
+    cmds.button( l='save', c=lambda _:arg1.latticeData('save'))
+    cmds.button( l='load', c=lambda _:arg1.latticeData('load'))
+    cmds.setParent('..')
+    
+    cmds.setParent('..')
+    cmds.setParent('..')
+    ###
     cmds.frameLayout( l='Template', collapsable=True, collapse=False )
     cmds.columnLayout()
     cmds.text(l='Load template files')
@@ -40,7 +56,11 @@ def createWindow(arg1):
     cmds.setParent('..')
 
     cmds.gridLayout( numberOfColumns=3, cellWidthHeight=(100, 20) ) #fourth layout - frame layout
-
+    
+    cmds.text(l='Head Verts')
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('arg1.headVerts','ass') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('arg1.headVerts','del') )
+    
     cmds.text( l='Upper Lip Verts')
     cmds.button( l='assign', c=lambda _:arg1.assignDelete('arg1.lipUpperVerts','ass') )
     cmds.button( l='delete', c=lambda _:arg1.assignDelete('arg1.lipUpperVerts','del') )
@@ -59,25 +79,15 @@ def createWindow(arg1):
 
     cmds.setParent('..')
     cmds.setParent('..')
-    ###
-    cmds.frameLayout( l='Helper', collapsable=True, collapse=True)
-    cmds.columnLayout( rowSpacing = 10 )
-
-    cmds.text( l='! eye cluster name: eye_r_cls')
-    cmds.text( l='! eye lattice name: eye_r_ffd1')
     
-    cmds.rowLayout(numberOfColumns=4)
-    cmds.text(l='eye lattice points: ')
-    cmds.button( l='mirror R to L', c=lambda _:arg1.latticeData('mirror'))
-    cmds.button( l='save', c=lambda _:arg1.latticeData('save'))
-    cmds.button( l='load', c=lambda _:arg1.latticeData('load'))
-    cmds.setParent('..')
-    
-    cmds.setParent('..')
-    cmds.setParent('..')
     ###
     cmds.frameLayout( l='Build', collapsable=True, collapse=False)
     cmds.columnLayout( rowSpacing = 10 )
+    
+    cmds.rowLayout(numberOfColumns=2)
+    cmds.text(l='(optional) ')
+    cmds.button(l='Cut Head')
+    cmds.setParent('..')
     
     cmds.button(l='Build Mouth Rig 01',c=arg1.buildMouthRig01)
     cmds.button(l='Build Eye Rig 01',c=arg1.buildEyeRig01)
@@ -114,12 +124,16 @@ def createWindow(arg1):
     cmds.button( l='load', c=lambda _:arg1.blendCrvData('load'))
     cmds.setParent('..')
     
-    cmds.text( l='Normalize Mouth Corner: ')
-    cmds.floatFieldGrp( numberOfFields=3, label='Scale', v1=1, v2=1, v3=1, cw=(1,1), cc=arg1.changeCornerN )
-    
+    cmds.rowLayout(numberOfColumns=2)
+    cmds.text( l='Normalize (Scale ctrl oreint): ')
+    cmds.button(l='Normalize')
+    cmds.setParent('..')
+    '''
+    cmds.rowLayout(numberOfColumns=2)
     cmds.text( l='Lip Pull: ')
-    cmds.floatFieldGrp( numberOfFields=2, label='lipPull', v1=.7, v2=.95, cw=(1,1), cc=arg1.changeLipPull )
-
+    cmds.floatFieldGrp( numberOfFields=2, label='lipPull', v1=.7, v2=.9, cw=(1,1), cc=arg1.changeLipPull )
+    cmds.setParent('..')
+    '''
     cmds.setParent('..')
     cmds.setParent('..')
     ###
@@ -128,7 +142,13 @@ def createWindow(arg1):
     
     cmds.button(l='000: Arrange Groups',c=arg1.arrangeGrps)
     cmds.button(l='select Jaw Bind',c=lambda _:cmds.select(arg1.jawBind))
-
+    '''
+    cmds.rowLayout(numberOfColumns=3)
+    cmds.text(l='face rig names: ')
+    cmds.button(l='save')
+    cmds.button(l='load')
+    cmds.setParent('..')
+    '''
     cmds.showWindow()
     
 ###---------------------------------------------------------------------------

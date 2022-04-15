@@ -38,9 +38,9 @@ def _lipLocsNamer(locs, prefix=''):
         if i==((len(locs)-1)/2):
             name += '_m_'
         elif i<((len(locs)-1)/2):
-            name += '_l_%02d'%i #result: 'lip_lower_l_00_loc'
+            name += '_r_%02d'%i #result: 'lip_lower_l_00_loc'
         elif i>((len(locs)-1)/2):
-            name += '_r_%02d'%( (len(locs)-1)-i ) #result: 'lip_lower_r_00_loc'
+            name += '_l_%02d'%( (len(locs)-1)-i ) #result: 'lip_lower_r_00_loc'
         name += '_loc'
         cmds.rename(loc,name)
         
