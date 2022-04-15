@@ -37,7 +37,7 @@ class BuildRig():
         
         self.lipUpperCrv = 'lip_upper_curve' #No change this!
         self.lipLowerCrv = 'lip_lower_curve' #No change this!
-        self.mouthCrv = None
+        self.mouthCrv = 'mouth_curve'
         
         self.headVerts = None
         self.lipUpperVerts = None
@@ -99,18 +99,20 @@ class BuildRig():
         self.createGrps() 
         
         #1: Generate mouth_curve from lip_curves
-        self.mouthCrv = MouthFunc._createMouthCrv(self.lipUpperCrv, self.lipLowerCrv)
+        MouthFunc._createMouthCrv(self.mouthCrv, self.lipUpperCrv, self.lipLowerCrv)
         
         #1: Create lip_locs on lip verts & connect to lip_curves
+        self.lipUpperLocs = MouthFunc._lipLocsNamer(self.lipUpperVerts, prefix='lip_upper')
+        self.lipLowerLocs = MouthFunc._lipLocsNamer(self.lipLowerVerts, prefix='lip_lower')
+        self.lipLocs = self.lipUpperLocs + self.lipLowerLocs
+        
         upperPos = ModFunc._getPosListFromVerts(self.lipUpperVerts)
-        upperLocs = ModFunc._createLocsOnCurve(self.lipUpperCrv,upperPos,self.lipUpperLocGrp)
-        upperLocs = MouthFunc._lipLocsNamer(upperLocs, prefix='lip_upper')
+        ModFunc._createLocsOnCurve(self.lipUpperLocs, upperPos, self.lipUpperCrv, self.lipUpperLocGrp)
+        
         
         lowerPos = ModFunc._getPosListFromVerts(self.lipLowerVerts)
-        lowerLocs = ModFunc._createLocsOnCurve(self.lipLowerCrv,lowerPos,self.lipLowerLocGrp)
-        lowerLocs = MouthFunc._lipLocsNamer(lowerLocs, prefix='lip_lower')
-        
-        self.lipLocs = upperLocs + lowerLocs
+        ModFunc._createLocsOnCurve(self.lipLowerLocs, lowerPos, self.lipLowerCrv, self.lipLowerLocGrp)
+
         
         #2: Aim constraint lip_locs to jaw_bind
         ModFunc._aimConstLocs(self.lipLocs, self.jawBind, upObj=self.faceLowerBind)
@@ -120,18 +122,22 @@ class BuildRig():
         ModFunc._createJntsOnLocs(self.lipLocs,self.lipBinds,self.faceLowerBind)
         
         #2: Create mouth drivers
-        driverList = ModFunc._createJntsOnCVs(self.mouthCrv,self.mouthDriverGrp) 
-        driverList = driverList[-1:] + driverList[:-1] #param 0 attachs to cv[1] for somehow, so I shifted last element to first position in list.
-        self.mouthDrivers = MouthFunc._mouthRigNamer(driverList, prefix='mouth',suffix='_driver')
+        driverList = ['corner_r','upper_00_r','upper_01_r','upper_m','upper_01_l','upper_00_l','corner_l','lower_00_l','lower_01_l','lower_m','lower_01_r','lower_00_r']
+        self.mouthDrivers = ['mouth_'+d+'_driver' for d in driverList]
+        ModFunc._createJntsOnCVs(self.mouthDrivers, self.mouthCrv,self.mouthDriverGrp) 
+
         
         #3: Create Bindmeshes on driver
-        self.mouthBindmeshes = ModFunc._createBindmeshesOnJnts(self.mouthDrivers,self.mouthBindmeshesGrp)
+        self.mouthBindmeshes = [d.replace('_driver','_bindmesh') for d in self.mouthDrivers]
+        ModFunc._createBindmeshesOnJnts(self.mouthBindmeshes,self.mouthDrivers,self.mouthBindmeshesGrp)
         
         #4: Create Follicles on Bindmeshes
-        self.mouthFols = ModFunc._createFolsOnBindmeshes(self.mouthBindmeshes,self.mouthFolGrp)
+        self.mouthFols = [d.replace('bindmesh','fol') for d in self.mouthBindmeshes]
+        ModFunc._createFolsOnBindmeshes(self.mouthFols,self.mouthBindmeshes,self.mouthFolGrp)
         
         #4: Create Clusters on Bindmeshes
-        self.jawCls = ModFunc._createClsOnBindmeshes(self.mouthBindmeshes,self.jawClsGrp)
+        self.jawCls = [d.replace('bindmesh','cls') for d in self.mouthBindmeshes]
+        ModFunc._createClsOnBindmeshes(self.jawCls,self.mouthBindmeshes,self.jawClsGrp)
         
         #4: Create Ctrls
             #lip ctrls

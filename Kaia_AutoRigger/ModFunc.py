@@ -7,7 +7,7 @@ def _getPosListFromVerts(verts):
         posList.append(pos)
     return posList
 
-def _createLocsOnCurve(curv,posList,grpName,newGrp=True):
+def _createLocsOnCurve(names,curv,posList,grpName,newGrp=True):
     ###no create locator when there's already one
     locDicList = []
     if newGrp==True:
@@ -45,12 +45,11 @@ def _createLocsOnCurve(curv,posList,grpName,newGrp=True):
         
         locDicList.append( {'loc':loc,'param':param} ) #return list of mini dictionaries
     locDicList.sort(key=lambda t: t['param']) #sort the list with parameter
-    locList = [d['loc'] for d in locDicList]
     
-    for loc in locList:
+    for loc,name in zip(locList,names):
         cmds.reorder( loc, back=True )#reorder in hierarchy
-        
-    return locList
+        cmds.rename(loc,name)
+
     
         
 def _aimConstLocs(locs,targ,upObj=None):
@@ -66,43 +65,39 @@ def _createJntsOnLocs(locs,names,parent): #parent should be a joint
         cmds.select(cl=True)
         jnt = cmds.joint( n=name, rad=.1 )
         const = cmds.parentConstraint(loc, jnt, mo=False)[0]
-
         cmds.parent(jnt,parent)
 
 
-
-def _createJntsOnCVs(curv,grpName):
-    jntList = []
+def _createJntsOnCVs(names,curv,grpName):
     grp = cmds.group(em=True, n=grpName)
     
     curvShape = _getCrvShape(curv)
     cvs = _getCVs(curv)
 
-    counter = 0
-    for cv in cvs:
+    for num,cv in enumerate(cvs):
         cmds.select(cl=True)
         poc1 = cmds.createNode('pointOnCurveInfo')
         cmds.connectAttr(curvShape+'.worldSpace[0]', poc1+'.inputCurve', f=True)
-        param = counter
+        param = num 
         cmds.setAttr(poc1 + '.parameter', param)
 
         jnt= cmds.joint(rad=.3)
         cmds.connectAttr(poc1+'.position', jnt+'.t')
         
         cmds.parent(jnt,grp)
-        jntList.append(jnt)
-        counter += 1
-    return jntList
+
+    jntList = driverList[-1:] + driverList[:-1] #param 0 attachs to cv[1] for somehow, so I shifted last element to first position in list.
+    for name,jnt in zip(name,jntList):
+        cmds.rename(jnt,name)
+        
 
 
 
-def _createBindmeshesOnJnts(jnts,grpName):
-    bindmeshList = []
+
+def _createBindmeshesOnJnts(names,jnts,grpName):
     grp = cmds.group(em=True,n=grpName)
-    
-    for jnt in jnts:
+    for jnt,name in zip(jnts,names):
         pos=cmds.xform(jnt,q=True,ws=True,t=True)
-        name = jnt.replace('_driver','_bindmesh')
         
         bindmesh = cmds.polyPlane(w=.3,h=.3,sw=1,sh=1,n=name)[0]
         cmds.move(pos[0],pos[1],pos[2],bindmesh)
@@ -111,33 +106,25 @@ def _createBindmeshesOnJnts(jnts,grpName):
         cmds.skinCluster(jnt,bindmesh,n='bindMesh_skinCluster',tsb=True)#tsb means toSelectedBones
         
         cmds.parent(bindmesh,grp)
-        bindmeshList.append(bindmesh)
-    return bindmeshList
+
     
-def _createClsOnBindmeshes(bindmeshes,grpName):
-    clsList = []
+def _createClsOnBindmeshes(names,bindmeshes,grpName):
     grp = cmds.group(em=True, n=grpName)
-    for bindmesh in bindmeshes:
+    for bindmesh,name in zip(bindmeshes,names):
         cmds.select(cl=True) #clear selection for safety
-        name=bindmesh.replace('bindmesh','cls')
-        
         clus = cmds.cluster(bindmesh)
         clsTrans = clus[1]
         clsTrans = cmds.rename(clsTrans, name)
-        
         cmds.parent(clsTrans,grp)
-        clsList.append(clsTrans)
-    return clsList
+        
     
-def _createFolsOnBindmeshes(bindmeshes,grpName):
-    folList = []
+def _createFolsOnBindmeshes(names,bindmeshes,grpName):
     grp = cmds.group(em=True, n=grpName)
-    for bindmesh in bindmeshes:
-        name = bindmesh.replace('bindmesh','fol')
+    for bindmesh,name in zip(bindmeshes,names):
         folShape = cmds.createNode('follicle', n=name+'_shape' )
         folTrans = cmds.listRelatives(folShape, p=1)[0]
         folTrans = cmds.rename(folTrans, name)
-        bmShape = cmds.listRelatives(bindmesh, type = 'mesh')[0]
+        bmShape = cmds.listRelatives(bindmesh, type='mesh')[0]
 
         cmds.connectAttr(bmShape+'.worldMesh', folShape+'.inputMesh')
         cmds.connectAttr(folShape+'.outTranslate', folTrans+'.t')
@@ -146,8 +133,7 @@ def _createFolsOnBindmeshes(bindmeshes,grpName):
         cmds.setAttr(folShape+'.parameterV', .5)
         
         cmds.parent(folTrans, grp)
-        folList.append(folTrans)
-    return folList
+
 
 def _createCtlGrp(drivenList, nameList, grpName, shape='circle', size=1, const=True):
     #Nurv curves, orient group, offset group, nul group

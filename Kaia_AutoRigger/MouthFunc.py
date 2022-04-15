@@ -4,7 +4,7 @@ import importlib
 from Kaia_AutoRigger import ModFunc
 importlib.reload(ModFunc)
 
-def _createMouthCrv(upperCrv, lowerCrv):
+def _createMouthCrv(name, upperCrv, lowerCrv):
     upperCVs = ModFunc._getCVs(upperCrv)
     lowerCVs = ModFunc._getCVs(lowerCrv)
     lowerCVs.reverse() #reverse list order so that it comes back to the start, as a circle
@@ -12,7 +12,7 @@ def _createMouthCrv(upperCrv, lowerCrv):
     cvList = upperCVs + lowerCVs
 
     sectionCount = len(cvList)-2
-    mouthCrv = cmds.circle(n='mouth_curve', s=sectionCount )[0] #create a new curve
+    mouthCrv = cmds.circle(n=name, s=sectionCount )[0] #create a new curve
     
     cmds.makeIdentity(mouthCrv, apply=True) #freeze transformation
     cmds.xform(mouthCrv, piv=(0,0,0), ws=True) #set pivot to 0,0,0
@@ -31,63 +31,23 @@ def _createMouthCrv(upperCrv, lowerCrv):
     
     return mouthCrv
 
-def _lipLocsNamer(locs, prefix=''):
+def _lipLocsNamer(inList, prefix=''):
     outList = []
-    for i,loc in enumerate(locs):
+    for i in range(len(inList)):
         name = prefix
-        if i==((len(locs)-1)/2):
+        if i==((len(inList)-1)/2):
             name += '_m_'
-        elif i<((len(locs)-1)/2):
+        elif i<((len(inList)-1)/2):
             name += '_r_%02d'%i #result: 'lip_lower_l_00_loc'
-        elif i>((len(locs)-1)/2):
-            name += '_l_%02d'%( (len(locs)-1)-i ) #result: 'lip_lower_r_00_loc'
+        elif i>((len(inList)-1)/2):
+            name += '_l_%02d'%( (len(inList)-1)-i ) #result: 'lip_lower_r_00_loc'
         name += '_loc'
-        cmds.rename(loc,name)
         
         outList.append(name) #append the loc name to self.lipLocs list
     return outList
     
-    
-def _mouthRigNamer(inList, prefix='',suffix=''):
-    if len(inList)%4 != 0:
-        print('Error: number of the list elements are not multiple of 4.')
-        
-    outList = []
-    c = 0 #c is a counter for list index
-    for i in inList:
-        name = prefix
-        if c == 0 or c==len(inList)/2: #on the corner
-            name += '_corner'
-        elif c>0 and c<len(inList)/2: 
-            name += '_upper'
-        elif c>len(inList)/2:
-            name += '_lower'
-        
-        if c == len(inList)/4 or c == len(inList)*3/4: #in the middle    
-            name += '_m'
-        elif c != len(inList)/4 and c != len(inList)*3/4: #not in the middle        
-            if c < len(inList)/4 or c > len(inList)*3/4: #on the right
-                name += '_r'
-            else:
-                name += '_l'
-            
-            if '_corner' in name:
-                numUp = 0 #numUp is a counter for rename 
-                numDown = (len(inList)-4)//4 -1 #numDown is a counter that goes reverse direction. It decreases from the maximum number
-            else:
-                if '_upper_r' in name or 'lower_l' in name:
-                    name += ('_%02d'%numUp)
-                    numUp+=1
-                elif '_upper_l' in name or 'lower_r' in name:
-                    name += ('_%02d'%numDown)
-                    numDown-=1
-                              
-        name += suffix
-        
-        cmds.rename(i,name)
-        outList.append(name) #put the driver joint name to the list
-        c+=1 #increase the counter
-    return outList
+
+
 
 def _2CurvCvCls(upCurv,loCurv,ctlList):
     #can use this for lip_upper_curve & lip_lower_curve, or eye_upper_curve & eye_lower_curve
