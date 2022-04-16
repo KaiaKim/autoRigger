@@ -56,7 +56,6 @@ def createWindow(arg1):
     cmds.setParent('..')
 
     cmds.gridLayout( numberOfColumns=3, cellWidthHeight=(100, 20) ) #fourth layout - frame layout
-    
     cmds.text(l='Head Verts')
     cmds.button( l='assign', c=lambda _:arg1.assignDelete('arg1.headVerts','ass') )
     cmds.button( l='delete', c=lambda _:arg1.assignDelete('arg1.headVerts','del') )
@@ -76,13 +75,19 @@ def createWindow(arg1):
     cmds.text( l='Lower R Eye Verts')
     cmds.button( l='assign', c=lambda _:arg1.assignDelete('arg1.lidLowerRVerts','ass') )
     cmds.button( l='delete', c=lambda _:arg1.assignDelete('arg1.lidLowerRVerts','del') )
-
     cmds.setParent('..')
+    
+    cmds.columnLayout()
+    cmds.button(l='set names',c=arg1.names)
+    cmds.setParent('..')
+    
     cmds.setParent('..')
     
     ###
     cmds.frameLayout( l='Build', collapsable=True, collapse=False)
     cmds.columnLayout( rowSpacing = 10 )
+    
+    
     
     cmds.rowLayout(numberOfColumns=2)
     cmds.text(l='(optional) ')

@@ -7,7 +7,7 @@ def _getPosListFromVerts(verts):
         posList.append(pos)
     return posList
 
-def _createLocsOnCurve(curv,posList,grpName,newGrp=True):
+def _createLocsOnCurve(names,posList,curv,grpName,newGrp=True):
     ###no create locator when there's already one
     locDicList = []
     if newGrp==True:
@@ -45,12 +45,12 @@ def _createLocsOnCurve(curv,posList,grpName,newGrp=True):
         
         locDicList.append( {'loc':loc,'param':param} ) #return list of mini dictionaries
     locDicList.sort(key=lambda t: t['param']) #sort the list with parameter
-    locList = [d['loc'] for d in locDicList]
     
-    for loc in locList:
+    for i,name in zip(locDicList,names):
+        loc=i['loc']
         cmds.reorder( loc, back=True )#reorder in hierarchy
-        
-    return locList
+        cmds.rename(loc,name)
+
     
         
 def _aimConstLocs(locs,targ,upObj=None):
@@ -66,24 +66,21 @@ def _createJntsOnLocs(locs,names,parent): #parent should be a joint
         cmds.select(cl=True)
         jnt = cmds.joint( n=name, rad=.1 )
         const = cmds.parentConstraint(loc, jnt, mo=False)[0]
-
         cmds.parent(jnt,parent)
 
 
-
-def _createJntsOnCVs(curv,grpName):
+def _createJntsOnCVs(names,curv,grpName):
     jntList = []
     grp = cmds.group(em=True, n=grpName)
     
     curvShape = _getCrvShape(curv)
     cvs = _getCVs(curv)
 
-    counter = 0
-    for cv in cvs:
+    for num,cv in enumerate(cvs):
         cmds.select(cl=True)
         poc1 = cmds.createNode('pointOnCurveInfo')
         cmds.connectAttr(curvShape+'.worldSpace[0]', poc1+'.inputCurve', f=True)
-        param = counter
+        param = num 
         cmds.setAttr(poc1 + '.parameter', param)
 
         jnt= cmds.joint(rad=.3)
@@ -91,18 +88,19 @@ def _createJntsOnCVs(curv,grpName):
         
         cmds.parent(jnt,grp)
         jntList.append(jnt)
-        counter += 1
-    return jntList
+
+    jntList = jntList[-1:] + jntList[:-1] #param 0 attachs to cv[1] for somehow, so I shifted last element to first position in list.
+    for name,jnt in zip(names,jntList):
+        cmds.rename(jnt,name)
+        
 
 
 
-def _createBindmeshesOnJnts(jnts,grpName):
-    bindmeshList = []
+
+def _createBindmeshesOnJnts(names,jnts,grpName):
     grp = cmds.group(em=True,n=grpName)
-    
-    for jnt in jnts:
+    for jnt,name in zip(jnts,names):
         pos=cmds.xform(jnt,q=True,ws=True,t=True)
-        name = jnt.replace('_driver','_bindmesh')
         
         bindmesh = cmds.polyPlane(w=.3,h=.3,sw=1,sh=1,n=name)[0]
         cmds.move(pos[0],pos[1],pos[2],bindmesh)
@@ -111,33 +109,25 @@ def _createBindmeshesOnJnts(jnts,grpName):
         cmds.skinCluster(jnt,bindmesh,n='bindMesh_skinCluster',tsb=True)#tsb means toSelectedBones
         
         cmds.parent(bindmesh,grp)
-        bindmeshList.append(bindmesh)
-    return bindmeshList
+
     
-def _createClsOnBindmeshes(bindmeshes,grpName):
-    clsList = []
+def _createClsOnBindmeshes(names,bindmeshes,grpName):
     grp = cmds.group(em=True, n=grpName)
-    for bindmesh in bindmeshes:
+    for bindmesh,name in zip(bindmeshes,names):
         cmds.select(cl=True) #clear selection for safety
-        name=bindmesh.replace('bindmesh','cls')
-        
         clus = cmds.cluster(bindmesh)
         clsTrans = clus[1]
         clsTrans = cmds.rename(clsTrans, name)
-        
         cmds.parent(clsTrans,grp)
-        clsList.append(clsTrans)
-    return clsList
+        
     
-def _createFolsOnBindmeshes(bindmeshes,grpName):
-    folList = []
+def _createFolsOnBindmeshes(names,bindmeshes,grpName):
     grp = cmds.group(em=True, n=grpName)
-    for bindmesh in bindmeshes:
-        name = bindmesh.replace('bindmesh','fol')
+    for bindmesh,name in zip(bindmeshes,names):
         folShape = cmds.createNode('follicle', n=name+'_shape' )
         folTrans = cmds.listRelatives(folShape, p=1)[0]
         folTrans = cmds.rename(folTrans, name)
-        bmShape = cmds.listRelatives(bindmesh, type = 'mesh')[0]
+        bmShape = cmds.listRelatives(bindmesh, type='mesh')[0]
 
         cmds.connectAttr(bmShape+'.worldMesh', folShape+'.inputMesh')
         cmds.connectAttr(folShape+'.outTranslate', folTrans+'.t')
@@ -146,12 +136,10 @@ def _createFolsOnBindmeshes(bindmeshes,grpName):
         cmds.setAttr(folShape+'.parameterV', .5)
         
         cmds.parent(folTrans, grp)
-        folList.append(folTrans)
-    return folList
+
 
 def _createCtlGrp(drivenList, nameList, grpName, shape='circle', size=1, const=True):
     #Nurv curves, orient group, offset group, nul group
-    ctlDicList = []
     bigGrp = cmds.group(em=True, n=grpName)
     
     for name,driven in zip(nameList,drivenList):
@@ -165,38 +153,36 @@ def _createCtlGrp(drivenList, nameList, grpName, shape='circle', size=1, const=T
             cmds.delete(constNode)
         
         cmds.parent(nulGrp,bigGrp)
-        ctlDicList.append( {'nul':nulGrp,'ori':orientGrp, 'off':offsetGrp,'ctl':ctl} ) #return list of mini dictionaries
-        
-    return ctlDicList
 
-def _scaleOrient(ctlDicList):
-    for i in ctlDicList:
+
+def _scaleOrient(ctlList):
+    for i in ctlList:
         scaleVal = [1,1,1]
-        if '_lower_' in i['ctl']:
+        if '_lower_' in i:
             scaleVal[2] = -1 #Z value is -1 
-        if '_l_' in i['ctl']:
+        if '_l_' in i:
             scaleVal[0] = -1 #X value is -1
         
-        cmds.scale(scaleVal[0],scaleVal[1],scaleVal[2],i['ori'])
+        cmds.scale(scaleVal[0],scaleVal[1],scaleVal[2],i+'_orient')
 
 def _setOffset(ctlDicList, t=(0,0,0), r=(0,0,0)):
     for i in ctlDicList:
-        cmds.move(t[0],t[1],t[2], i['off'], r=True)
-        cmds.rotate(r[0],r[1],r[2], i['off'], r=True)
+        cmds.move(t[0],t[1],t[2], i+'_offset', r=True)
+        cmds.rotate(r[0],r[1],r[2], i+'_offset', r=True)
     
 def _normalizeCtls(ctls,val=(1,1,1)):
     val = list(val)
     for i in ctls:
-        cmds.scale(1/val[0], 1/val[1], 1/val[2],i['ctl'])
+        cmds.scale(1/val[0], 1/val[1], 1/val[2],i)
         
-        x,y,z = cmds.getAttr(i['ori']+'.s')[0]
+        x,y,z = cmds.getAttr(i+'_orient'+'.s')[0]
         if x<0: val[0] = -val[0]
         if y<0: val[1] = -val[1]
         if z<0: val[2] = -val[2]
-        cmds.scale(val[0], val[1], val[2], i['ori'])
+        cmds.scale(val[0], val[1], val[2], i+'_orient')
         
-        #cmds.makeIdentity(i['ctl'], apply=True)
-        #cmds.delete(i['ctl'], constructionHistory=True)
+        #cmds.makeIdentity(i, apply=True)
+        #cmds.delete(i, constructionHistory=True)
 
 def _parentConstIterate(parents,childs):
     for parent,child in zip(parents,childs):
@@ -265,13 +251,11 @@ def _applyTransformData(inData, ws=False, os=False):
             scl = i['scl']
             cmds.scale(scl[0],scl[1],scl[2],i['name'])
             
-def _mirrorObj(right):
-    left = cmds.duplicate(right)[0]
-    left = cmds.rename(left,right.replace('_r_','_l_'))
+def _mirrorObj(name,right):
+    left = cmds.duplicate(right, n=name)[0]
     cmds.scale(-1,1,1,left)
     cmds.makeIdentity(left, apply=True)
     cmds.delete(left, constructionHistory=True)
-    return left
 
 def _mirrorIterate(rightList):
     leftList = []

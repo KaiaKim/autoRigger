@@ -22,8 +22,12 @@ class AutoRigFace(Builder.BuildRig):
         
         self.winTitle = 'Kaia\'s auto rigger' #this is the title of the window #display name
         self.winName = 'kaiaAutoRigFace' #this needs to be ac word that has no spaces or it won't work! #node name
-        
-        self.names()
+    
+        self.headVerts = None
+        self.lipUpperVerts = None
+        self.lipLowerVerts = None
+        self.lidUpperRVerts = None
+        self.lidLowerRVerts = None
         
     def quickTest(self,_):
         #some hard coded data for quick testing
@@ -50,7 +54,7 @@ class AutoRigFace(Builder.BuildRig):
         
         if flag=='mirror' or flag=='save':
             #get transform
-            orients = [d['ori'] for d in allCtls]
+            orients = [d+'_orient' for d in self.allCtls]
             data = ModFunc._getTransformData(orients, t=False, r=True)
         
         if flag=='mirror':
@@ -153,9 +157,8 @@ class AutoRigFace(Builder.BuildRig):
         print('### enter orient edit mode ###')
         ###lip ctrl
         #unparent lipCvClsoffset from lip ctrl
-        for j in self.lipCvCls:
-            offGrp = j+'_offset'
-            cmds.parent(offGrp, w=True) #parent to world
+        for clus in self.lipCvCls:
+            cmds.parent(clus+'_offset', w=True) #parent to world
 
         ###mouth ctrl
         #delete parent constraint of jaw clusters
@@ -167,10 +170,8 @@ class AutoRigFace(Builder.BuildRig):
     
     def exitOrientEdit(self,_):
         print('### exit orient edit mode ###')
-        for i,j in zip(self.lipCtls,self.lipCvCls):
-            ctl = i['ctl']
-            offGrp = j+'_offset'
-            cmds.parent(offGrp,ctl)
+        for ctl,clus in zip(self.lipCtls,self.lipCvCls):
+            cmds.parent(clus+'_offset',ctl)
 
 
     def changeCornerN(self,x,y,z):
@@ -178,8 +179,8 @@ class AutoRigFace(Builder.BuildRig):
         
     def changeLipPull(self,one,two):
         for i in self.mCornerCtls:
-            cmds.setAttr(i['ctl']+'.lipOnePull', one)
-            cmds.setAttr(i['ctl']+'.lipTwoPull', two)
+            cmds.setAttr(i+'.lipOnePull', one)
+            cmds.setAttr(i+'.lipTwoPull', two)
     
     def saveNames(self,_):
         pass

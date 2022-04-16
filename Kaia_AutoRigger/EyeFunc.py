@@ -4,45 +4,64 @@ import importlib
 from Kaia_AutoRigger import ModFunc
 importlib.reload(ModFunc)
 
-def _eyeLocsNamer(locs, side='', prefix=''):
+def _eyeLocsNamer(inList, prefix=''):
     outList = []
-    for i,loc in enumerate(locs):
+    for i in range(len(inList)):
         name = prefix
         name += '_%02d' %i #'lower_lid_00_l_loc'
         name += '_loc'
-        cmds.rename(loc,name)
         
         outList.append(name) #append the loc name to self.lipLocs list
     return outList
     
-def _createBsCrv(origList,suffixList,grpName):
-    outList = []
+def _createBsCrv(crvs,names,grpName):
+    #self.eyeRCrvs = [self.lidUpperRCrv, self.lidLowerRCrv]
+    #suffixList = ['_open','_closed','_neutral','_mid']
+    #self.eyeRBlendCrvs = [self.lidUpperRCrv+d for d in suffixList]+[self.lidLowerRCrv+d for d in suffixList]
+    #names = ['lid_upper_r_curve_open', 'lid_upper_r_curve_closed', 'lid_upper_r_curve_neutral', 'lid_upper_r_curve_mid', ...]
     grp = cmds.group(em=True,n=grpName)
-    for orig in origList:
-        for suffix in suffixList:
-            crv1 = cmds.duplicate(orig, n=orig+suffix)[0]
-            cmds.parent(crv1,grp)
-            outList.append(crv1)
-    return outList
     
-
-def _createBsNode(origList,suffixList):
-    outList = []
-    for orig in origList:
-        bls = cmds.blendShape(orig, n=orig.replace('_curve','_blend'), o='local')[0]
-        for num,suffix in enumerate(suffixList):
-            targ=orig+suffix
-            cmds.blendShape(bls, e=True, t=(orig, num, targ, 1.0))
-        outList.append(bls)
-    return outList
+    for name in names:
+        if 'upper' in name:
+            orig = crvs[0]
+        elif 'lower' in name:
+            orig = crvs[1]
+        
+        if ('upper'and'neutral') or ('lower'and'closed') in name: #lower_closed = upper_neut = upper_orig
+            orig = crvs[0]
             
+        if ('lower'and'neutral') or ('upper'and'closed') in name: #upper_closed = lower_neut = lower_ orig
+            orig = crvs[1]
+        
+        dup = cmds.duplicate(orig,n=name)
+        cmds.parent(crv, dup)
+
+
+
+def _createBsNode(nodes,crvs,targList):
+    #nodes = self.eyeRBsNodes = ['upper_r_open','upper_r_closed','lower_r_open','lower_r_closed']
+    #crvs = self.eyeRCrvs = [self.lidUpperRCrv, self.lidLowerRCrv]
+    #targList = self.eyeRBlendCrvs = ['lid_upper_r_curve_open', 'lid_upper_r_curve_closed', 'lid_upper_r_curve_neutral', 'lid_upper_r_curve_mid', ...]
+    for node in nodes:
+        if 'upper' in node: x=0
+        elif 'lower' in node: x=1
+        orig=crvs[x]
+        cmds.blendShape(orig, n=node, o='local')
+        if '_open' in node:
+            cmds.blendShape(node, e=True, t=(orig, 1, targList[0+4*x], 1.0))
+        elif '_closed' in node:
+            cmds.blendShape(node, e=True, t=(orig, 1, targList[1+4*x], 1.0))
+            cmds.blendShape(node, e=True, ib=True, t=(orig, 2, targList[2+4*x], 0.333))
+            cmds.blendShape(node, e=True, ib=True, t=(orig, 3, targList[3+4*x], 0.666))
+            
+
             
 def _connectCornerCtrl(blinkCtls, blendCrvs, bsNodeList):
     #blinkCtls = [{'ctl': 'blink_upper_r_ctl'}, {'ctl': 'blink_lower_r_ctl'}, {'ctl': 'blink_upper_l_ctl'}, {'ctl': 'blink_lower_l_ctl'}]
     #bsNodeList = ['upper_lid_r_blend','lower_lid_r_blend','upper_lid_l_blend','lower_lid_l_blend']
     #closedCrvs=['upper_lid_r_curve_closed','lower_lid_r_curve_closed','upper_lid_l_curve_closed','lower_lid_l_curve_closed']
-    upperCtls = [d['ctl'] for d in blinkCtls if 'upper' in d['ctl']]
-    lowerCtls = [d['ctl'] for d in blinkCtls if 'lower' in d['ctl']]
+    upperCtls = [d for d in blinkCtls if 'upper' in d]
+    lowerCtls = [d for d in blinkCtls if 'lower' in d]
     upperNode = [d for d in bsNodeList if 'upper' in d]
     lowerNode = [d for d in bsNodeList if 'lower' in d]
     upperClosed = [d for d in blendCrvs if 'upper' in d and 'closed' in d]
@@ -78,12 +97,6 @@ def _connectCornerCtrl(blinkCtls, blendCrvs, bsNodeList):
         #clamp outputR >> blend weight lower_lid_l_closed_curve
         cmds.connectAttr( clmp+'.outputR', lowerNode[i]+'.'+ lowerClosed[i] )
     
-    
-    ###
-    # To set the keyframe on the selected object's translateX based on
-    # curve1's rotateZ:
-    #cmds.setDrivenKeyframe( at='translateX', cd='curve1.rz' )
-    pass
     
 def _matchCloseCrv(posList):
     outList = []

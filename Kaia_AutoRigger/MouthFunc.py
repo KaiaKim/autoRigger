@@ -4,7 +4,7 @@ import importlib
 from Kaia_AutoRigger import ModFunc
 importlib.reload(ModFunc)
 
-def _createMouthCrv(upperCrv, lowerCrv):
+def _createMouthCrv(name, upperCrv, lowerCrv):
     upperCVs = ModFunc._getCVs(upperCrv)
     lowerCVs = ModFunc._getCVs(lowerCrv)
     lowerCVs.reverse() #reverse list order so that it comes back to the start, as a circle
@@ -12,7 +12,7 @@ def _createMouthCrv(upperCrv, lowerCrv):
     cvList = upperCVs + lowerCVs
 
     sectionCount = len(cvList)-2
-    mouthCrv = cmds.circle(n='mouth_curve', s=sectionCount )[0] #create a new curve
+    mouthCrv = cmds.circle(n=name, s=sectionCount )[0] #create a new curve
     
     cmds.makeIdentity(mouthCrv, apply=True) #freeze transformation
     cmds.xform(mouthCrv, piv=(0,0,0), ws=True) #set pivot to 0,0,0
@@ -31,65 +31,25 @@ def _createMouthCrv(upperCrv, lowerCrv):
     
     return mouthCrv
 
-def _lipLocsNamer(locs, prefix=''):
+def _lipLocsNamer(inList, prefix=''):
     outList = []
-    for i,loc in enumerate(locs):
+    for i in range(len(inList)):
         name = prefix
-        if i==((len(locs)-1)/2):
+        if i==((len(inList)-1)/2):
             name += '_m_'
-        elif i<((len(locs)-1)/2):
+        elif i<((len(inList)-1)/2):
             name += '_r_%02d'%i #result: 'lip_lower_l_00_loc'
-        elif i>((len(locs)-1)/2):
-            name += '_l_%02d'%( (len(locs)-1)-i ) #result: 'lip_lower_r_00_loc'
+        elif i>((len(inList)-1)/2):
+            name += '_l_%02d'%( (len(inList)-1)-i ) #result: 'lip_lower_r_00_loc'
         name += '_loc'
-        cmds.rename(loc,name)
         
         outList.append(name) #append the loc name to self.lipLocs list
     return outList
     
-    
-def _mouthRigNamer(inList, prefix='',suffix=''):
-    if len(inList)%4 != 0:
-        print('Error: number of the list elements are not multiple of 4.')
-        
-    outList = []
-    c = 0 #c is a counter for list index
-    for i in inList:
-        name = prefix
-        if c == 0 or c==len(inList)/2: #on the corner
-            name += '_corner'
-        elif c>0 and c<len(inList)/2: 
-            name += '_upper'
-        elif c>len(inList)/2:
-            name += '_lower'
-        
-        if c == len(inList)/4 or c == len(inList)*3/4: #in the middle    
-            name += '_m'
-        elif c != len(inList)/4 and c != len(inList)*3/4: #not in the middle        
-            if c < len(inList)/4 or c > len(inList)*3/4: #on the right
-                name += '_r'
-            else:
-                name += '_l'
-            
-            if '_corner' in name:
-                numUp = 0 #numUp is a counter for rename 
-                numDown = (len(inList)-4)//4 -1 #numDown is a counter that goes reverse direction. It decreases from the maximum number
-            else:
-                if '_upper_r' in name or 'lower_l' in name:
-                    name += ('_%02d'%numUp)
-                    numUp+=1
-                elif '_upper_l' in name or 'lower_r' in name:
-                    name += ('_%02d'%numDown)
-                    numDown-=1
-                              
-        name += suffix
-        
-        cmds.rename(i,name)
-        outList.append(name) #put the driver joint name to the list
-        c+=1 #increase the counter
-    return outList
 
-def _2CurvCvCls(upCurv,loCurv,ctlList):
+
+
+def _2CurvCvCls(names,upCurv,loCurv):
     #can use this for lip_upper_curve & lip_lower_curve, or eye_upper_curve & eye_lower_curve
     clsList = []
     
@@ -105,8 +65,7 @@ def _2CurvCvCls(upCurv,loCurv,ctlList):
 
     cvList = [leftCorner]+upCVs+[rightCorner]+loCVs
     
-    for cv,ctl in zip(cvList,ctlList):
-        name = ctl.replace('lip_','lipCv_').replace('_ctl','_cls') #ex) lipCV_corner_r_cls
+    for cv,name in zip(cvList,names):
         clus = cmds.cluster(cv, n=name)[1] #[1] gets trans node #lipCv_lower_r_00_clsHandle
         clsList.append(name)
         offGrp = cmds.group(clus,n=name+'_offset')
@@ -117,10 +76,10 @@ def _2CurvCvCls(upCurv,loCurv,ctlList):
 
 def constMicroToMacro(inList):
     for i in inList:
-        if '_m_' in i['ctl']:
-            i['nul2'] = cmds.group(i['ori'],n=i['nul']+'2') #create nul2 grp
-            macro = i['ctl'].replace('lip','mouth') #micro_mouth_lower_m_ctl
-            cmds.parentConstraint(macro,i['nul2'],mo=True)
+        if '_m_' in i:
+            nul2 = cmds.group(i+'_orient',n=i+'_nul2') #create nul2 grp
+            macro = i.replace('lip','mouth') #micro_mouth_lower_m_ctl
+            cmds.parentConstraint(macro,nul2,mo=True)
 
 def attachJawCls(jawCls, mouthCtls, faceLowerBind, jawBind):
     #We're gonna parent constraint jawClusters to the mouth macro controllers
@@ -131,9 +90,9 @@ def attachJawCls(jawCls, mouthCtls, faceLowerBind, jawBind):
         
         elif '0' in clus: #inbetween
             if 'upper' in clus:
-                parent1=mouthCtls[0]['ctl'] #macro_mouth_upper_ctl
+                parent1=mouthCtls[0] #macro_mouth_upper_ctl
             elif 'lower' in clus:
-                parent1=mouthCtls[1]['ctl'] #macro_mouth_lower_ctl
+                parent1=mouthCtls[1] #macro_mouth_lower_ctl
             
             if '_r_' in clus:
                 parent2=jawCls[0] #mouth_corner_r_cls
@@ -163,23 +122,21 @@ def _setWeightVal(child, parent00, parent01):
 
 
 def setMouthCornerCtls(mCornerCtls, mouthCtls, jawCls, faceLowerBind,jawBind):
-    cornerCtl = [d['ctl'] for d in mCornerCtls]
     cornerCls = [d for d in jawCls if '_corner_' in d] #left, right
-    midCtl = [d['ctl'] for d in mouthCtls] #upper, lower
-    #inbetweenCls = [d for d in jawCls if re.findall('[0-9]+',d)!=[] ]
     inbetweenCls = [d for d in jawCls if '0' in d ]
+    #inbetweenCls = [d for d in jawCls if re.findall('[0-9]+',d)!=[] ]
     
     #set corner pin
     _setCornerPin(cornerCtl[0], cornerCls[0], faceLowerBind,jawBind)
     _setCornerPin(cornerCtl[1], cornerCls[1], faceLowerBind,jawBind)
 
     #add attribute
-    for ctl in cornerCtl:
+    for ctl in mcornerCtls:
         cmds.addAttr(ctl, shortName='lipOnePull', defaultValue=0, minValue=0, maxValue=1)
         cmds.addAttr(ctl, shortName='lipTwoPull', defaultValue=0, minValue=0, maxValue=1)
     
     ###--------------------MouthFunc._setLipPull()
-    _connectLipPull(cornerCtl,inbetweenCls,midCtl,cornerCls)
+    _connectLipPull(mcornerCtls,inbetweenCls,mouthCtls,cornerCls)
 
 
 def _setCornerPin(ctl,clus,parent1,parent2):
@@ -248,23 +205,16 @@ def _connectLipPull(cornerCtl,clsList,midCtl,cornerCls):
         cmds.connectAttr(ctl+attr,revNode2+'.inputX')
         cmds.connectAttr(revNode2+'.outputX',clus+'_parentConstraint1.'+parent4+'W1')
         
-def _createBsCrv(orig,grpName):
-    outList = []
+def _createBsCrv(orig,nameList,grpName):
     grp = cmds.group(em=True,n=grpName)
-    suffixList = ['_wide','_small','_smile','_frown']
-    for i in suffixList:
-        crv1 = cmds.duplicate(orig, n=orig+'_r'+i)[0]
-        outList.append(crv1)
-        crv2 = cmds.duplicate(orig, n=orig+'_l'+i)[0]
-        outList.append(crv2)
-        cmds.parent(crv1,crv2,grp)
-    return outList
+    for name in names:
+        crv = cmds.duplicate(orig, n=name)[0]
+        cmds.parent(crv,grp)
 
-def _createBsNode(orig, targList):
-    bs = cmds.blendShape(orig, n='mouth_curve_blend', o='local')[0] #o is origin
+def _createBsNode(name, orig, targList):
+    bs = cmds.blendShape(orig, n=name, o='local')[0] #o is origin
     for num,targ in enumerate(targList):
         cmds.blendShape(bs, e=True, t=(orig, num, targ, 1.0) )
-    return bs
 
 def _setBsCvWeight(bs):
     for i in range(8):
@@ -299,13 +249,12 @@ def _symmetricMouthCrv(crvList):
     return outList
 
 def _connectCornerCtrl(mCornerCtls, blendCrvs, bs):
-    #rCtl = mCornerCtls[0]['ctl']
-    #lCtl = mCornerCtls[1]['ctl']
+    #rCtl = mCornerCtls[0]
+    #lCtl = mCornerCtls[1]
     #blendCrvs = 
     #[ wideR wideL smallR smallL smileR smileL frownR frownL ]
     #[ 0     1     2      3      4      5      6      7      ]
-    for num,i in enumerate(mCornerCtls):
-        ctl=i['ctl']
+    for ctl,i in enumerate(mCornerCtls):
         ###
         clp = cmds.createNode('clamp')
         cmds.setAttr(clp+'.maxR',10)
