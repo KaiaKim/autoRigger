@@ -89,7 +89,10 @@ class BuildRig():
         
         self.mouthBlendCrvGrp = 'mouth_blend_crv_grp'
         suffixList = ['_wide','_small','_smile','_frown']
-        self.mouthBlendCrvs = [self.mouthCrv+'_r'+d for d in suffixList]+[self.mouthCrv+'_r'+d for d in suffixList]
+        self.mouthBlendCrvs = []
+        for suffix in suffixList:
+            self.mouthBlendCrvs.append(self.mouthCrv+'_r'+suffix)
+            self.mouthBlendCrvs.append(self.mouthCrv+'_l'+suffix)
         self.mouthBsNode = 'mouth_curve_blend'
         ###
         self.eyeRBlendCrvGrp = 'eye_r_blend_crv_grp'
@@ -97,7 +100,7 @@ class BuildRig():
         self.eyeRCrvs = [self.lidUpperRCrv, self.lidLowerRCrv]
         self.eyeLCrvs = [self.lidUpperLCrv, self.lidLowerLCrv]
         
-        suffixList = ['_open','_closed','_neutral','_mid']
+        suffixList = ['_open','_neutral','_mid','_closed']
         self.eyeRBlendCrvs = [self.lidUpperRCrv+d for d in suffixList]+[self.lidLowerRCrv+d for d in suffixList]
         self.eyeLBlendCrvs = [self.lidUpperLCrv+d for d in suffixList]+[self.lidLowerLCrv+d for d in suffixList]
                 
@@ -108,7 +111,7 @@ class BuildRig():
         self.eyeLoft = None
         
         self.allCtls = self.lipCtls + self.mouthCtls + self.mCornerCtls + self.blinkCtls
-            
+        
     
     def buildMouthRig01(self,_):
         #0:Create Groups
@@ -172,7 +175,7 @@ class BuildRig():
         MouthFunc.attachJawCls(self.jawCls, self.mouthCtls, self.faceLowerBind, self.jawBind)
         
         #8: Create lipCV Clusters on lip_curves
-        MouthFunc._2CurvCvCls(self.lipCvCls, self.lipUpperCrv, self.lipLowerCrv )
+        MouthFunc._2CurvCvCls(self.lipCvCls, self.lipCtls, self.lipUpperCrv, self.lipLowerCrv )
         
         #10: Corner pin, Lip pull
         MouthFunc.setMouthCornerCtls(self.mCornerCtls, self.mouthCtls, self.jawCls, self.faceLowerBind,self.jawBind)
@@ -231,10 +234,13 @@ class BuildRig():
     def BuildMouthBlendshapes01(self,_):
         #1: Duplicate orig curve
         MouthFunc._createBsCrv(self.mouthCrv,self.mouthBlendCrvs,self.mouthBlendCrvGrp)
+        
         #2: Create Blendshape Node
         MouthFunc._createBsNode(self.mouthBsNode, self.mouthCrv, self.mouthBlendCrvs)
+        
         #3: Set blendshape cv weight(sepereate left & right weight)
         MouthFunc._setBsCvWeight(self.mouthBsNode)
+        
         #4: Connect Blendshape weight to translate value of mouth corner ctrls
         MouthFunc._connectCornerCtrl(self.mCornerCtls, self.mouthBlendCrvs, self.mouthBsNode)
             
@@ -243,11 +249,18 @@ class BuildRig():
         #1: Duplicate orig curve
         EyeFunc._createBsCrv(self.eyeRCrvs, self.eyeRBlendCrvs, self.eyeRBlendCrvGrp)
         EyeFunc._createBsCrv(self.eyeLCrvs, self.eyeLBlendCrvs, self.eyeLBlendCrvGrp)
+        
         #2: Create Blendshape Node
         EyeFunc._createBsNode(self.eyeRBsNodes, self.eyeRCrvs, self.eyeRBlendCrvs)
         EyeFunc._createBsNode(self.eyeLBsNodes, self.eyeLCrvs, self.eyeLBlendCrvs)
+        
         #3: Connect Blendshape weight to translate value of mouth corner ctrls
-        #EyeFunc._connectCornerCtrl(self.blinkCtls, self.eyeBlendCrvs, bsNodeList)
+        EyeFunc._connectCornerCtrl(self.blinkCtls[:2], self.eyeRBlendCrvs, self.eyeRBsNodes) # first two elements (right ctrls)
+        EyeFunc._connectCornerCtrl(self.blinkCtls[2:], self.eyeLBlendCrvs, self.eyeLBsNodes) #last two elements (left ctrls)
+        
+        #EXTRA: set different color for orig crvs
+        eyeCrvs = [self.lidUpperRCrv, self.lidLowerRCrv, self.lidUpperLCrv, self.lidLowerLCrv]
+        ModFunc._overrideColor(eyeCrvs,color=(0,1,1))
 
     
     def createGrps(self):

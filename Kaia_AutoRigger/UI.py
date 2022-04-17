@@ -147,13 +147,7 @@ def createWindow(arg1):
     
     cmds.button(l='000: Arrange Groups',c=arg1.arrangeGrps)
     cmds.button(l='select Jaw Bind',c=lambda _:cmds.select(arg1.jawBind))
-    '''
-    cmds.rowLayout(numberOfColumns=3)
-    cmds.text(l='face rig names: ')
-    cmds.button(l='save')
-    cmds.button(l='load')
-    cmds.setParent('..')
-    '''
+
     cmds.showWindow()
     
 ###---------------------------------------------------------------------------

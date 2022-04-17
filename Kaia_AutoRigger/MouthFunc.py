@@ -49,7 +49,7 @@ def _lipLocsNamer(inList, prefix=''):
 
 
 
-def _2CurvCvCls(names,upCurv,loCurv):
+def _2CurvCvCls(names,ctls,upCurv,loCurv):
     #can use this for lip_upper_curve & lip_lower_curve, or eye_upper_curve & eye_lower_curve
     clsList = []
     
@@ -65,12 +65,13 @@ def _2CurvCvCls(names,upCurv,loCurv):
 
     cvList = [leftCorner]+upCVs+[rightCorner]+loCVs
     
-    for cv,name in zip(cvList,names):
+    for cv,name,ctl in zip(cvList,names,ctls):
         clus = cmds.cluster(cv, n=name)[1] #[1] gets trans node #lipCv_lower_r_00_clsHandle
         clsList.append(name)
+        
         offGrp = cmds.group(clus,n=name+'_offset')
-
         cmds.parent(offGrp, ctl) #(child, parent)
+        
     
     return clsList
 
@@ -127,16 +128,15 @@ def setMouthCornerCtls(mCornerCtls, mouthCtls, jawCls, faceLowerBind,jawBind):
     #inbetweenCls = [d for d in jawCls if re.findall('[0-9]+',d)!=[] ]
     
     #set corner pin
-    _setCornerPin(cornerCtl[0], cornerCls[0], faceLowerBind,jawBind)
-    _setCornerPin(cornerCtl[1], cornerCls[1], faceLowerBind,jawBind)
+    _setCornerPin(mCornerCtls[0], cornerCls[0], faceLowerBind,jawBind)
+    _setCornerPin(mCornerCtls[1], cornerCls[1], faceLowerBind,jawBind)
 
     #add attribute
-    for ctl in mcornerCtls:
+    for ctl in mCornerCtls:
         cmds.addAttr(ctl, shortName='lipOnePull', defaultValue=0, minValue=0, maxValue=1)
         cmds.addAttr(ctl, shortName='lipTwoPull', defaultValue=0, minValue=0, maxValue=1)
-    
-    ###--------------------MouthFunc._setLipPull()
-    _connectLipPull(mcornerCtls,inbetweenCls,mouthCtls,cornerCls)
+    #
+    _connectLipPull(mCornerCtls,inbetweenCls,mouthCtls,cornerCls)
 
 
 def _setCornerPin(ctl,clus,parent1,parent2):
@@ -205,7 +205,7 @@ def _connectLipPull(cornerCtl,clsList,midCtl,cornerCls):
         cmds.connectAttr(ctl+attr,revNode2+'.inputX')
         cmds.connectAttr(revNode2+'.outputX',clus+'_parentConstraint1.'+parent4+'W1')
         
-def _createBsCrv(orig,nameList,grpName):
+def _createBsCrv(orig,names,grpName):
     grp = cmds.group(em=True,n=grpName)
     for name in names:
         crv = cmds.duplicate(orig, n=name)[0]
@@ -254,7 +254,7 @@ def _connectCornerCtrl(mCornerCtls, blendCrvs, bs):
     #blendCrvs = 
     #[ wideR wideL smallR smallL smileR smileL frownR frownL ]
     #[ 0     1     2      3      4      5      6      7      ]
-    for ctl,i in enumerate(mCornerCtls):
+    for num,ctl in enumerate(mCornerCtls):
         ###
         clp = cmds.createNode('clamp')
         cmds.setAttr(clp+'.maxR',10)
