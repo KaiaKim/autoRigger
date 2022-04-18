@@ -13,7 +13,12 @@ def _eyeLocsNamer(inList, prefix=''):
         
         outList.append(name) #append the loc name to self.lipLocs list
     return outList
-    
+
+def _createDrivCrv(names,origs):
+    for orig,name in zip(origs,names):
+        cmds.duplicate(orig,n=name)
+        cmds.rebuildCurve(name,d=1,kcp=True)
+
 def _createBsCrv(crvs,names,grpName):
     #self.eyeRCrvs = [self.lidUpperRCrv, self.lidLowerRCrv]
     #names = ['lid_upper_r_curve_open', 'lid_upper_r_curve_closed', 'lid_upper_r_curve_neutral', 'lid_upper_r_curve_mid', ...]

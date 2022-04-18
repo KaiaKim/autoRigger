@@ -31,16 +31,14 @@ class BuildRig():
         self.jawBind = 'jaw_bind' #No change this!
         self.eyeSocketRBind = 'eye_socket_r_bind' #No change this!
         self.eyeSocketLBind = 'eye_socket_l_bind' #No change this!
-        self.eyeBinds = ['eye_r_bind','eye_l_bind']
-        self.browCorBinds = ['brow_corrugator_r_bind','brow_corrugator_l_bind'] 
+        self.eyeBinds = ['eye_r_bind','eye_l_bind'] #No change this!
+        self.browCorBinds = ['brow_corrugator_r_bind','brow_corrugator_l_bind']  #No change this!
         
         self.lidCrvs = ['upper_lid_r_curve', 'lower_lid_r_curve', 'upper_lid_l_curve', 'lower_lid_l_curve'] #No change this!
-        self.eyeRCrvs = [self.lidCrvs[0], self.lidCrvs[1]]
-        self.eyeLCrvs = [self.lidCrvs[2], self.lidCrvs[3]]
-        
+        self.lidDrivCrvs = [d.replace('_curve','_driver_curve') for d in self.lidCrvs] #lid driver curve
         self.lipUpperCrv = 'lip_upper_curve' #No change this!
         self.lipLowerCrv = 'lip_lower_curve' #No change this!
-        self.mouthCrv = 'mouth_curve'
+        self.mouthCrv = 'mouth_curve' #No change this!
         
         ###
         self.eyeballRLtc = 'eye_r_ffd1'
@@ -250,8 +248,9 @@ class BuildRig():
         ModFunc._parentConstIterate(self.lidLLocs,self.lidLBinds)
         
         #3: Create Lid Driver Curve
+        EyeFunc._createDrivCrv(self.lidDrivCrvs,self.lidCrvs)
         
-        #4: Create Lid Ctls 
+        #4: Create Lid Ctls
         
         #4: Create blink Ctls
         socketBinds = [self.eyeSocketRBind, self.eyeSocketRBind, self.eyeSocketLBind, self.eyeSocketLBind]
@@ -362,12 +361,12 @@ class BuildRig():
         
     def eyeBs01(self):
         #1: Duplicate orig curve
-        EyeFunc._createBsCrv(self.eyeRCrvs, self.eyeRBlendCrvs, self.eyeRBlendCrvGrp)
-        EyeFunc._createBsCrv(self.eyeLCrvs, self.eyeLBlendCrvs, self.eyeLBlendCrvGrp)
+        EyeFunc._createBsCrv(self.lidCrvs[:2], self.eyeRBlendCrvs, self.eyeRBlendCrvGrp)
+        EyeFunc._createBsCrv(self.lidCrvs[2:], self.eyeLBlendCrvs, self.eyeLBlendCrvGrp)
         
         #2: Create Blendshape Node
-        EyeFunc._createBsNode(self.eyeRBsNodes, self.eyeRCrvs, self.eyeRBlendCrvs)
-        EyeFunc._createBsNode(self.eyeLBsNodes, self.eyeLCrvs, self.eyeLBlendCrvs)
+        EyeFunc._createBsNode(self.eyeRBsNodes, self.lidCrvs[:2], self.eyeRBlendCrvs)
+        EyeFunc._createBsNode(self.eyeLBsNodes, self.lidCrvs[2:], self.eyeLBlendCrvs)
         
         #3: Connect Blendshape weight to translate value of mouth corner ctrls
         EyeFunc._connectCornerCtrl(self.blinkCtls[:2], self.eyeRBlendCrvs, self.eyeRBsNodes) # first two elements (right ctrls)

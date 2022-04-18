@@ -83,7 +83,7 @@ class AutoRigFace(Builder.BuildRig):
                 (rx,ry,rz) = i['rot']
                 i['rot'] = (rx,-ry,-rz)
             ModFunc._applyTransformData(mirrorData)
-        
+
         if flag=='load':
             #apply transform
             ModFunc._applyTransformData(data)
