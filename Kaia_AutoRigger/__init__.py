@@ -8,11 +8,13 @@ from Kaia_AutoRigger import UI
 from Kaia_AutoRigger import ModFunc
 from Kaia_AutoRigger import MouthFunc
 from Kaia_AutoRigger import EyeFunc
+from Kaia_AutoRigger import BrowFunc
 importlib.reload(Builder)
 importlib.reload(UI)
 importlib.reload(ModFunc)
 importlib.reload(MouthFunc)
 importlib.reload(EyeFunc)
+importlib.reload(BrowFunc)
 
 ###-----------------------------------------------------CLASS---------------------------------------------------
 class AutoRigFace(Builder.BuildRig):
@@ -31,18 +33,36 @@ class AutoRigFace(Builder.BuildRig):
         
     def quickTest(self,_):
         #some hard coded data for quick testing
+        self.headVerts=['forBody.vtx[0:6959]']
         self.lipUpperVerts=['forBody.vtx[3314]', 'forBody.vtx[3315]', 'forBody.vtx[3317]', 'forBody.vtx[3320]', 'forBody.vtx[3321]', 'forBody.vtx[3322]', 'forBody.vtx[3325]', 'forBody.vtx[3326]', 'forBody.vtx[3327]', 'forBody.vtx[3331]', 'forBody.vtx[3332]', 'forBody.vtx[3335]', 'forBody.vtx[3337]', 'forBody.vtx[3495]', 'forBody.vtx[3818]', 'forBody.vtx[4010]', 'forBody.vtx[4200]', 'forBody.vtx[4386]', 'forBody.vtx[4574]', 'forBody.vtx[4751]', 'forBody.vtx[4918]', 'forBody.vtx[5079]', 'forBody.vtx[5215]', 'forBody.vtx[5350]', 'forBody.vtx[5485]', 'forBody.vtx[5620]', 'forBody.vtx[5741]']
         self.lipLowerVerts=['forBody.vtx[3313]', 'forBody.vtx[3316]', 'forBody.vtx[3318]', 'forBody.vtx[3319]', 'forBody.vtx[3323]', 'forBody.vtx[3324]', 'forBody.vtx[3327]', 'forBody.vtx[3328]', 'forBody.vtx[3329]', 'forBody.vtx[3330]', 'forBody.vtx[3333]', 'forBody.vtx[3334]', 'forBody.vtx[3336]', 'forBody.vtx[3494]', 'forBody.vtx[3729]', 'forBody.vtx[3950]', 'forBody.vtx[4144]', 'forBody.vtx[4334]', 'forBody.vtx[4526]', 'forBody.vtx[4707]', 'forBody.vtx[4878]', 'forBody.vtx[5043]', 'forBody.vtx[5183]', 'forBody.vtx[5322]', 'forBody.vtx[5461]', 'forBody.vtx[5600]', 'forBody.vtx[5741]']
         self.lidUpperRVerts=['forBody.vtx[6251]', 'forBody.vtx[6252]', 'forBody.vtx[6253]', 'forBody.vtx[6254]', 'forBody.vtx[6255]', 'forBody.vtx[6256]', 'forBody.vtx[6257]', 'forBody.vtx[6258]', 'forBody.vtx[6259]', 'forBody.vtx[6260]', 'forBody.vtx[6261]', 'forBody.vtx[6262]', 'forBody.vtx[6263]', 'forBody.vtx[6264]', 'forBody.vtx[6266]', 'forBody.vtx[6306]', 'forBody.vtx[6347]']
         self.lidLowerRVerts=['forBody.vtx[6239]', 'forBody.vtx[6240]', 'forBody.vtx[6241]', 'forBody.vtx[6242]', 'forBody.vtx[6243]', 'forBody.vtx[6244]', 'forBody.vtx[6245]', 'forBody.vtx[6246]', 'forBody.vtx[6247]', 'forBody.vtx[6248]', 'forBody.vtx[6249]', 'forBody.vtx[6250]', 'forBody.vtx[6251]', 'forBody.vtx[6277]', 'forBody.vtx[6313]', 'forBody.vtx[6347]', 'forBody.vtx[6348]']
-
+        self.browRVert=['forBody.vtx[5388]']
+        
     def assignDelete(self,data,flag):
         if flag=='ass':
-            data=cmds.ls(sl=True,fl=True)
-            print(data)
+            if data == 'headVerts': self.headVerts=cmds.ls(sl=True)
+            elif data == 'lipUpperVerts': self.lipUpperVerts=cmds.ls(sl=True,fl=True)
+            elif data == 'lipLowerVerts': self.lipLowerVerts=cmds.ls(sl=True,fl=True)
+            elif data == 'lidUpperRVerts': self.lidUpperRVerts=cmds.ls(sl=True,fl=True)
+            elif data == 'lidLowerRVerts': self.lidLowerRVerts=cmds.ls(sl=True,fl=True)
+            elif data == 'browRVert': self.browRVert=cmds.ls(sl=True,fl=True)
+        elif flag=='sel':
+            if data == 'headVerts': cmds.select(self.headVerts)
+            elif data == 'lipUpperVerts': cmds.select(self.lipUpperVerts)
+            elif data == 'lipLowerVerts': cmds.select(self.lipLowerVerts)
+            elif data == 'lidUpperRVerts': cmds.select(self.lidUpperRVerts)
+            elif data == 'lidLowerRVerts': cmds.select(self.lidLowerRVerts)
+            elif data == 'browRVert': cmds.select(self.browRVert)
         elif flag=='del':
-            data=None
-    
+            if data == 'headVerts': self.headVerts=None
+            elif data == 'lipUpperVerts': self.lipUpperVerts=None
+            elif data == 'lipLowerVerts': self.lipLowerVerts=None
+            elif data == 'lidUpperRVerts': self.lidUpperRVerts=None
+            elif data == 'lidLowerRVerts': self.lidLowerRVerts=None
+            elif data == 'browRVert': self.browRVert=None
+
     def orientData(self,flag=''):
         if flag=='load':
             #read json file

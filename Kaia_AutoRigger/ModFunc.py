@@ -138,22 +138,22 @@ def _createFolsOnBindmeshes(names,bindmeshes,grpName):
         cmds.parent(folTrans, grp)
 
 
-def _createCtlGrp(drivenList, nameList, grpName, shape='circle', size=1, const=True):
+def _createCtlGrp(targList, nameList, grpName, newGrp=True, ori=True, shape='circle', size=1, const=True, mid=False):
     #Nurv curves, orient group, offset group, nul group
-    bigGrp = cmds.group(em=True, n=grpName)
+    if newGrp==True: bigGrp = cmds.group(em=True, n=grpName)
+    else: bigGrp = grpName
     
-    for name,driven in zip(nameList,drivenList):
+    for name,targ in zip(nameList,targList):
         ctl = _customNURBScircle(shape, size, name)
         
         nulGrp = cmds.group(ctl, n = ctl+'_nul')
-        orientGrp = cmds.group(ctl, n=ctl+'_orient')
-        offsetGrp = cmds.group(ctl, n=ctl+'_offset')
-        constNode = cmds.parentConstraint(driven, nulGrp, mo=False)
-        if const==False:
-            cmds.delete(constNode)
+        if ori==True: orientGrp = cmds.group(ctl, n=ctl+'_orient')
+        
+        constNode = cmds.parentConstraint(targ, nulGrp, mo=False)
+        if const==False: cmds.delete(constNode)
+        if mid==True: cmds.move(0,nulGrp,x=True,ws=True)
         
         cmds.parent(nulGrp,bigGrp)
-
 
 def _scaleOrient(ctlList):
     for i in ctlList:
@@ -165,10 +165,13 @@ def _scaleOrient(ctlList):
         
         cmds.scale(scaleVal[0],scaleVal[1],scaleVal[2],i+'_orient')
 
-def _setOffset(ctlDicList, t=(0,0,0), r=(0,0,0)):
-    for i in ctlDicList:
-        cmds.move(t[0],t[1],t[2], i+'_offset', r=True)
-        cmds.rotate(r[0],r[1],r[2], i+'_offset', r=True)
+def _offsetCtls(ctlList, r=(0,0,0), s=(1,1,1), t=(0,0,0)):
+    for ctl in ctlList:
+        CVs = _getCVs(ctl)
+        cmds.rotate(r[0],r[1],r[2], CVs, r=True)
+        cmds.scale(s[0],s[1],s[2], CVs, r=True)
+        cmds.move(t[0],t[1],t[2], CVs, r=True)
+        
     
 def _normalizeCtls(ctls,val=(1,1,1)):
     val = list(val)
@@ -216,9 +219,7 @@ def _customNURBScircle(shape, size, name):
         ctl = cmds.circle(n=name, r=size, sections=4, d=1)[0]
     elif shape=='triangle':
         ctl = cmds.circle(n=name, r=size, sections=3, d=1)[0]
-        CVs = _getCVs(ctl)
-        cmds.rotate(0,0,30,CVs)
-
+        
     cmds.delete(ctl, constructionHistory=True)
     return ctl
 

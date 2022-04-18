@@ -54,31 +54,44 @@ def createWindow(arg1):
     cmds.button(l='Quick Test Data',c=arg1.quickTest )
 
     cmds.setParent('..')
-
-    cmds.gridLayout( numberOfColumns=3, cellWidthHeight=(100, 20) ) #fourth layout - frame layout
-    cmds.text(l='Head Verts')
-    cmds.button( l='assign', c=lambda _:arg1.assignDelete('arg1.headVerts','ass') )
-    cmds.button( l='delete', c=lambda _:arg1.assignDelete('arg1.headVerts','del') )
     
+    cmds.rowLayout(numberOfColumns=2)
+    
+    cmds.gridLayout(numberOfColumns=1,cellWidthHeight=(100, 20))
+    cmds.text(l='Head Verts')
     cmds.text( l='Upper Lip Verts')
-    cmds.button( l='assign', c=lambda _:arg1.assignDelete('arg1.lipUpperVerts','ass') )
-    cmds.button( l='delete', c=lambda _:arg1.assignDelete('arg1.lipUpperVerts','del') )
-
     cmds.text( l='Lower Lip Verts')
-    cmds.button( l='assign', c=lambda _:arg1.assignDelete('arg1.lipLowerVerts','ass') )
-    cmds.button( l='delete', c=lambda _:arg1.assignDelete('arg1.lipLowerVerts','del') )
-
     cmds.text( l='Upper R Eye Verts')
-    cmds.button( l='assign', c=lambda _:arg1.assignDelete('arg1.lidUpperRVerts','ass') )
-    cmds.button( l='delete', c=lambda _:arg1.assignDelete('arg1.lidUpperRVerts','del') )
-
     cmds.text( l='Lower R Eye Verts')
-    cmds.button( l='assign', c=lambda _:arg1.assignDelete('arg1.lidLowerRVerts','ass') )
-    cmds.button( l='delete', c=lambda _:arg1.assignDelete('arg1.lidLowerRVerts','del') )
+    cmds.text( l='R Brow Vert')
     cmds.setParent('..')
     
-    cmds.columnLayout()
-    cmds.button(l='set names',c=arg1.names)
+    cmds.gridLayout( numberOfColumns=3, cellWidthHeight=(66, 20) ) #fourth layout - frame layout
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('headVerts','ass') )
+    cmds.button( l='select', c=lambda _:arg1.assignDelete('headVerts','sel') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('headVerts','del') )
+    
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('lipUpperVerts','ass') )
+    cmds.button( l='select', c=lambda _:arg1.assignDelete('lipUpperVerts','sel') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('lipUpperVerts','del') )
+    
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('lipLowerVerts','ass') )
+    cmds.button( l='select', c=lambda _:arg1.assignDelete('lipLowerVerts','sel') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('lipLowerVerts','del') )
+
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('lidUpperRVerts','ass') )
+    cmds.button( l='select', c=lambda _:arg1.assignDelete('lidUpperRVerts','sel') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('lidUpperRVerts','del') )
+    
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('lidLowerRVerts','ass') )
+    cmds.button( l='select', c=lambda _:arg1.assignDelete('lidLowerRVerts','sel') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('lidLowerRVerts','del') )
+    
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('browRVert','ass') )
+    cmds.button( l='select', c=lambda _:arg1.assignDelete('browRVert','sel') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('browRVert','del') )
+    cmds.setParent('..')
+    
     cmds.setParent('..')
     
     cmds.setParent('..')
@@ -87,15 +100,14 @@ def createWindow(arg1):
     cmds.frameLayout( l='Build', collapsable=True, collapse=False)
     cmds.columnLayout( rowSpacing = 10 )
     
-    
-    
     cmds.rowLayout(numberOfColumns=2)
-    cmds.text(l='(optional) ')
     cmds.button(l='Cut Head')
+    cmds.text(l='(optional) ')
     cmds.setParent('..')
     
-    cmds.button(l='Build Mouth Rig 01',c=arg1.buildMouthRig01)
-    cmds.button(l='Build Eye Rig 01',c=arg1.buildEyeRig01)
+    cmds.button(l='Set Rig Names',c=arg1.names)
+    
+    cmds.button(l='Build Face Rig 01',c=arg1.buildRig01)
     
     cmds.rowLayout(numberOfColumns=4)
     cmds.text( l='Ctrl orients: ')
@@ -104,10 +116,7 @@ def createWindow(arg1):
     cmds.button( l='load', c=lambda _:arg1.orientData('load'))
     cmds.setParent('..')
     
-    cmds.button(l='Build Mouth Rig 02',c=arg1.buildMouthRig02)
-    
-    cmds.button(l='Build Mouth Blendshapes 01', c=arg1.BuildMouthBlendshapes01)
-    cmds.button(l='Build Eye Blendshapes 01', c=arg1.BuildEyeBlendshapes01)
+    cmds.button(l='Build Face Rig 02',c=arg1.buildRig02)
     
     cmds.setParent('..')
     cmds.setParent('..')
