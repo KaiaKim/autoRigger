@@ -30,15 +30,36 @@ class AutoRigFace(Builder.BuildRig):
         self.lipLowerVerts = None
         self.lidUpperRVerts = None
         self.lidLowerRVerts = None
+    
+    def cutHead(self,_):
+        #select edge loop
         
+        #detach body&head
+        #seperate
+        #get body vertex(face)
+        #combine body&head
+        #merge vertex
+            ###body finish
+            
+        #duplicate body
+        #delete body vertex(face)
+            ###head finish
+
+        #select head
+        #select body
+        #deform-blendshape (check topology off, local)
+        #weight 1
+        print('cut head func')
+        pass
+    
     def quickTest(self,_):
         #some hard coded data for quick testing
-        self.headVerts=['forBody.vtx[0:6959]']
-        self.lipUpperVerts=['forBody.vtx[3314]', 'forBody.vtx[3315]', 'forBody.vtx[3317]', 'forBody.vtx[3320]', 'forBody.vtx[3321]', 'forBody.vtx[3322]', 'forBody.vtx[3325]', 'forBody.vtx[3326]', 'forBody.vtx[3327]', 'forBody.vtx[3331]', 'forBody.vtx[3332]', 'forBody.vtx[3335]', 'forBody.vtx[3337]', 'forBody.vtx[3495]', 'forBody.vtx[3818]', 'forBody.vtx[4010]', 'forBody.vtx[4200]', 'forBody.vtx[4386]', 'forBody.vtx[4574]', 'forBody.vtx[4751]', 'forBody.vtx[4918]', 'forBody.vtx[5079]', 'forBody.vtx[5215]', 'forBody.vtx[5350]', 'forBody.vtx[5485]', 'forBody.vtx[5620]', 'forBody.vtx[5741]']
-        self.lipLowerVerts=['forBody.vtx[3313]', 'forBody.vtx[3316]', 'forBody.vtx[3318]', 'forBody.vtx[3319]', 'forBody.vtx[3323]', 'forBody.vtx[3324]', 'forBody.vtx[3327]', 'forBody.vtx[3328]', 'forBody.vtx[3329]', 'forBody.vtx[3330]', 'forBody.vtx[3333]', 'forBody.vtx[3334]', 'forBody.vtx[3336]', 'forBody.vtx[3494]', 'forBody.vtx[3729]', 'forBody.vtx[3950]', 'forBody.vtx[4144]', 'forBody.vtx[4334]', 'forBody.vtx[4526]', 'forBody.vtx[4707]', 'forBody.vtx[4878]', 'forBody.vtx[5043]', 'forBody.vtx[5183]', 'forBody.vtx[5322]', 'forBody.vtx[5461]', 'forBody.vtx[5600]', 'forBody.vtx[5741]']
-        self.lidUpperRVerts=['forBody.vtx[6251]', 'forBody.vtx[6252]', 'forBody.vtx[6253]', 'forBody.vtx[6254]', 'forBody.vtx[6255]', 'forBody.vtx[6256]', 'forBody.vtx[6257]', 'forBody.vtx[6258]', 'forBody.vtx[6259]', 'forBody.vtx[6260]', 'forBody.vtx[6261]', 'forBody.vtx[6262]', 'forBody.vtx[6263]', 'forBody.vtx[6264]', 'forBody.vtx[6266]', 'forBody.vtx[6306]', 'forBody.vtx[6347]']
-        self.lidLowerRVerts=['forBody.vtx[6239]', 'forBody.vtx[6240]', 'forBody.vtx[6241]', 'forBody.vtx[6242]', 'forBody.vtx[6243]', 'forBody.vtx[6244]', 'forBody.vtx[6245]', 'forBody.vtx[6246]', 'forBody.vtx[6247]', 'forBody.vtx[6248]', 'forBody.vtx[6249]', 'forBody.vtx[6250]', 'forBody.vtx[6251]', 'forBody.vtx[6277]', 'forBody.vtx[6313]', 'forBody.vtx[6347]', 'forBody.vtx[6348]']
-        self.browRVert=['forBody.vtx[5388]']
+        self.headVerts=['body.vtx[0:6959]']
+        self.lipUpperVerts=['body.vtx[3314]', 'body.vtx[3315]', 'body.vtx[3317]', 'body.vtx[3320]', 'body.vtx[3321]', 'body.vtx[3322]', 'body.vtx[3325]', 'body.vtx[3326]', 'body.vtx[3327]', 'body.vtx[3331]', 'body.vtx[3332]', 'body.vtx[3335]', 'body.vtx[3337]', 'body.vtx[3495]', 'body.vtx[3818]', 'body.vtx[4010]', 'body.vtx[4200]', 'body.vtx[4386]', 'body.vtx[4574]', 'body.vtx[4751]', 'body.vtx[4918]', 'body.vtx[5079]', 'body.vtx[5215]', 'body.vtx[5350]', 'body.vtx[5485]', 'body.vtx[5620]', 'body.vtx[5741]']
+        self.lipLowerVerts=['body.vtx[3313]', 'body.vtx[3316]', 'body.vtx[3318]', 'body.vtx[3319]', 'body.vtx[3323]', 'body.vtx[3324]', 'body.vtx[3327]', 'body.vtx[3328]', 'body.vtx[3329]', 'body.vtx[3330]', 'body.vtx[3333]', 'body.vtx[3334]', 'body.vtx[3336]', 'body.vtx[3494]', 'body.vtx[3729]', 'body.vtx[3950]', 'body.vtx[4144]', 'body.vtx[4334]', 'body.vtx[4526]', 'body.vtx[4707]', 'body.vtx[4878]', 'body.vtx[5043]', 'body.vtx[5183]', 'body.vtx[5322]', 'body.vtx[5461]', 'body.vtx[5600]', 'body.vtx[5741]']
+        self.lidUpperRVerts=['body.vtx[6251]', 'body.vtx[6252]', 'body.vtx[6253]', 'body.vtx[6254]', 'body.vtx[6255]', 'body.vtx[6256]', 'body.vtx[6257]', 'body.vtx[6258]', 'body.vtx[6259]', 'body.vtx[6260]', 'body.vtx[6261]', 'body.vtx[6262]', 'body.vtx[6263]', 'body.vtx[6264]', 'body.vtx[6266]', 'body.vtx[6306]', 'body.vtx[6347]']
+        self.lidLowerRVerts=['body.vtx[6239]', 'body.vtx[6240]', 'body.vtx[6241]', 'body.vtx[6242]', 'body.vtx[6243]', 'body.vtx[6244]', 'body.vtx[6245]', 'body.vtx[6246]', 'body.vtx[6247]', 'body.vtx[6248]', 'body.vtx[6249]', 'body.vtx[6250]', 'body.vtx[6251]', 'body.vtx[6277]', 'body.vtx[6313]', 'body.vtx[6347]', 'body.vtx[6348]']
+        self.browRVert=['body.vtx[5388]']
         
     def assignDelete(self,data,flag):
         if flag=='ass':
@@ -210,3 +231,9 @@ UI.createWindow(run01)
 ### 3. orient edit mode (unparent the clusters - edit orient - reparent the clusters)
 
 ###DQ skin > attibute editor > support Non-rigid transformation ON
+
+#keyframe -option over -index 0 -absolute -floatChange 1 lid_upper_r_closed_blend_upper_lid_r_curve_closed ;
+#keyframe -index 0 -absolute -valueChange 1 lid_upper_r_closed_blend_upper_lid_r_curve_closed ;
+#keyTangent -index 0 -outTangentType linear lid_upper_r_closed_blend_upper_lid_r_curve_closed ;
+#setAttr "lid_upper_r_closed_blend_upper_lid_r_curve_closed.preInfinity" 1;
+#setAttr "lid_upper_r_closed_blend_upper_lid_r_curve_closed.postInfinity" 1;

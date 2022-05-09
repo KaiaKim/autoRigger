@@ -15,8 +15,13 @@ def createWindow(arg1):
     cmds.scrollLayout( 'scorllLayout', width=320) #makes your entire layout scrollable #first - main layout
     cmds.columnLayout( adjustableColumn=True ) #second layout - attaches to the main layout
     ###
-    cmds.frameLayout( l='Prepare', collapsable=True, collapse=True)
+    cmds.frameLayout( l='Model Prepare', collapsable=True, collapse=True)
     cmds.columnLayout( rowSpacing = 10 )
+    
+    cmds.rowLayout(numberOfColumns=2)
+    cmds.button(l='Cut Head', c=arg1.cutHead)
+    cmds.text(l='(optional) ')
+    cmds.setParent('..')
 
     cmds.text( l='! eye cluster name: eye_r_cls')
     cmds.text( l='! eye lattice name: eye_r_ffd1')
@@ -99,11 +104,6 @@ def createWindow(arg1):
     ###
     cmds.frameLayout( l='Build', collapsable=True, collapse=False)
     cmds.columnLayout( rowSpacing = 10 )
-    
-    cmds.rowLayout(numberOfColumns=2)
-    cmds.button(l='Cut Head')
-    cmds.text(l='(optional) ')
-    cmds.setParent('..')
     
     cmds.button(l='Set Rig Names',c=arg1.names)
     

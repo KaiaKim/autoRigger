@@ -45,8 +45,6 @@ def _lipLocsNamer(inList, prefix=''):
         
         outList.append(name) #append the loc name to self.lipLocs list
     return outList
-    
-
 
 
 def _2CurvCvCls(names,ctls,upCurv,loCurv):
@@ -71,8 +69,6 @@ def _2CurvCvCls(names,ctls,upCurv,loCurv):
         
         offGrp = cmds.group(clus,n=name+'_offset')
         cmds.parent(offGrp, ctl) #(child, parent)
-        
-    
     return clsList
 
 def constMicroToMacro(inList):
@@ -122,6 +118,15 @@ def _setWeightVal(child, parent00, parent01):
     cmds.setAttr(constraint+'.interpType',2) #Interpolation Type: Shortest
 
 
+def attachCornerCtls(cornerCtls,faceLowerBind,jawBind):
+    for ctl in cornerCtls:
+        nul=ctl+'_nul'
+        constraint = cmds.parentConstraint(faceLowerBind,jawBind,nul,mo=True)[0]
+        cmds.setAttr(constraint+'.'+faceLowerBind+'W0', .5)
+        cmds.setAttr(constraint+'.'+jawBind+'W1',.5)
+        cmds.setAttr(constraint+'.interpType',2) #Interpolation Type: Shortest
+
+
 def setMouthCornerCtls(mCornerCtls, mouthCtls, jawCls, faceLowerBind,jawBind):
     cornerCls = [d for d in jawCls if '_corner_' in d] #left, right
     inbetweenCls = [d for d in jawCls if '0' in d ]
@@ -144,7 +149,7 @@ def _setCornerPin(ctl,clus,parent1,parent2):
     #clus='mouth_corner_r_cls'
     #parent1='face_lower_bind'
     #parent2='jaw_bind'
-    
+    nul=ctl+'_nul'
     #Add Attribute: cornerPin min -1, max 1, default 0
     cmds.addAttr(ctl, shortName='cornerPin', defaultValue=0, minValue=-1, maxValue=1)
     
@@ -161,12 +166,14 @@ def _setCornerPin(ctl,clus,parent1,parent2):
     
     #outValueX >> face_Lower_bindW0
     cmds.connectAttr(setRanNode+'.outValueX',clus+'_parentConstraint1.'+parent1+'W0')
+    cmds.connectAttr(setRanNode+'.outValueX',nul+'_parentConstraint1.'+parent1+'W0')
     
     #reverse node
     revNode = cmds.createNode('reverse')
     #outValueX >> inputX, outputX >> jaw_bindW1
     cmds.connectAttr(setRanNode+'.outValueX',revNode+'.inputX')
     cmds.connectAttr(revNode+'.outputX',clus+'_parentConstraint1.'+parent2+'W1')
+    cmds.connectAttr(revNode+'.outputX',nul+'_parentConstraint1.'+parent2+'W1')
     
 
 def _connectLipPull(cornerCtl,clsList,midCtl,cornerCls):
@@ -273,8 +280,8 @@ def _connectCornerCtrl(mCornerCtls, blendCrvs, bs):
         cmds.setAttr(rng+'.oldMinX',-10)
         cmds.setAttr(rng+'.maxY',10)
         cmds.setAttr(rng+'.oldMaxY',10)
-        cmds.connectAttr(ctl+'.ty',rng+'.valueX')
-        cmds.connectAttr(ctl+'.ty',rng+'.valueY')
+        cmds.connectAttr(ctl+'.tz',rng+'.valueX')
+        cmds.connectAttr(ctl+'.tz',rng+'.valueY')
         cmds.connectAttr(rng+'.outValueX',bs+'.'+blendCrvs[6+num]) #6 or 7
         cmds.connectAttr(rng+'.outValueY',bs+'.'+blendCrvs[4+num]) #4 or 5
         

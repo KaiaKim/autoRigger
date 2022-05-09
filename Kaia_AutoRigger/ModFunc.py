@@ -69,9 +69,12 @@ def _createJntsOnLocs(locs,names,parent): #parent should be a joint
         cmds.parent(jnt,parent)
 
 
-def _createJntsOnCVs(names,curv,grpName):
+def _createJntsOnCVs(names,curv,grpName,newGrp=True):
     jntList = []
-    grp = cmds.group(em=True, n=grpName)
+    if newGrp==True:
+        grp = cmds.group(em=True, n=grpName)
+    elif newGrp==False:
+        grp = grpName
     
     curvShape = _getCrvShape(curv)
     cvs = _getCVs(curv)
@@ -155,6 +158,10 @@ def _createCtlGrp(targList, nameList, grpName, newGrp=True, ori=True, shape='cir
         
         cmds.parent(nulGrp,bigGrp)
 
+def _90dOrient(ctlList):
+    for i in ctlList:
+        cmds.rotate(90,0,0,i)
+
 def _scaleOrient(ctlList):
     for i in ctlList:
         scaleVal = [1,1,1]
@@ -190,7 +197,11 @@ def _normalizeCtls(ctls,val=(1,1,1)):
 def _parentConstIterate(parents,childs):
     for parent,child in zip(parents,childs):
         cmds.parentConstraint(parent,child,mo=True)
-    
+
+def _parentIterate(parents,childs):
+    for parent,child in zip(parents,childs):
+        cmds.parent(child,parent)
+
 def _localScaleLoc(loc,num):
     locShape = cmds.listRelatives(loc)[0]
     cmds.setAttr(locShape+'.localScale',num,num,num)
@@ -276,3 +287,12 @@ def _mirrorPosX(posList):
         mirList.append((-x,y,z))
     return mirList
 ###---------test execute--------------------------------------
+'''
+mySel = cmds.ls(sl=True)
+
+for i in mySel:
+    cvs=_getCVs(i)
+    for cv in cvs:
+        cmds.move(0,2.5,-5,cv,r=True)
+'''
+

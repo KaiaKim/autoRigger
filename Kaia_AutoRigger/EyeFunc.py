@@ -19,6 +19,34 @@ def _createDrivCrv(names,origs):
         cmds.duplicate(orig,n=name)
         cmds.rebuildCurve(name,d=1,kcp=True)
 
+def _createDrivJnts(names,curv):
+    jntList = []
+    curvShape = ModFunc._getCrvShape(curv)
+    cvs = ModFunc._getCVs(curv)
+
+    for name,cv in zip(names,cvs):
+        cmds.select(cl=True)
+        jnt= cmds.joint(rad=.3,n=name)
+        pos = cmds.xform(cv,q=True,ws=True,t=True) 
+        cmds.move(pos[0],pos[1],pos[2],jnt)
+        jntList.append(jnt)
+
+
+def _attachLidCtls(ctls,crv):
+    crvShape = ModFunc._getCrvShape(crv)
+
+    for num,ctl in enumerate(ctls):
+        nul=ctl+'_nul'
+        poc1 = cmds.createNode('pointOnCurveInfo')
+        cmds.connectAttr(crvShape+'.worldSpace[0]', poc1+'.inputCurve', f=True)
+        cmds.setAttr(poc1 + '.parameter',num)
+        cmds.connectAttr(poc1+'.position', nul+'.t')
+
+
+def _skinCrv(jnts,crv):
+    cmds.select(jnts,crv)
+    cmds.skinCluster(maximumInfluences=1)
+
 def _createBsCrv(crvs,names,grpName):
     #self.eyeRCrvs = [self.lidUpperRCrv, self.lidLowerRCrv]
     #names = ['lid_upper_r_curve_open', 'lid_upper_r_curve_closed', 'lid_upper_r_curve_neutral', 'lid_upper_r_curve_mid', ...]
@@ -52,7 +80,7 @@ def _createBsNode(nodes,crvs,targList):
         if '_open' in node:
             cmds.blendShape(node, e=True, t=(orig, 1, targList[0+4*x], 1.0))
         elif '_closed' in node:
-            print('_closedTarget:',targList[3+4*x])
+            #print('_closedTarget:',targList[3+4*x])
             cmds.blendShape(node, e=True, t=(orig, 1, targList[3+4*x], 1.0))
             cmds.blendShape(node, e=True, ib=True, t=(orig, 1, targList[1+4*x], 0.333))
             cmds.blendShape(node, e=True, ib=True, t=(orig, 1, targList[2+4*x], 0.666))
@@ -60,10 +88,9 @@ def _createBsNode(nodes,crvs,targList):
 
             
 def _connectCornerCtrl(blinkCtls, blendCrvs, bsNodes):
-    
-    print('blinkCtls:',blinkCtls)
-    print('blendCrvs:',blendCrvs)
-    print('bsNodes:',bsNodes)
+    #print('blinkCtls:',blinkCtls)
+    #print('blendCrvs:',blendCrvs)
+    #print('bsNodes:',bsNodes)
     #blinkCtls: ['blink_upper_r_ctl', 'blink_lower_r_ctl']
     #blendCrvs: ['upper_lid_r_curve_open', 'upper_lid_r_curve_neutral', 'upper_lid_r_curve_mid', 'upper_lid_r_curve_closed', 'lower_lid_r_curve_open', 'lower_lid_r_curve_neutral', 'lower_lid_r_curve_mid', 'lower_lid_r_curve_closed']
     #bsNodes: ['lid_upper_r_open_blend', 'lid_upper_r_closed_blend', 'lid_lower_r_open_blend', 'lid_lower_r_closed_blend']
