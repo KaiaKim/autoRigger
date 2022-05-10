@@ -50,6 +50,10 @@ def _skinCrv(jnts,crv):
 def _createBsCrv(crvs,names,grpName):
     #self.eyeRCrvs = [self.lidUpperRCrv, self.lidLowerRCrv]
     #names = ['lid_upper_r_curve_open', 'lid_upper_r_curve_closed', 'lid_upper_r_curve_neutral', 'lid_upper_r_curve_mid', ...]
+    
+    print(crvs)
+    print(names)
+    
     grp = cmds.group(em=True,n=grpName)
     
     for name in names:
@@ -79,6 +83,7 @@ def _createBsNode(nodes,crvs,targList):
         cmds.blendShape(orig, n=node, o='local')
         if '_open' in node:
             cmds.blendShape(node, e=True, t=(orig, 1, targList[0+4*x], 1.0))
+            cmds.setAttr(node+'.'+targList[0+4*x],1)
         elif '_closed' in node:
             #print('_closedTarget:',targList[3+4*x])
             cmds.blendShape(node, e=True, t=(orig, 1, targList[3+4*x], 1.0))
@@ -97,8 +102,8 @@ def _connectCornerCtrl(blinkCtls, blendCrvs, bsNodes):
 
         #upper closed
     #set driven key node1
-    drv1 = cmds.setDrivenKeyframe( bsNodes[1]+'.'+blendCrvs[3], cd=blinkCtls[0]+'.rx' )
-    drv1 = bsNodes[1]+'_'+blendCrvs[3] #given node name is 'upper_lid_r_blend_upper_lid_r_curve_closed'
+    sdk1 = cmds.setDrivenKeyframe( bsNodes[1]+'.'+blendCrvs[3], cd=blinkCtls[0]+'.rx' )
+    sdk1 = bsNodes[1]+'_'+blendCrvs[3] #given node name is 'upper_lid_r_blend_upper_lid_r_curve_closed'
     
         #lower closed
     #reverse node
@@ -109,11 +114,11 @@ def _connectCornerCtrl(blinkCtls, blendCrvs, bsNodes):
     clmp = cmds.createNode('clamp')
     
     #set driven key node2
-    drv2 = cmds.setDrivenKeyframe(clmp+'.inputR', cd=blinkCtls[1]+'.rx')
-    drv2 = clmp+'_'+'inputR'
+    sdk2 = cmds.setDrivenKeyframe(clmp+'.inputR', cd=blinkCtls[1]+'.rx')
+    sdk2 = clmp+'_'+'inputR'
     
     #driven1 output >> reverse inputX
-    cmds.connectAttr(drv1+'.output',rev+'.inputX')
+    cmds.connectAttr(sdk1+'.output',rev+'.inputX')
     #reverse outputX >> addDoubleLinear input1
     cmds.connectAttr(rev+'.outputX',addDou+'.input1')
     #addDoubleLinear input2, 0.333
@@ -122,16 +127,45 @@ def _connectCornerCtrl(blinkCtls, blendCrvs, bsNodes):
     cmds.connectAttr(addDou+'.output',clmp+'.maxR')
     #clamp outputR >> blend weight lower_lid_l_closed_curve
     cmds.connectAttr( clmp+'.outputR', bsNodes[3]+'.'+ blendCrvs[7] )
-
     
-def _matchCloseCrv(posList):
-    outList = []
-    upper = [d for d in posList if 'upper' in d['name'] and '_closed' in d['name']] 
-    lower = [d for d in posList if 'lower' in d['name'] and '_closed' in d['name']] 
-    for u,l in zip(upper,lower):
-        l['pos'] = u['pos']
-    outList = upper+lower
-    return outList
+    ###
+    cmds.keyframe(sdk1,index=(0,0),a=True,fc=-20,vc=0)
+    cmds.setKeyframe(sdk1,i=True,f=0)
+    cmds.setKeyframe(sdk1,i=True,f=40)
+    cmds.keyframe(sdk1,index=(1,1),a=True,vc=1/3)
+    cmds.keyframe(sdk1,index=(2,2),a=True,vc=1)
+
+    cmds.keyTangent(sdk1,index=(0,2),itt="spline",ott="spline")
+
+    cmds.setAttr(sdk1+'.preInfinity',1)
+    cmds.setAttr(sdk1+'.postInfinity',1)
+    
+    ###
+    cmds.keyframe(sdk2,index=(0,0),a=True,fc=-20,vc=0)
+    cmds.setKeyframe(sdk2,i=True,f=0)
+    cmds.setKeyframe(sdk2,i=True,f=40)
+    cmds.keyframe(sdk2,index=(1,1),a=True,vc=1/3)
+    cmds.keyframe(sdk2,index=(2,2),a=True,vc=1)
+
+    cmds.keyTangent(sdk2,index=(0,2),itt="spline",ott="spline")
+
+    cmds.setAttr(sdk2+'.preInfinity',1)
+    cmds.setAttr(sdk2+'.postInfinity',1)
+    '''
+    ###
+    cmds.setKeyframe(sdk2,i=True,f=1)
+    
+    cmds.keyframe(sdk2,index=(0,0),a=True,fc=1/3)
+    cmds.keyframe(sdk2,index=(1,1),a=True,vc=1)
+    
+    cmds.keyTangent(sdk2,index=(0,0),itt='flat',ott='spline')
+    cmds.keyTangent(sdk2,index=(1,1),itt='spline',ott='spline')
+    
+    cmds.setAttr(sdk2+'.preInfinity',0)
+    cmds.setAttr(sdk2+'.postInfinity',1)
+    '''
+    
+
 
 def _mirrorCVs(posList):
     rPos = [d for d in posList if '_r_' in d['name']]
@@ -141,11 +175,6 @@ def _mirrorCVs(posList):
         l['pos']=(-x,y,z)
     outList = rPos+lPos
     return outList
-    
-def _roatateCtrlShape(ctls):
-    for ctl in ctls:
-        CVs = ModFunc._getCVs(ctl)
-        cmds.rotate(90,0,0,CVs)
     
 def _createLoftBall():
     pass

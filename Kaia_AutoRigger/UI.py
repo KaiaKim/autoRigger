@@ -154,7 +154,6 @@ def createWindow(arg1):
     cmds.frameLayout( l='Extra', collapsable=True, collapse=False)
     cmds.columnLayout( rowSpacing = 10 )
     
-    cmds.button(l='000: Arrange Groups',c=arg1.arrangeGrps)
     cmds.button(l='select Jaw Bind',c=lambda _:cmds.select(arg1.jawBind))
 
     cmds.showWindow()

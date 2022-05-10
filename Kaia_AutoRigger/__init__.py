@@ -102,7 +102,12 @@ class AutoRigFace(Builder.BuildRig):
             for i in mirrorData:
                 i['name'] = i['name'].replace('_r_','_l_')
                 (rx,ry,rz) = i['rot']
-                i['rot'] = (rx,-ry,-rz)
+                
+                if 'blink' in i['name']:
+                    i['rot'] = (-rx,-ry, rz)
+                else:
+                    i['rot'] = (rx,-ry,-rz)
+                
             ModFunc._applyTransformData(mirrorData)
 
         if flag=='load':
@@ -185,11 +190,7 @@ class AutoRigFace(Builder.BuildRig):
         cvPos = ModFunc._getTransformData(allCVs, t=True, r=False, os=True)
         cvPos5 = EyeFunc._mirrorCVs(cvPos)
         ModFunc._applyTransformData(cvPos5, os=True)
-        
-        cvPos = ModFunc._getTransformData(allCVs, t=True, r=False, os=True)
-        cvPos4 = EyeFunc._matchCloseCrv(cvPos)
-        ModFunc._applyTransformData(cvPos4, os=True)
-        
+
         
     def enterOrientEdit(self,_):
         print('### enter orient edit mode ###')

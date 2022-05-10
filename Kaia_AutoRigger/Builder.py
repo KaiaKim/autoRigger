@@ -41,13 +41,14 @@ class BuildRig():
         self.mouthCrv = 'mouth_curve' #No change this!
         
         ###
-        self.lidDrivJnts = [] #upper_r_0_driver lower_r upper_l lower_l
+        self.lidDriverGrp = 'lid_driver_jnts_grp'
+        self.lidMicroCtlGrp = 'lid_driver_ctl_grp'
+        self.lidDrivers = [] #upper_r_0_driver lower_r upper_l lower_l
         for crv in self.lidCrvs:
             for i in range(5):
-                self.lidDrivJnts.append(crv.rsplit('_',1)[0]+'_'+str(i)+'_driver')
-        self.lidDrivJntGrp = 'lid_driver_jnts_grp'
-        self.lidDrivCtls = [d.replace('_driver','_ctl') for d in self.lidDrivJnts]
-        self.lidDrivCtlGrp = 'lid_driver_ctl_grp'
+                self.lidDrivers.append(crv.rsplit('_',1)[0]+'_'+str(i)+'_driver')
+        self.lidMicroCtls = [d.replace('_driver','_ctl') for d in self.lidDrivers]
+        
         
         
         ###
@@ -122,7 +123,7 @@ class BuildRig():
         
         suffixList = ['_open','_neutral','_mid','_closed']
         self.eyeRBlendCrvs = [self.lidCrvs[0]+d for d in suffixList]+[self.lidCrvs[1]+d for d in suffixList]
-        self.eyeLBlendCrvs = [self.lidCrvs[2]+d for d in suffixList]+[self.lidCrvs[2]+d for d in suffixList]
+        self.eyeLBlendCrvs = [self.lidCrvs[2]+d for d in suffixList]+[self.lidCrvs[3]+d for d in suffixList]
                 
         nodeNames = ['upper_r_open','upper_r_closed','lower_r_open','lower_r_closed']
         self.eyeRBsNodes = ['lid_'+d+'_blend' for d in nodeNames]
@@ -146,6 +147,9 @@ class BuildRig():
         self.brow02()
         self.mouthBs01()
         self.lidBs01()
+        
+        self.hideExtra()
+        self.arrangeGrps()
     
     def face01(self):
         #0:Create Face Ctls
@@ -154,7 +158,7 @@ class BuildRig():
         #face_upper_ctl
         ModFunc._createCtlGrp([self.faceUpperBind],[self.faceUpperCtl], self.animGrp, newGrp=False, ori=False, size=12 )
         ModFunc._offsetCtls([self.faceUpperCtl], t=(0,0,0), r=(90,0,0))
-        ModFunc._overrideColor([self.faceUpperCtl], color=(0,0,1))
+        ModFunc._overrideColor([self.faceUpperCtl], color=(1,1,0))
     
     def mouth01(self):
         #0:Create Groups
@@ -191,14 +195,16 @@ class BuildRig():
         #4: Create Ctrls
             #lip ctrls
         ModFunc._createCtlGrp(self.mouthFols,self.lipCtls,self.lipCtlGrp, size=.3 )
-        ModFunc._offsetCtls(self.lipCtls, t=(0,-1,0))
+        ModFunc._offsetCtls([d for d in self.lipCtls if 'upper' in d or 'corner' in d], t=(0,-1,0)) #upper
+        ModFunc._offsetCtls([d for d in self.lipCtls if 'lower' in d], t=(0,1,0)) #lower
         ModFunc._90dOrient(self.lipCtls)
         ModFunc._scaleOrient(self.lipCtls)
         ModFunc._overrideColor(self.lipCtls, color=(1,1,0))
             
             #mouth ctrls
         ModFunc._createCtlGrp(self.mMacroFols, self.mouthCtls, self.mouthCtlGrp, size=.5, shape='square')
-        ModFunc._offsetCtls(self.mouthCtls, t=(0,-1.5,0))
+        ModFunc._offsetCtls([self.mouthCtls[0]], t=(0,-1.5,0)) #upper
+        ModFunc._offsetCtls([self.mouthCtls[1]], t=(0,1.5,0)) #lower
         ModFunc._90dOrient(self.mouthCtls)
         ModFunc._scaleOrient(self.mouthCtls)
         ModFunc._overrideColor(self.mouthCtls, color=(1,1,0))
@@ -209,12 +215,12 @@ class BuildRig():
         ModFunc._90dOrient(self.mCornerCtls)
         ModFunc._scaleOrient(self.mCornerCtls)
         ModFunc._overrideColor(self.mCornerCtls, color=(1,0,0))
-        
+
         #5: Parent constraint micro nul2 group to macro ctl
         MouthFunc.constMicroToMacro(self.lipCtls)
         
         #6: Normalize Corner Ctls
-        ModFunc._normalizeCtls(self.mCornerCtls,val=(1,1,1))
+        ModFunc._normalizeCtls(self.mCornerCtls,val=(3,3,3))
     
     def mouth02(self):
         #7: Attach Jaw Clusters to Jaw
@@ -272,30 +278,32 @@ class BuildRig():
         ###
         #5: Create Lid Driver Joints
         for num,crv in enumerate(self.lidDrivCrvs):
-            EyeFunc._createDrivJnts(self.lidDrivJnts[num*5:num*5+5],crv) #0,1,2,3,4
+            EyeFunc._createDrivJnts(self.lidDrivers[num*5:num*5+5],crv) #0,1,2,3,4
         
         #4: Create Lid tweak Ctls
-        ModFunc._createCtlGrp(self.lidDrivJnts, self.lidDrivCtls, self.lidDrivCtlGrp, ori=False, const=False, size=.3)
-        ModFunc._offsetCtls(self.lidDrivCtls, t=(0,0,.7))
-        ModFunc._overrideColor(self.lidDrivCtls, color=(1,1,0))
+        ModFunc._createCtlGrp(self.lidDrivers, self.lidMicroCtls, self.lidMicroCtlGrp, ori=False, const=False, size=.3)
+        ModFunc._offsetCtls(self.lidMicroCtls, t=(0,0,.7))
+        ModFunc._overrideColor(self.lidMicroCtls, color=(1,1,0))
         
         #5: attach lid tweak ctl nuls to driver crvs
         for num,crv in enumerate(self.lidDrivCrvs):
-            EyeFunc._attachLidCtls(self.lidDrivCtls[num*5:num*5+5],crv)
+            EyeFunc._attachLidCtls(self.lidMicroCtls[num*5:num*5+5],crv)
         
         #5: parent lid Drivers to lid tweak ctls
-        ModFunc._parentIterate(self.lidDrivCtls,self.lidDrivJnts)
+        ModFunc._parentIterate(self.lidMicroCtls,self.lidDrivers)
         
         #6: Skin Driver joints to lid curves
         for num,crv in enumerate(self.lidCrvs):
-            EyeFunc._skinCrv(self.lidDrivJnts[num*5:num*5+5],crv) #0,1,2,3,4
+            EyeFunc._skinCrv(self.lidDrivers[num*5:num*5+5],crv) #0,1,2,3,4
         
         
         #4: Create blink Ctls
         socketBinds = [self.eyeSocketRBind, self.eyeSocketRBind, self.eyeSocketLBind, self.eyeSocketLBind]
-        ModFunc._createCtlGrp(socketBinds, self.blinkCtls, self.blinkCtlGrp, size=6, const=False)
-        EyeFunc._roatateCtrlShape(self.blinkCtls)
-        ModFunc._scaleOrient(self.blinkCtls)
+        ModFunc._createCtlGrp(socketBinds, self.blinkCtls, self.blinkCtlGrp, size=1, shape='arch', const=False)
+        ModFunc._offsetCtls(self.blinkCtls[:2], t=(0,0,7), s=(1.2,-.7,1)) #r
+        ModFunc._offsetCtls(self.blinkCtls[2:], t=(0,0,7), s=(1.2,.7,1)) #l
+        cmds.scale(1,-1,1,self.blinkCtls[0]+'_orient') #lower_r
+        cmds.scale(1,-1,1,self.blinkCtls[3]+'_orient') #upper_l
         ModFunc._overrideColor(self.blinkCtls, color=(1,0,0))
         cmds.parent(self.blinkCtlGrp,self.faceUpperCtl)
         
@@ -313,13 +321,13 @@ class BuildRig():
         ModFunc._createCtlGrp([self.eyeSocketLBind], [self.eyeRotMacroCtl], self.faceUpperCtl, 
         newGrp=False, ori=False, const=False, mid=True, size=1, shape='triangle' )
         ModFunc._offsetCtls([self.eyeRotMacroCtl], t=(0,0,7.5), r=(90,0,0))
-        ModFunc._overrideColor([self.eyeRotMacroCtl], color=(1,0,0))
+        ModFunc._overrideColor([self.eyeRotMacroCtl], color=(0,0,1))
                 
             #eye_R_ctl, eye_L_ctl
         ModFunc._createCtlGrp(self.eyeBinds, self.eyeMicroCtls, self.faceUpperCtl, 
         newGrp=False, const=False, size=.7 )
         ModFunc._offsetCtls(self.eyeMicroCtls, t=(0,0,6))
-        ModFunc._overrideColor(self.eyeMicroCtls, color=(1,0,0))
+        ModFunc._overrideColor(self.eyeMicroCtls, color=(0,0,1))
                 
             #eye aim macro ctl
         ModFunc._createCtlGrp([self.eyeSocketLBind], [self.eyeAimMacroCtl], self.faceUpperCtl, 
@@ -424,7 +432,9 @@ class BuildRig():
         EyeFunc._connectCornerCtrl(self.blinkCtls[:2], self.eyeRBlendCrvs, self.eyeRBsNodes) # first two elements (right ctrls)
         EyeFunc._connectCornerCtrl(self.blinkCtls[2:], self.eyeLBlendCrvs, self.eyeLBsNodes) #last two elements (left ctrls)
         
-        
+    def hideExtra(self):
+        cmds.select(self.mouthDrivers,self.jawCls,self.lipCvCls,self.lidDrivers)
+        cmds.hide()
 
     
     def createGrps(self):
@@ -433,7 +443,7 @@ class BuildRig():
         cmds.group(n=self.rigGrp, em=True)
         cmds.group(n=self.bindGrp, em=True)
         
-    def arrangeGrps(self,_):
+    def arrangeGrps(self):
         #these are rather simple parent commands, we keep going even if there's an error.
         try:
             cmds.parent(self.animGrp,self.rigGrp,self.bindGrp,self.faceRoot)

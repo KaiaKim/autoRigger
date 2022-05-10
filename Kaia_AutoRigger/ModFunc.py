@@ -160,7 +160,7 @@ def _createCtlGrp(targList, nameList, grpName, newGrp=True, ori=True, shape='cir
 
 def _90dOrient(ctlList):
     for i in ctlList:
-        cmds.rotate(90,0,0,i)
+        cmds.rotate(90,0,0,i+'_orient')
 
 def _scaleOrient(ctlList):
     for i in ctlList:
@@ -184,15 +184,8 @@ def _normalizeCtls(ctls,val=(1,1,1)):
     val = list(val)
     for i in ctls:
         cmds.scale(1/val[0], 1/val[1], 1/val[2],i)
-        
-        x,y,z = cmds.getAttr(i+'_orient'+'.s')[0]
-        if x<0: val[0] = -val[0]
-        if y<0: val[1] = -val[1]
-        if z<0: val[2] = -val[2]
-        cmds.scale(val[0], val[1], val[2], i+'_orient')
-        
-        #cmds.makeIdentity(i, apply=True)
-        #cmds.delete(i, constructionHistory=True)
+        cmds.scale(val[0], val[1], val[2], i+'_orient',r=True)
+
 
 def _parentConstIterate(parents,childs):
     for parent,child in zip(parents,childs):
@@ -230,9 +223,15 @@ def _customNURBScircle(shape, size, name):
         ctl = cmds.circle(n=name, r=size, sections=4, d=1)[0]
     elif shape=='triangle':
         ctl = cmds.circle(n=name, r=size, sections=3, d=1)[0]
-        
+        cmds.move(0,-.25,0,ctl+'.cv[*]',r=True)
+    elif shape=='arch':
+        ctl = cmds.circle(n=name, r=size, sections=6, d=0)[0]
+        cmds.move(0,2,0,ctl+'.cv[4]',r=True)
+        cmds.move(0,-.3,0,ctl+'.cv[*]',r=True)
+    
     cmds.delete(ctl, constructionHistory=True)
     return ctl
+
 
 def _getTransformData(inList, t=False, r=False, ws=False, os=False):
     outData = []
@@ -287,12 +286,5 @@ def _mirrorPosX(posList):
         mirList.append((-x,y,z))
     return mirList
 ###---------test execute--------------------------------------
-'''
-mySel = cmds.ls(sl=True)
 
-for i in mySel:
-    cvs=_getCVs(i)
-    for cv in cvs:
-        cmds.move(0,2.5,-5,cv,r=True)
-'''
 

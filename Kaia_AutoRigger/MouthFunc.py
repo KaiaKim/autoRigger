@@ -64,10 +64,11 @@ def _2CurvCvCls(names,ctls,upCurv,loCurv):
     cvList = [leftCorner]+upCVs+[rightCorner]+loCVs
     
     for cv,name,ctl in zip(cvList,names,ctls):
-        clus = cmds.cluster(cv, n=name)[1] #[1] gets trans node #lipCv_lower_r_00_clsHandle
-        clsList.append(name)
+        clus = cmds.cluster(cv)
+        clsTrans = clus[1]
+        clsTrans = cmds.rename(clsTrans, name)
         
-        offGrp = cmds.group(clus,n=name+'_offset')
+        offGrp = cmds.group(clsTrans,n=name+'_offset')
         cmds.parent(offGrp, ctl) #(child, parent)
     return clsList
 
@@ -280,8 +281,8 @@ def _connectCornerCtrl(mCornerCtls, blendCrvs, bs):
         cmds.setAttr(rng+'.oldMinX',-10)
         cmds.setAttr(rng+'.maxY',10)
         cmds.setAttr(rng+'.oldMaxY',10)
-        cmds.connectAttr(ctl+'.tz',rng+'.valueX')
-        cmds.connectAttr(ctl+'.tz',rng+'.valueY')
+        cmds.connectAttr(ctl+'.ty',rng+'.valueX')
+        cmds.connectAttr(ctl+'.ty',rng+'.valueY')
         cmds.connectAttr(rng+'.outValueX',bs+'.'+blendCrvs[6+num]) #6 or 7
         cmds.connectAttr(rng+'.outValueY',bs+'.'+blendCrvs[4+num]) #4 or 5
         
