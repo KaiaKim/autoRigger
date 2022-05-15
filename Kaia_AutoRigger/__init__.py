@@ -7,12 +7,14 @@ from Kaia_AutoRigger import Builder
 from Kaia_AutoRigger import UI
 from Kaia_AutoRigger import ModFunc
 from Kaia_AutoRigger import MouthFunc
+from Kaia_AutoRigger import LidFunc
 from Kaia_AutoRigger import EyeFunc
 from Kaia_AutoRigger import BrowFunc
 importlib.reload(Builder)
 importlib.reload(UI)
 importlib.reload(ModFunc)
 importlib.reload(MouthFunc)
+importlib.reload(LidFunc)
 importlib.reload(EyeFunc)
 importlib.reload(BrowFunc)
 
@@ -24,65 +26,29 @@ class AutoRigFace(Builder.BuildRig):
         
         self.winTitle = 'Kaia\'s auto rigger' #this is the title of the window #display name
         self.winName = 'kaiaAutoRigFace' #this needs to be ac word that has no spaces or it won't work! #node name
-    
-        self.headVerts = None
-        self.lipUpperVerts = None
-        self.lipLowerVerts = None
-        self.lidUpperRVerts = None
-        self.lidLowerRVerts = None
-    
-    def cutHead(self,_):
-        #select edge loop
         
-        #detach body&head
-        #seperate
-        #get body vertex(face)
-        #combine body&head
-        #merge vertex
-            ###body finish
-            
-        #duplicate body
-        #delete body vertex(face)
-            ###head finish
-
-        #select head
-        #select body
-        #deform-blendshape (check topology off, local)
-        #weight 1
-        print('cut head func')
-        pass
+        self.verts = {'head':None, 'lipUpper':None, 'lipLower':None, 'lidUpperR':None, 'lidLowerR':None, 'browR':None}
     
     def quickTest(self,_):
         #some hard coded data for quick testing
-        self.headVerts=['body.vtx[0:6959]']
-        self.lipUpperVerts=['body.vtx[3314]', 'body.vtx[3315]', 'body.vtx[3317]', 'body.vtx[3320]', 'body.vtx[3321]', 'body.vtx[3322]', 'body.vtx[3325]', 'body.vtx[3326]', 'body.vtx[3327]', 'body.vtx[3331]', 'body.vtx[3332]', 'body.vtx[3335]', 'body.vtx[3337]', 'body.vtx[3495]', 'body.vtx[3818]', 'body.vtx[4010]', 'body.vtx[4200]', 'body.vtx[4386]', 'body.vtx[4574]', 'body.vtx[4751]', 'body.vtx[4918]', 'body.vtx[5079]', 'body.vtx[5215]', 'body.vtx[5350]', 'body.vtx[5485]', 'body.vtx[5620]', 'body.vtx[5741]']
-        self.lipLowerVerts=['body.vtx[3313]', 'body.vtx[3316]', 'body.vtx[3318]', 'body.vtx[3319]', 'body.vtx[3323]', 'body.vtx[3324]', 'body.vtx[3327]', 'body.vtx[3328]', 'body.vtx[3329]', 'body.vtx[3330]', 'body.vtx[3333]', 'body.vtx[3334]', 'body.vtx[3336]', 'body.vtx[3494]', 'body.vtx[3729]', 'body.vtx[3950]', 'body.vtx[4144]', 'body.vtx[4334]', 'body.vtx[4526]', 'body.vtx[4707]', 'body.vtx[4878]', 'body.vtx[5043]', 'body.vtx[5183]', 'body.vtx[5322]', 'body.vtx[5461]', 'body.vtx[5600]', 'body.vtx[5741]']
-        self.lidUpperRVerts=['body.vtx[6251]', 'body.vtx[6252]', 'body.vtx[6253]', 'body.vtx[6254]', 'body.vtx[6255]', 'body.vtx[6256]', 'body.vtx[6257]', 'body.vtx[6258]', 'body.vtx[6259]', 'body.vtx[6260]', 'body.vtx[6261]', 'body.vtx[6262]', 'body.vtx[6263]', 'body.vtx[6264]', 'body.vtx[6266]', 'body.vtx[6306]', 'body.vtx[6347]']
-        self.lidLowerRVerts=['body.vtx[6239]', 'body.vtx[6240]', 'body.vtx[6241]', 'body.vtx[6242]', 'body.vtx[6243]', 'body.vtx[6244]', 'body.vtx[6245]', 'body.vtx[6246]', 'body.vtx[6247]', 'body.vtx[6248]', 'body.vtx[6249]', 'body.vtx[6250]', 'body.vtx[6251]', 'body.vtx[6277]', 'body.vtx[6313]', 'body.vtx[6347]', 'body.vtx[6348]']
-        self.browRVert=['body.vtx[5388]']
+        self.verts['head']=['face.vtx[0:6959]']
+        self.verts['lipUpper']=['face.vtx[3314]', 'face.vtx[3315]', 'face.vtx[3317]', 'face.vtx[3320]', 'face.vtx[3321]', 'face.vtx[3322]', 'face.vtx[3325]', 'face.vtx[3326]', 'face.vtx[3327]', 'face.vtx[3331]', 'face.vtx[3332]', 'face.vtx[3335]', 'face.vtx[3337]', 'face.vtx[3495]', 'face.vtx[3818]', 'face.vtx[4010]', 'face.vtx[4200]', 'face.vtx[4386]', 'face.vtx[4574]', 'face.vtx[4751]', 'face.vtx[4918]', 'face.vtx[5079]', 'face.vtx[5215]', 'face.vtx[5350]', 'face.vtx[5485]', 'face.vtx[5620]', 'face.vtx[5741]']
+        self.verts['lipLower']=['face.vtx[3313]', 'face.vtx[3316]', 'face.vtx[3318]', 'face.vtx[3319]', 'face.vtx[3323]', 'face.vtx[3324]', 'face.vtx[3327]', 'face.vtx[3328]', 'face.vtx[3329]', 'face.vtx[3330]', 'face.vtx[3333]', 'face.vtx[3334]', 'face.vtx[3336]', 'face.vtx[3494]', 'face.vtx[3729]', 'face.vtx[3950]', 'face.vtx[4144]', 'face.vtx[4334]', 'face.vtx[4526]', 'face.vtx[4707]', 'face.vtx[4878]', 'face.vtx[5043]', 'face.vtx[5183]', 'face.vtx[5322]', 'face.vtx[5461]', 'face.vtx[5600]', 'face.vtx[5741]']
+        self.verts['lidUpperR']=['face.vtx[6251]', 'face.vtx[6252]', 'face.vtx[6253]', 'face.vtx[6254]', 'face.vtx[6255]', 'face.vtx[6256]', 'face.vtx[6257]', 'face.vtx[6258]', 'face.vtx[6259]', 'face.vtx[6260]', 'face.vtx[6261]', 'face.vtx[6262]', 'face.vtx[6263]', 'face.vtx[6264]', 'face.vtx[6266]', 'face.vtx[6306]', 'face.vtx[6347]']
+        self.verts['lidLowerR']=['face.vtx[6239]', 'face.vtx[6240]', 'face.vtx[6241]', 'face.vtx[6242]', 'face.vtx[6243]', 'face.vtx[6244]', 'face.vtx[6245]', 'face.vtx[6246]', 'face.vtx[6247]', 'face.vtx[6248]', 'face.vtx[6249]', 'face.vtx[6250]', 'face.vtx[6251]', 'face.vtx[6277]', 'face.vtx[6313]', 'face.vtx[6347]', 'face.vtx[6348]']
+        self.verts['browR']=['face.vtx[5388]']
         
     def assignDelete(self,data,flag):
         if flag=='ass':
-            if data == 'headVerts': self.headVerts=cmds.ls(sl=True)
-            elif data == 'lipUpperVerts': self.lipUpperVerts=cmds.ls(sl=True,fl=True)
-            elif data == 'lipLowerVerts': self.lipLowerVerts=cmds.ls(sl=True,fl=True)
-            elif data == 'lidUpperRVerts': self.lidUpperRVerts=cmds.ls(sl=True,fl=True)
-            elif data == 'lidLowerRVerts': self.lidLowerRVerts=cmds.ls(sl=True,fl=True)
-            elif data == 'browRVert': self.browRVert=cmds.ls(sl=True,fl=True)
+            if data == 'head': self.verts['head']=cmds.ls(sl=True)
+            else: self.verts[data]=cmds.ls(sl=True,fl=True)
+            
         elif flag=='sel':
-            if data == 'headVerts': cmds.select(self.headVerts)
-            elif data == 'lipUpperVerts': cmds.select(self.lipUpperVerts)
-            elif data == 'lipLowerVerts': cmds.select(self.lipLowerVerts)
-            elif data == 'lidUpperRVerts': cmds.select(self.lidUpperRVerts)
-            elif data == 'lidLowerRVerts': cmds.select(self.lidLowerRVerts)
-            elif data == 'browRVert': cmds.select(self.browRVert)
+            cmds.select(self.verts[data])
+
         elif flag=='del':
-            if data == 'headVerts': self.headVerts=None
-            elif data == 'lipUpperVerts': self.lipUpperVerts=None
-            elif data == 'lipLowerVerts': self.lipLowerVerts=None
-            elif data == 'lidUpperRVerts': self.lidUpperRVerts=None
-            elif data == 'lidLowerRVerts': self.lidLowerRVerts=None
-            elif data == 'browRVert': self.browRVert=None
+            self.verts[data]=None
+
 
     def orientData(self,flag=''):
         if flag=='load':
@@ -188,7 +154,7 @@ class AutoRigFace(Builder.BuildRig):
             allCVs += CVs
             
         cvPos = ModFunc._getTransformData(allCVs, t=True, r=False, os=True)
-        cvPos5 = EyeFunc._mirrorCVs(cvPos)
+        cvPos5 = LidFunc._mirrorCVs(cvPos)
         ModFunc._applyTransformData(cvPos5, os=True)
 
         
@@ -229,12 +195,5 @@ class AutoRigFace(Builder.BuildRig):
 ###-----------------------------------------------------EXECUTE---------------------------------------------------------------
 run01=AutoRigFace()
 UI.createWindow(run01)
-### 3. orient edit mode (unparent the clusters - edit orient - reparent the clusters)
 
 ###DQ skin > attibute editor > support Non-rigid transformation ON
-
-#keyframe -option over -index 0 -absolute -floatChange 1 lid_upper_r_closed_blend_upper_lid_r_curve_closed ;
-#keyframe -index 0 -absolute -valueChange 1 lid_upper_r_closed_blend_upper_lid_r_curve_closed ;
-#keyTangent -index 0 -outTangentType linear lid_upper_r_closed_blend_upper_lid_r_curve_closed ;
-#setAttr "lid_upper_r_closed_blend_upper_lid_r_curve_closed.preInfinity" 1;
-#setAttr "lid_upper_r_closed_blend_upper_lid_r_curve_closed.postInfinity" 1;

@@ -17,11 +17,6 @@ def createWindow(arg1):
     ###
     cmds.frameLayout( l='Model Prepare', collapsable=True, collapse=True)
     cmds.columnLayout( rowSpacing = 10 )
-    
-    cmds.rowLayout(numberOfColumns=2)
-    cmds.button(l='Cut Head', c=arg1.cutHead)
-    cmds.text(l='(optional) ')
-    cmds.setParent('..')
 
     cmds.text( l='! eye cluster name: eye_r_cls')
     cmds.text( l='! eye lattice name: eye_r_ffd1')
@@ -72,29 +67,29 @@ def createWindow(arg1):
     cmds.setParent('..')
     
     cmds.gridLayout( numberOfColumns=3, cellWidthHeight=(66, 20) ) #fourth layout - frame layout
-    cmds.button( l='assign', c=lambda _:arg1.assignDelete('headVerts','ass') )
-    cmds.button( l='select', c=lambda _:arg1.assignDelete('headVerts','sel') )
-    cmds.button( l='delete', c=lambda _:arg1.assignDelete('headVerts','del') )
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('head','ass') )
+    cmds.button( l='select', c=lambda _:arg1.assignDelete('head','sel') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('head','del') )
     
-    cmds.button( l='assign', c=lambda _:arg1.assignDelete('lipUpperVerts','ass') )
-    cmds.button( l='select', c=lambda _:arg1.assignDelete('lipUpperVerts','sel') )
-    cmds.button( l='delete', c=lambda _:arg1.assignDelete('lipUpperVerts','del') )
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('lipUpper','ass') )
+    cmds.button( l='select', c=lambda _:arg1.assignDelete('lipUpper','sel') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('lipUpper','del') )
     
-    cmds.button( l='assign', c=lambda _:arg1.assignDelete('lipLowerVerts','ass') )
-    cmds.button( l='select', c=lambda _:arg1.assignDelete('lipLowerVerts','sel') )
-    cmds.button( l='delete', c=lambda _:arg1.assignDelete('lipLowerVerts','del') )
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('lipLower','ass') )
+    cmds.button( l='select', c=lambda _:arg1.assignDelete('lipLower','sel') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('lipLower','del') )
 
-    cmds.button( l='assign', c=lambda _:arg1.assignDelete('lidUpperRVerts','ass') )
-    cmds.button( l='select', c=lambda _:arg1.assignDelete('lidUpperRVerts','sel') )
-    cmds.button( l='delete', c=lambda _:arg1.assignDelete('lidUpperRVerts','del') )
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('lidUpperR','ass') )
+    cmds.button( l='select', c=lambda _:arg1.assignDelete('lidUpperR','sel') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('lidUpperR','del') )
     
-    cmds.button( l='assign', c=lambda _:arg1.assignDelete('lidLowerRVerts','ass') )
-    cmds.button( l='select', c=lambda _:arg1.assignDelete('lidLowerRVerts','sel') )
-    cmds.button( l='delete', c=lambda _:arg1.assignDelete('lidLowerRVerts','del') )
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('lidLowerR','ass') )
+    cmds.button( l='select', c=lambda _:arg1.assignDelete('lidLowerR','sel') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('lidLowerR','del') )
     
-    cmds.button( l='assign', c=lambda _:arg1.assignDelete('browRVert','ass') )
-    cmds.button( l='select', c=lambda _:arg1.assignDelete('browRVert','sel') )
-    cmds.button( l='delete', c=lambda _:arg1.assignDelete('browRVert','del') )
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('browR','ass') )
+    cmds.button( l='select', c=lambda _:arg1.assignDelete('browR','sel') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('browR','del') )
     cmds.setParent('..')
     
     cmds.setParent('..')
@@ -142,12 +137,7 @@ def createWindow(arg1):
     cmds.text( l='Normalize (Scale ctrl oreint): ')
     cmds.button(l='Normalize')
     cmds.setParent('..')
-    '''
-    cmds.rowLayout(numberOfColumns=2)
-    cmds.text( l='Lip Pull: ')
-    cmds.floatFieldGrp( numberOfFields=2, label='lipPull', v1=.7, v2=.9, cw=(1,1), cc=arg1.changeLipPull )
-    cmds.setParent('..')
-    '''
+
     cmds.setParent('..')
     cmds.setParent('..')
     ###

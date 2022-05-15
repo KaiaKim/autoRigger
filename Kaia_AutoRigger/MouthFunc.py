@@ -31,21 +31,6 @@ def _createMouthCrv(name, upperCrv, lowerCrv):
     
     return mouthCrv
 
-def _lipLocsNamer(inList, prefix=''):
-    outList = []
-    for i in range(len(inList)):
-        name = prefix
-        if i==((len(inList)-1)/2):
-            name += '_m_'
-        elif i<((len(inList)-1)/2):
-            name += '_r_%02d'%i #result: 'lip_lower_l_00_loc'
-        elif i>((len(inList)-1)/2):
-            name += '_l_%02d'%( (len(inList)-1)-i ) #result: 'lip_lower_r_00_loc'
-        name += '_loc'
-        
-        outList.append(name) #append the loc name to self.lipLocs list
-    return outList
-
 
 def _2CurvCvCls(names,ctls,upCurv,loCurv):
     #can use this for lip_upper_curve & lip_lower_curve, or eye_upper_curve & eye_lower_curve
