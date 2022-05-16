@@ -143,6 +143,14 @@ def _createFolsOnBindmeshes(names,bindmeshes,grpName):
 
 def _createCtlGrp(targList, nameList, grpName, newGrp=True, ori=True, shape='circle', size=1, const=True, mid=False):
     #Nurv curves, orient group, offset group, nul group
+    '''
+    if type(targList)=='string':
+        targList = [targList]
+    
+    if type(nameList)=='string':
+        nameList = [nameList]
+    '''
+    
     if newGrp==True: bigGrp = cmds.group(em=True, n=grpName)
     else: bigGrp = grpName
     
@@ -219,16 +227,25 @@ def _getCVs(crv):
 def _customNURBScircle(shape, size, name):
     if shape=='circle':
         ctl = cmds.circle(n=name, r=size, d=1)[0] #degree=1(linear)
+    elif shape== 'semiCircle':
+        name='test'
+        size='1'
+        ctl = cmds.circle(n=name, r=size, d=1)[0]
+        cmds.move(0,ctl+'.cv[3:5]',y=True,a=True)
+        cmds.move(-.5*size,ctl+'.cv[*]',y=True,r=True)
     elif shape=='square':
         ctl = cmds.circle(n=name, r=size, sections=4, d=1)[0]
     elif shape=='triangle':
         ctl = cmds.circle(n=name, r=size, sections=3, d=1)[0]
-        cmds.move(0,-.25,0,ctl+'.cv[*]',r=True)
+        cmds.move(0,-.25*size,0,ctl+'.cv[*]',r=True)
     elif shape=='arch':
         ctl = cmds.circle(n=name, r=size, sections=6, d=0)[0]
-        cmds.move(0,2,0,ctl+'.cv[4]',r=True)
-        cmds.move(0,-.3,0,ctl+'.cv[*]',r=True)
-    
+        cmds.move(0,2*size,0,ctl+'.cv[4]',r=True)
+        cmds.move(0,-.3*size,0,ctl+'.cv[*]',r=True)
+    elif shape== 'pentagon':
+        ctl = cmds.circle(n=name, r=size, sections=5, d=1)[0]
+    else:
+        print('wrong shape name')
     cmds.delete(ctl, constructionHistory=True)
     return ctl
 

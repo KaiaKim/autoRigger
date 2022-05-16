@@ -20,15 +20,18 @@ class mouth():
         self.bindmeshes = [d.replace('_driver','_bindmesh') for d in self.drivJnts]
         self.folGrp = 'mouth_fol_grp'
         self.fols = [d.replace('bindmesh','fol') for d in self.bindmeshes]
-        self.jawClsGrp = 'jaw_cls_grp'
-        self.jawCls = [d.replace('bindmesh','cls') for d in self.bindmeshes]
+        self.clusGrp = 'mouth_cls_grp'
+        self.clus = [d.replace('bindmesh','cls') for d in self.bindmeshes]
         
             ###
-        self.microCtlGrp = 'lip_ctl_grp'
+        self.bigCtl = 'mouth_ctl_grp'
+        self.microCtlGrp = 'lip_micro_ctl_grp'
         self.microCtls =  [d.replace('fol','ctl').replace('mouth','lip') for d in self.fols]
-        self.macroCtlGrp = 'mouth_ctl_grp'
+        self.macroCtlGrp = 'lip_macro_ctl_grp'
         self.macroFols = [d for d in self.fols if '_m_' in d] #'mouth_upper_m_fol','mouth_lower_m_fol'
         self.macroCtls = [d.replace('fol','ctl') for d in self.macroFols]
+        self.thickCtlGrp = 'lip_thick_ctl_grp'
+        self.thickCtls = ['lip_thick_upper_ctl','lip_thick_lower_ctl']
         self.cornerCtlGrp = 'mouth_corner_ctl_grp'
         self.cornerFols = [d for d in self.fols if '_corner_' in d]
         self.cornerCtls = [d.replace('fol','ctl') for d in self.cornerFols]
@@ -114,6 +117,7 @@ class eye():
         self.ctls = ['eye_r_ctl','eye_l_ctl']
         self.aimCtl = 'eye_aim_ctl'
         self.aimMicroCtls = ['eye_r_aim_ctl','eye_l_aim_ctl']
+        self.pupilCtls = ['eye_r_pupil_ctl','eye_l_pupil_ctl']
             ###
         self.rLoft = None
 
@@ -124,3 +128,10 @@ class brow():
         self.inCtls = ['brow_inner_r_ctl','brow_inner_l_ctl']
         self.peakCtls = ['brow_peak_r_ctl','brow_peak_l_ctl']
 
+class nose():
+    def __init__(self,verts):
+        self.ctlGrp = 'nose_ctl_grp'
+        self.ctl = 'nose_ctl'
+        self.sneerCtls = ['nose_sneer_r_ctl', 'nose_sneer_l_ctl']
+        self.nostrilCtls = ['nose_nostril_r_ctl', 'nose_nostril_l_ctl']
+        

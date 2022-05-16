@@ -25,7 +25,7 @@ def _connectEyeCtls(ctls, rotCtl, aimCtl, aimMicroCtls, binds):
         cmds.aimConstraint(aimMicroCtls[i],aimGrp,mo=True)
         
     #connectConverge
-    cmds.addAttr(aimCtl, shortName='converge', defaultValue=0, minValue=-2, maxValue=2)
+    cmds.addAttr(aimCtl, shortName='converge', keyable=True, defaultValue=0, minValue=-2, maxValue=2)
     
     mul = cmds.createNode('multDoubleLinear')
     cmds.connectAttr(aimCtl+'.converge',mul+'.input1')

@@ -29,6 +29,9 @@ class BuildRig():
         self.faceBind = 'face_bind' #This name is from the template file. No change this!
         self.faceUpperBind = 'face_upper_bind' #No change this!
         self.faceLowerBind = 'face_lower_bind' #No change this!
+        self.noseBind = 'nose_bind'
+        self.sneerBinds = ['sneer_r_bind','sneer_l_bind']
+        self.nostrilBinds = ['nostril_r_bind','nostril_l_bind']
         self.jawBind = 'jaw_bind' #No change this!
         self.eyeSocketRBind = 'eye_socket_r_bind' #No change this!
         self.eyeSocketLBind = 'eye_socket_l_bind' #No change this!
@@ -36,14 +39,15 @@ class BuildRig():
         self.browCorBinds = ['brow_corrugator_r_bind','brow_corrugator_l_bind']  #No change this!
 
         self.faceUpperCtl = 'face_upper_ctl'
-
+        self.jawCtl = 'jaw_ctl'
         #execute namer class object
         self.M = Namer.mouth(self.verts)
         self.L = Namer.lid(self.verts)
         self.E = Namer.eye(self.verts)
         self.B = Namer.brow(self.verts)
+        self.N = Namer.nose(self.verts)
         
-        self.allCtls = self.M.microCtls + self.M.macroCtls + self.M.cornerCtls + self.L.ctls + self.E.ctls + self.B.ctls
+        self.allCtls = self.M.microCtls + self.M.macroCtls + self.M.cornerCtls + self.L.ctls + self.E.ctls + self.B.ctls + [self.jawCtl]
 
         
     def buildRig01(self,_):
@@ -66,9 +70,31 @@ class BuildRig():
     
     def face01(self):
         #0:Create Face Ctls
-        ModFunc._createCtlGrp([self.faceUpperBind],[self.faceUpperCtl], self.animGrp, newGrp=False, ori=False, size=12 )
+        ModFunc._createCtlGrp([self.faceUpperBind],[self.faceUpperCtl], self.animGrp, newGrp=False, ori=False, const=False, size=12 )
         ModFunc._offsetCtls([self.faceUpperCtl], t=(0,0,0), r=(90,0,0))
         ModFunc._overrideColor([self.faceUpperCtl], color=(1,1,0))
+        
+        #0:Create Jaw Ctls
+        ModFunc._createCtlGrp([self.jawBind], [self.jawCtl], self.animGrp, newGrp=False, const=False, size=1.5, shape='triangle')
+        ModFunc._offsetCtls([self.jawCtl],t=(0,0,10), r=(180,0,0),s=(-1,.7,1))
+        ModFunc._overrideColor([self.jawCtl], color=(1,1,0))
+        
+        #0:Create Nose Ctls
+        ModFunc._createCtlGrp([self.noseBind],[self.N.ctl], self.animGrp,
+         newGrp=False, const=False, size=2)
+         
+        ModFunc._createCtlGrp(self.sneerBinds,self.N.sneerCtls, self.N.ctl,
+         newGrp=False, const=False, size=.7, shape='arch')
+        ModFunc._offsetCtls(self.N.sneerCtls, t=(0,0,1))
+        
+        ModFunc._createCtlGrp(self.nostrilBinds,self.N.nostrilCtls, self.N.ctl,
+         newGrp=False, const=False, size=.5, shape='pentagon')
+        ModFunc._offsetCtls(self.N.nostrilCtls, r=(90,0,0))
+         
+        ModFunc._overrideColor([self.N.ctl]+self.N.sneerCtls+self.N.nostrilCtls, color=(0.06,0.12,0.05))
+        
+        
+        #note: create cheek joints!
     
     def mouth01(self):
         #1: Generate mouth_curve from lip_curves
@@ -97,31 +123,39 @@ class BuildRig():
         ModFunc._createFolsOnBindmeshes(self.M.fols,self.M.bindmeshes,self.M.folGrp)
         
         #4: Create Clusters on Bindmeshes
-        ModFunc._createClsOnBindmeshes(self.M.jawCls,self.M.bindmeshes,self.M.jawClsGrp)
+        ModFunc._createClsOnBindmeshes(self.M.clus,self.M.bindmeshes,self.M.clusGrp)
         
         #4: Create Ctrls
-            #lip ctrls
+            #lip micro ctrls
         ModFunc._createCtlGrp(self.M.fols,self.M.microCtls,self.M.microCtlGrp, size=.3 )
         ModFunc._offsetCtls([d for d in self.M.microCtls if 'upper' in d or 'corner' in d], t=(0,-1,0)) #upper
         ModFunc._offsetCtls([d for d in self.M.microCtls if 'lower' in d], t=(0,1,0)) #lower
-        ModFunc._90dOrient(self.M.microCtls)
-        ModFunc._scaleOrient(self.M.microCtls)
-        ModFunc._overrideColor(self.M.microCtls, color=(1,1,0))
-            
-            #mouth ctrls
-        ModFunc._createCtlGrp(self.M.macroFols, self.M.macroCtls, self.M.macroCtlGrp, size=.5, shape='square')
-        ModFunc._offsetCtls([self.M.macroCtls[0]], t=(0,-1.5,0)) #upper
-        ModFunc._offsetCtls([self.M.macroCtls[1]], t=(0,1.5,0)) #lower
-        ModFunc._90dOrient(self.M.macroCtls)
-        ModFunc._scaleOrient(self.M.macroCtls)
-        ModFunc._overrideColor(self.M.macroCtls, color=(1,1,0))
-        
+            #lip macro ctrls
+        ModFunc._createCtlGrp(self.M.macroFols, self.M.macroCtls, self.M.macroCtlGrp,
+         size=.5, shape='semiCircle')
+        ModFunc._offsetCtls([self.M.macroCtls[0]], t=(0,-2,0)) #upper
+        ModFunc._offsetCtls([self.M.macroCtls[1]], t=(0,2,0)) #lower
+            #big ctl
+        ModFunc._createCtlGrp([self.M.macroFols[0]],[self.M.bigCtl], self.animGrp,
+         newGrp=False, const=False, size=4, shape='square')
+        ModFunc._offsetCtls(self.M.cornerCtls, t=(0,2,0), r=(0,0,45))
+            #lip thick ctl
+        ModFunc._createCtlGrp(self.M.macroFols,self.M.thickCtls, self.M.thickCtlGrp,
+        size=1, shape='square')
+        ModFunc._offsetCtls([self.M.thickCtls[0]], t=(0,1.5,0), s=(3,1,1)) #upper
+        ModFunc._offsetCtls([self.M.thickCtls[1]], t=(0,-1.5,0), s=(3,1,-1)) #lower
             #corner ctrls
-        ModFunc._createCtlGrp(self.M.cornerFols, self.M.cornerCtls, self.M.cornerCtlGrp, const=False, size=.5, shape='triangle')
+        ModFunc._createCtlGrp(self.M.cornerFols, self.M.cornerCtls, self.M.cornerCtlGrp,
+         const=False, size=.5, shape='triangle')
         ModFunc._offsetCtls(self.M.cornerCtls, t=(0,-1.5,0), r=(0,0,-30))
-        ModFunc._90dOrient(self.M.cornerCtls)
-        ModFunc._scaleOrient(self.M.cornerCtls)
-        ModFunc._overrideColor(self.M.cornerCtls, color=(1,0,0))
+        
+            ###
+        ModFunc._overrideColor(self.M.microCtls, color=(1,1,0))
+        ModFunc._overrideColor(self.M.macroCtls+[self.M.bigCtl]+self.thickCtls+self.M.cornerCtls, color=(1,0,0))
+        
+        ModFunc._90dOrient(self.M.microCtls+self.M.macroCtls+[self.M.bigCtl]+self.thickCtls+self.M.cornerCtls)
+        ModFunc._scaleOrient(self.M.microCtls+self.M.macroCtls+self.M.cornerCtls)
+        
 
         #5: Parent constraint micro nul2 group to macro ctl
         MouthFunc.constMicroToMacro(self.M.microCtls)
@@ -131,7 +165,7 @@ class BuildRig():
     
     def mouth02(self):
         #7: Attach Jaw Clusters to Jaw
-        MouthFunc.attachJawCls(self.M.jawCls, self.M.macroCtls, self.faceLowerBind, self.jawBind)
+        MouthFunc.attachJawCls(self.M.clus, self.M.macroCtls, self.faceLowerBind, self.jawBind)
         
         #8: Create lipCV Clusters on lip_curves
         MouthFunc._2CurvCvCls(self.M.cvCls, self.M.microCtls, self.M.upperCrv, self.M.lowerCrv )
@@ -141,13 +175,26 @@ class BuildRig():
         MouthFunc.attachCornerCtls(self.M.cornerCtls, self.faceLowerBind, self.jawBind)
         
         #10: Corner pin, Lip pull
-        MouthFunc.setMouthCornerCtls(self.M.cornerCtls, self.M.macroCtls, self.M.jawCls, self.faceLowerBind,self.jawBind)
+        MouthFunc.setMouthCornerCtls(self.M.cornerCtls, self.M.macroCtls, self.M.clus, self.faceLowerBind,self.jawBind)
         
         #set lip pull attribute
         for i in self.M.cornerCtls:
             cmds.setAttr(i+'.lipOnePull', 0.7)
             cmds.setAttr(i+'.lipTwoPull', 0.9)
             
+            ###Mouth crv blendshapes
+        #1: Duplicate orig curve
+        MouthFunc._createBsCrv(self.M.crv,self.M.blendCrvs,self.M.blendCrvGrp)
+        
+        #2: Create Blendshape Node
+        MouthFunc._createBsNode(self.M.bsNode, self.M.crv, self.M.blendCrvs)
+        
+        #3: Set blendshape cv weight(sepereate left & right weight)
+        MouthFunc._setBsCvWeight(self.M.bsNode)
+        
+        #4: Connect Blendshape weight to translate value of mouth corner ctrls
+        MouthFunc._connectCornerCtrl(self.M.cornerCtls, self.M.blendCrvs, self.M.bsNode)
+ 
         
     def lid01(self):
         #1: Mirror Lid Curves
@@ -203,7 +250,6 @@ class BuildRig():
         for num,crv in enumerate(self.L.crvs):
             LidFunc._skinCrv(self.L.drivJnts[num*5:num*5+5],crv) #0,1,2,3,4
         
-        
         #4: Create blink Ctls
         socketBinds = [self.eyeSocketRBind, self.eyeSocketRBind, self.eyeSocketLBind, self.eyeSocketLBind]
         ModFunc._createCtlGrp(socketBinds, self.L.ctls, self.L.ctlGrp, size=1, shape='arch', const=False)
@@ -211,11 +257,23 @@ class BuildRig():
         ModFunc._offsetCtls(self.L.ctls[2:], t=(0,0,7), s=(1.2,.7,1)) #l
         cmds.scale(1,-1,1,self.L.ctls[0]+'_orient') #lower_r
         cmds.scale(1,-1,1,self.L.ctls[3]+'_orient') #upper_l
-        ModFunc._overrideColor(self.L.ctls, color=(1,0,0))
+        ModFunc._overrideColor(self.L.ctls, color=(0,0,1))
         cmds.parent(self.L.ctlGrp,self.faceUpperCtl)
         
     def lid02(self):
-        pass
+            ###lid crv blendshapes
+        #1: Duplicate orig curve
+        LidFunc._createBsCrv(self.L.crvs[:2], self.L.rBlendCrvs, self.L.rBlendCrvGrp)
+        LidFunc._createBsCrv(self.L.crvs[2:], self.L.lBlendCrvs, self.L.lBlendCrvGrp)
+        
+        #2: Create Blendshape Node
+        LidFunc._createBsNode(self.L.rBsNodes, self.L.drivCrvs[:2], self.L.rBlendCrvs)
+        LidFunc._createBsNode(self.L.lBsNodes, self.L.drivCrvs[2:], self.L.lBlendCrvs)
+        
+        #3: Connect Blendshape weight to translate value of mouth corner ctrls
+        LidFunc._connectCornerCtrl(self.L.ctls[:2], self.L.rBlendCrvs, self.L.rBsNodes) # first two elements (right ctrls)
+        LidFunc._connectCornerCtrl(self.L.ctls[2:], self.L.lBlendCrvs, self.L.lBsNodes) #last two elements (left ctrls)
+        
     
     def eye01(self):
         #4: Create Eye Ctls
@@ -235,18 +293,23 @@ class BuildRig():
         ModFunc._createCtlGrp([self.eyeSocketLBind], [self.E.aimCtl], self.faceUpperCtl, 
         newGrp=False, ori=False, const=False, mid=True, size=1, shape='square' )
         ModFunc._offsetCtls([self.E.aimCtl],r=(0,0,45),s=(7,1,1))
-        ModFunc._overrideColor([self.E.aimCtl], color=(1,1,0))
+        ModFunc._overrideColor([self.E.aimCtl], color=(0,0,1))
 
             #eye aim micro ctls LR
         targList = [self.E.aimCtl, self.E.aimCtl]
         ModFunc._createCtlGrp(targList, self.E.aimMicroCtls, self.E.aimCtl, 
         newGrp=False, ori=False, const=False, mid=True, size=1 )
-        ModFunc._overrideColor(self.E.aimMicroCtls, color=(1,1,0))
+        ModFunc._overrideColor(self.E.aimMicroCtls, color=(0,0,1))
         
+            ###initial offset
         cmds.move(0,0,20,self.E.aimCtl+'_nul',r=True)
         cmds.move(-3,0,0,self.E.aimMicroCtls[0]+'_nul',r=True)
         cmds.move(3,0,0,self.E.aimMicroCtls[1]+'_nul',r=True)
         
+            #pupil ctl
+        ModFunc._createCtlGrp(self.E.ctls, self.E.pupilCtls, self.faceUpperCtl,
+        newGrp=False, const=False, ori=False, shape='pentagon', size=.5)
+        ModFunc._overrideColor(self.E.pupilCtls, color=(0,0,1))
         '''
         LidFunc._createLoftBall()
         LidFunc._SlideOnSurface()
@@ -256,9 +319,10 @@ class BuildRig():
         #5: Connect Eye Ctls
         EyeFunc._connectEyeCtls(self.E.ctls, self.E.rotCtl, self.E.aimCtl, self.E.aimMicroCtls, self.eyeBinds)
         
-                
-        pass
-    
+        #note: create pupil joints!
+        pupilNuls = [self.E.pupilCtls[0]+'_nul', self.E.pupilCtls[1]+'_nul']
+        ModFunc._parentIterate(self.E.ctls,pupilNuls)
+        
     def brow01(self):
         #2: Create Brow Ctls
             #brow_r_ctl
@@ -303,35 +367,8 @@ class BuildRig():
         #4: Aim Constraint?
         pass
     
-    def mouthBs01(self):
-        #1: Duplicate orig curve
-        MouthFunc._createBsCrv(self.M.crv,self.M.blendCrvs,self.M.blendCrvGrp)
-        
-        #2: Create Blendshape Node
-        MouthFunc._createBsNode(self.M.bsNode, self.M.crv, self.M.blendCrvs)
-        
-        #3: Set blendshape cv weight(sepereate left & right weight)
-        MouthFunc._setBsCvWeight(self.M.bsNode)
-        
-        #4: Connect Blendshape weight to translate value of mouth corner ctrls
-        MouthFunc._connectCornerCtrl(self.M.cornerCtls, self.M.blendCrvs, self.M.bsNode)
-            
-        
-    def lidBs01(self):
-        #1: Duplicate orig curve
-        LidFunc._createBsCrv(self.L.crvs[:2], self.L.rBlendCrvs, self.L.rBlendCrvGrp)
-        LidFunc._createBsCrv(self.L.crvs[2:], self.L.lBlendCrvs, self.L.lBlendCrvGrp)
-        
-        #2: Create Blendshape Node
-        LidFunc._createBsNode(self.L.rBsNodes, self.L.drivCrvs[:2], self.L.rBlendCrvs)
-        LidFunc._createBsNode(self.L.lBsNodes, self.L.drivCrvs[2:], self.L.lBlendCrvs)
-        
-        #3: Connect Blendshape weight to translate value of mouth corner ctrls
-        LidFunc._connectCornerCtrl(self.L.ctls[:2], self.L.rBlendCrvs, self.L.rBsNodes) # first two elements (right ctrls)
-        LidFunc._connectCornerCtrl(self.L.ctls[2:], self.L.lBlendCrvs, self.L.lBsNodes) #last two elements (left ctrls)
-        
     def hideExtra(self):
-        cmds.select(self.M.drivJnts,self.M.jawCls,self.M.cvCls,self.L.drivJnts)
+        cmds.select(self.M.drivJnts,self.M.clus,self.M.cvCls,self.L.drivJnts)
         cmds.hide()
 
     
@@ -357,7 +394,7 @@ class BuildRig():
                 self.M.upperLocGrp, self.M.lowerLocGrp,
                 self.L.rLocGrp, self.L.lLocGrp,
                 self.M.crv,
-                self.M.bindmeshesGrp,self.M.jawClsGrp, self.M.folGrp,
+                self.M.bindmeshesGrp,self.M.clusGrp, self.M.folGrp,
                 self.M.drivJntGrp,
                 self.M.blendCrvGrp, self.L.rBlendCrvGrp, self.L.lBlendCrvGrp,
                 self.rigGrp)
