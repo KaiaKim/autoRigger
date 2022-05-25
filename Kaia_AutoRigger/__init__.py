@@ -28,7 +28,7 @@ class AutoRigFace(Builder.BuildRig):
         self.winName = 'kaiaAutoRigFace' #this needs to be ac word that has no spaces or it won't work! #node name
         
         self.verts = {'head':None, 'lipUpper':None, 'lipLower':None, 'lidUpperR':None, 'lidLowerR':None, 'browR':None}
-    
+        
     def quickTest(self,_):
         #some hard coded data for quick testing
         self.verts['head']=['face.vtx[0:6959]']

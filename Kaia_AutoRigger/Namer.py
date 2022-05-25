@@ -1,4 +1,28 @@
 ###-----------------------------------------------------CLASS---------------------------------------------------
+class templateNames():
+    def __init__(self):
+        
+        pass
+    def binds(self):
+        #These names are from the template file. No change this!
+        self.faceBind = 'face_bind'
+        self.faceUpperBind = 'face_upper_bind' 
+        self.faceLowerBind = 'face_lower_bind' 
+        self.mouthBind = 'mouth_bind'
+        self.noseBind = 'nose_bind'
+        self.sneerBinds = ['sneer_r_bind','sneer_l_bind']
+        self.nostrilBinds = ['nostril_r_bind','nostril_l_bind']
+        self.jawBind = 'jaw_bind'
+        self.jawTipBind = 'jaw_tip' 
+        self.eyeSocketRBind = 'eye_socket_r_bind' 
+        self.eyeSocketLBind = 'eye_socket_l_bind' 
+        self.eyeBinds = ['eye_r_bind','eye_l_bind']
+        self.browBinds = ['brow_r_bind','brow_l_bind']
+        self.browInBinds = ['brow_inner_r_bind','brow_inner_l_bind']
+        self.browPeakBinds = ['brow_peak_r_bind','brow_peak_l_bind']
+        self.browCorBinds = ['brow_corrugator_r_bind','brow_corrugator_l_bind']
+
+
 class mouth():
     def __init__(self,verts):
         self.upperCrv = 'lip_upper_curve' #No change this!
@@ -93,7 +117,7 @@ class lid():
         self.lBlendCrvGrp = 'lid_l_blend_crv_grp'
         suffixList = ['_open','_neutral','_mid','_closed']
         self.rBlendCrvs = [self.crvs[0]+d for d in suffixList]+[self.crvs[1]+d for d in suffixList]
-        self.lBlendCrvs = [self.crvs[2]+d for d in suffixList]+[self.crvs[3]+d for d in suffixList]
+        self.lBlendCrvs = [d.replace('_r_','_l_') for d in self.rBlendCrvs]
         nodeNames = ['upper_r_open','upper_r_closed','lower_r_open','lower_r_closed']
         self.rBsNodes = ['lid_'+d+'_blend' for d in nodeNames]
         self.lBsNodes = [d.replace('_r_','_l_') for d in self.rBsNodes]
@@ -127,6 +151,15 @@ class brow():
         self.ctls = ['brow_r_ctl','brow_l_ctl']
         self.inCtls = ['brow_inner_r_ctl','brow_inner_l_ctl']
         self.peakCtls = ['brow_peak_r_ctl','brow_peak_l_ctl']
+        
+        self.drv = [d.replace('_ctl','_driver') for d in self.ctls]
+        self.localDrv = [d.replace('_ctl','_localDriver') for d in self.ctls]
+        
+        self.inDrv =[d.replace('_ctl','_driver') for d in self.inCtls]
+        self.inLocalDrv = [d.replace('_ctl','_localDriver') for d in self.inCtls]
+        
+        self.peakDrv =[d.replace('_ctl','_driver') for d in self.peakCtls]
+        self.peakLocalDrv = [d.replace('_ctl','_localDriver') for d in self.peakCtls]
 
 class nose():
     def __init__(self,verts):

@@ -143,13 +143,7 @@ def _createFolsOnBindmeshes(names,bindmeshes,grpName):
 
 def _createCtlGrp(targList, nameList, grpName, newGrp=True, ori=True, shape='circle', size=1, const=True, mid=False):
     #Nurv curves, orient group, offset group, nul group
-    '''
-    if type(targList)=='string':
-        targList = [targList]
-    
-    if type(nameList)=='string':
-        nameList = [nameList]
-    '''
+
     
     if newGrp==True: bigGrp = cmds.group(em=True, n=grpName)
     else: bigGrp = grpName
@@ -174,7 +168,7 @@ def _scaleOrient(ctlList):
     for i in ctlList:
         scaleVal = [1,1,1]
         if '_lower_' in i:
-            scaleVal[2] = -1 #Z value is -1 
+            scaleVal[1] = -1 #Y value is -1 
         if '_l_' in i:
             scaleVal[0] = -1 #X value is -1
         
@@ -228,8 +222,6 @@ def _customNURBScircle(shape, size, name):
     if shape=='circle':
         ctl = cmds.circle(n=name, r=size, d=1)[0] #degree=1(linear)
     elif shape== 'semiCircle':
-        name='test'
-        size='1'
         ctl = cmds.circle(n=name, r=size, d=1)[0]
         cmds.move(0,ctl+'.cv[3:5]',y=True,a=True)
         cmds.move(-.5*size,ctl+'.cv[*]',y=True,r=True)
