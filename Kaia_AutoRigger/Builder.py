@@ -28,9 +28,13 @@ class BuildRig(Namer.templateNames):
 
         self.binds()
         
+        self.faceCtl = 'face_ctl'
         self.faceUpperCtl = 'face_upper_ctl'
         self.jawCtl = 'jaw_ctl'
-
+        self.cheekCtlGrp = 'cheek_ctl_grp'
+        self.cheekCtls = [d.replace('_bind','_ctl') for d in self.cheekBinds]
+        self.cheekDrvs = ['cheek_driver_r_nul','cheek_driver_l_nul']
+        
         #execute namer class object
         self.M = Namer.mouth(self.verts)
         self.L = Namer.lid(self.verts)
@@ -60,17 +64,22 @@ class BuildRig(Namer.templateNames):
         self.arrangeGrps()
     
     def face01(self):
-        #0:Create Face Ctls
-        ModFunc._createCtlGrp([self.faceUpperBind],[self.faceUpperCtl], self.animGrp, newGrp=False, ori=False, const=False, size=12 )
-        ModFunc._offsetCtls([self.faceUpperCtl], t=(0,0,0), r=(90,0,0))
-        ModFunc._overrideColor([self.faceUpperCtl], color=(1,1,0))
+        #0: Create Face Ctls
+        ModFunc._createCtlGrp([self.faceBind],[self.faceCtl],self.animGrp, newGrp=False,ori=False,const=False,size=8)
+        ModFunc._offsetCtls([self.faceCtl],r=(90,0,0))
         
-        #0:Create Jaw Ctls
+        #0: Create Upper Face Ctls
+        ModFunc._createCtlGrp([self.faceUpperBind],[self.faceUpperCtl], self.faceCtl, newGrp=False, ori=False, const=False, size=12 )
+        ModFunc._offsetCtls([self.faceUpperCtl], r=(90,0,0))
+        
+        ModFunc._overrideColor([self.faceCtl, self.faceUpperCtl], color=(1,1,0))
+        
+        #0: Create Jaw Ctls
         ModFunc._createCtlGrp([self.jawBind], [self.jawCtl], self.animGrp, newGrp=False, const=False, size=1.5, shape='triangle')
         ModFunc._offsetCtls([self.jawCtl],t=(0,-2,12), r=(180,0,0),s=(-1,.7,1))
         ModFunc._overrideColor([self.jawCtl], color=(1,1,0))
         
-        #0:Create Nose Ctls
+        #0: Create Nose Ctls
         ModFunc._createCtlGrp([self.noseBind],[self.N.ctl], self.animGrp,
          newGrp=False, const=False, size=2)
          
@@ -82,7 +91,20 @@ class BuildRig(Namer.templateNames):
          newGrp=False, const=False, size=.4, shape='pentagon')
         ModFunc._offsetCtls(self.N.nostrilCtls, t=(0,-.6,0), r=(90,0,0))
          
-        ModFunc._overrideColor([self.N.ctl]+self.N.sneerCtls+self.N.nostrilCtls, color=(0.06,0.12,0.05))
+        ModFunc._overrideColor([self.N.ctl]+self.N.sneerCtls+self.N.nostrilCtls, color=(0,1,0))
+        
+        #0: Create Cheek Ctls
+        ModFunc._createCtlGrp(self.cheekBinds, self.cheekCtls, self.cheekCtlGrp, const=False, size=.5 )
+        ModFunc._overrideColor(self.cheekCtls, color=(1,1,0))
+        
+        #scale orient z
+        for ctl in self.cheekCtls:
+            if '_l_' in ctl:
+                cmds.scale(1,1,-1,ctl+'_orient')
+        
+        cmds.parent(self.cheekCtlGrp,self.faceCtl)
+        
+        #1: Create Cheek lift jnts
         
     
     def face02(self):
@@ -93,8 +115,16 @@ class BuildRig(Namer.templateNames):
         cmds.parentConstraint(self.jawCtl,self.jawBind,mo=True)
         cmds.parent(self.jawCtl+'_nul',self.M.bigCtl)
         
+        #1: Parent constraint nose binds
+        ModFunc._parentConstIterate([self.N.ctl]+self.N.sneerCtls+self.N.nostrilCtls,[self.noseBind]+self.sneerBinds+self.nostrilBinds)
         
-
+        #1: Parent constraint cheek binds
+        ModFunc._parentConstIterate(self.cheekCtls,self.cheekBinds)
+        #2: Make Cheek joints follow mCorner ctls
+        ModFunc._createCheekDrv(self.cheekDrvs,self.M.cornerCtls,self.faceCtl)
+        
+        ModFunc._createCheekAuto(self.cheekCtls[0:2],self.cheekDrvs,(.1,.5,.1) )
+        ModFunc._createCheekAuto(self.cheekCtls[2:4],self.cheekDrvs,(.5,.5,.5))
     
     def mouth01(self):
         #1: Generate mouth_curve from lip_curves
@@ -103,7 +133,6 @@ class BuildRig(Namer.templateNames):
         #1: Create lip_locs on lip verts & connect to lip_curves
         upperPos = ModFunc._getPosListFromVerts(self.verts['lipUpper'])
         ModFunc._createLocsOnCurve(self.M.upperLocs, upperPos, self.M.upperCrv, self.M.upperLocGrp)
-        
         lowerPos = ModFunc._getPosListFromVerts(self.verts['lipLower'])
         ModFunc._createLocsOnCurve(self.M.lowerLocs, lowerPos, self.M.lowerCrv, self.M.lowerLocGrp)
         
@@ -111,7 +140,7 @@ class BuildRig(Namer.templateNames):
         ModFunc._aimConstLocs(self.M.locs, self.jawBind, upObj=self.faceLowerBind)
         
         #2: Create lip_bind_jnts && constraint to lip_locs
-        ModFunc._createJntsOnLocs(self.M.locs,self.M.binds,self.mouthBind) ###parent change!
+        ModFunc._createJntsOnLocs(self.M.locs,self.M.binds,self.faceLowerBind) ###parent change!
         
         #2: Create mouth drivers
         ModFunc._createJntsOnCVs(self.M.drivJnts, self.M.crv,self.M.drivJntGrp) 
@@ -136,13 +165,14 @@ class BuildRig(Namer.templateNames):
         ModFunc._offsetCtls(self.M.macroCtls, t=(0,-1.5,0), r=(0,0,45), s=(3,1,1))
 
             #big ctl
-        ModFunc._createCtlGrp([self.mouthBind],[self.M.bigCtl], self.animGrp,
+        ModFunc._createCtlGrp([self.faceLowerBind],[self.M.bigCtl], self.faceCtl,
          newGrp=False, const=False, ori=False, size=4, shape='square')
         ModFunc._offsetCtls([self.M.bigCtl], t=(0,-2.5,12), r=(0,0,45), s=(1,.8,1))
             #lip thick ctl
         ModFunc._createCtlGrp(self.M.macroFols,self.M.thickCtls, self.M.thickCtlGrp,
         size=.5, shape='semiCircle')
         ModFunc._offsetCtls(self.M.thickCtls, t=(0,-1.5,0), s=(2.5,1,1))
+        cmds.scale(1,1,-1,self.M.thickCtls[1]+'_orient')
             #corner ctrls
         ModFunc._createCtlGrp(self.M.cornerFols, self.M.cornerCtls, self.M.cornerCtlGrp,
          const=False, size=.5, shape='triangle')
@@ -151,7 +181,6 @@ class BuildRig(Namer.templateNames):
             ###
         ModFunc._overrideColor(self.M.microCtls, color=(1,1,0))
         ModFunc._overrideColor(self.M.macroCtls+[self.M.bigCtl]+self.M.thickCtls+self.M.cornerCtls, color=(1,0,0))
-        
         ModFunc._scaleOrient(self.M.microCtls+self.M.macroCtls+self.M.thickCtls+self.M.cornerCtls)
         ModFunc._90dOrient(self.M.microCtls+self.M.macroCtls+self.M.thickCtls+self.M.cornerCtls)
         
@@ -163,20 +192,19 @@ class BuildRig(Namer.templateNames):
     
     def mouth02(self):
         #6: Parent Constraint mouth bind
-        cmds.parentConstraint(self.M.bigCtl,self.mouthBind)
+        cmds.parentConstraint(self.M.bigCtl,self.faceLowerBind)
             
         #7: Attach Jaw Clusters to Jaw
-        MouthFunc.attachJawCls(self.M.clus, self.M.macroCtls, self.mouthBind, self.jawBind)
+        MouthFunc.attachJawCls(self.M.clus, self.M.macroCtls, self.faceLowerBind, self.jawBind)
         
         #8: Create lipCV Clusters on lip_curves
         MouthFunc._2CurvCvCls(self.M.cvCls, self.M.microCtls, self.M.upperCrv, self.M.lowerCrv )
         
         #9: parent constraint corner ctl nul to jaw
-            ###
-        MouthFunc.attachCornerCtls(self.M.cornerCtls, self.mouthBind, self.jawBind)
+        MouthFunc.attachCornerCtls(self.M.cornerCtls, self.faceLowerBind, self.jawBind)
         
         #10: Corner pin, Lip pull
-        MouthFunc.setMouthCornerCtls(self.M.cornerCtls, self.M.macroCtls, self.M.clus, self.mouthBind,self.jawBind)
+        MouthFunc.setMouthCornerCtls(self.M.cornerCtls, self.M.macroCtls, self.M.clus, self.faceLowerBind,self.jawBind)
         
         #set lip pull attribute
         for i in self.M.cornerCtls:
@@ -229,8 +257,7 @@ class BuildRig(Namer.templateNames):
         
         #3: Create Lid Driver Curve
         LidFunc._createDrivCrv(self.L.drivCrvs,self.L.crvs)
-        
-        ###
+
         #5: Create Lid Driver Joints
         for num,crv in enumerate(self.L.drivCrvs):
             LidFunc._createDrivJnts(self.L.drivJnts[num*5:num*5+5],crv) #0,1,2,3,4
@@ -239,7 +266,7 @@ class BuildRig(Namer.templateNames):
         ModFunc._createCtlGrp(self.L.drivJnts, self.L.microCtls, self.L.microCtlGrp, ori=False, const=False, size=.3)
         ModFunc._offsetCtls(self.L.microCtls, t=(0,0,.7))
         ModFunc._overrideColor(self.L.microCtls, color=(1,1,0))
-        cmds.parent(self.L.microctlGrp,self.faceUpperCtl)
+        cmds.parent(self.L.microCtlGrp,self.faceUpperCtl)
         
         #5: attach lid tweak ctl nuls to driver crvs
         for num,crv in enumerate(self.L.drivCrvs):
@@ -312,10 +339,6 @@ class BuildRig(Namer.templateNames):
         ModFunc._createCtlGrp(self.E.ctls, self.E.pupilCtls, self.faceUpperCtl,
         newGrp=False, const=False, ori=False, shape='pentagon', size=.5)
         ModFunc._overrideColor(self.E.pupilCtls, color=(0,0,1))
-        '''
-        LidFunc._createLoftBall()
-        LidFunc._SlideOnSurface()
-        '''
         
     def eye02(self):
         #5: Connect Eye Ctls
@@ -335,7 +358,6 @@ class BuildRig(Namer.templateNames):
         ModFunc._scaleOrient(self.B.ctls)
         ModFunc._overrideColor(self.B.ctls, color=(1,1,0))
         cmds.parent(self.B.ctlGrp, self.faceUpperCtl)
-        
         cmds.delete(browPosLocs[0],browPosLocs[1])
         
             #orientCompensate
@@ -367,7 +389,6 @@ class BuildRig(Namer.templateNames):
         BrowFunc._createFollowAttr(self.B.ctls)
         BrowFunc._createFollowAttr(self.B.inCtls)
         BrowFunc._createFollowAttr(self.B.peakCtls)
-
         
         #4: Create brow local Driver under ctl nul
         pos = cmds.xform(self.verts['browR'],q=True,t=True,ws=True)
@@ -375,18 +396,18 @@ class BuildRig(Namer.templateNames):
         BrowFunc._createLocalDrv(self.B.ctls,self.B.localDrv,pos,parents)
         BrowFunc._createLocalDrv(self.B.inCtls,self.B.inLocalDrv,pos,parents)
         BrowFunc._createLocalDrv(self.B.peakCtls,self.B.peakLocalDrv,pos,parents)
-
             
         #5: Create brow Driver
         pos = cmds.xform(self.browBinds[0],q=True,t=True,ws=True)
-        xf = cmds.group(n='brow_xform',em=True)
-        cmds.parentConstraint(self.faceUpperBind,xf,mo=False)
-        cmds.scaleConstraint(self.faceUpperBind,xf,mo=False)
+        cmds.group(n=self.B.xfGrp,em=True)
+        cmds.parentConstraint(self.faceUpperBind,self.B.xfGrp,mo=False)
+        cmds.scaleConstraint(self.faceUpperBind,self.B.xfGrp,mo=False)
         
-        BrowFunc._createDrv(self.B.ctls,self.B.drv,pos,xf)
-        BrowFunc._createDrv(self.B.inCtls,self.B.inDrv,pos,xf)
-        BrowFunc._createDrv(self.B.peakCtls,self.B.peakDrv,pos,xf)
-             
+        BrowFunc._createDrv(self.B.ctls,self.B.drv,pos,self.B.xfGrp)
+        BrowFunc._createDrv(self.B.inCtls,self.B.inDrv,pos,self.B.xfGrp)
+        BrowFunc._createDrv(self.B.peakCtls,self.B.peakDrv,pos,self.B.xfGrp)
+        
+        #6: Create Brow Meat jnts
         
     def brow02(self):
         #6: Connect Brow Ctls to Brow Drivers
@@ -394,24 +415,11 @@ class BuildRig(Namer.templateNames):
         BrowFunc._connectBrowCtls(self.B.ctls,self.B.localDrv,self.B.drv,self.browBinds,wuo)
         BrowFunc._connectBrowCtls(self.B.inCtls,self.B.inLocalDrv,self.B.inDrv,self.browInBinds,wuo)
         BrowFunc._connectBrowCtls(self.B.peakCtls,self.B.peakLocalDrv,self.B.peakDrv,self.browPeakBinds,wuo)
-
         
         #7: Connect Main Follow Y to Inner Follow Y:
         for main,inner,peak in zip(self.B.ctls,self.B.inCtls,self.B.peakCtls):
             cmds.connectAttr(main+'.followY',inner+'.followY')
             cmds.connectAttr(main+'.followY',peak+'.followY')
-
-            
-        '''
-        #EXTRA: Create Guide locator grp
-        for ctl, bind in zip(self.B.ctls,self.browBinds):
-            name = ctl.replace('_ctl','_guide')
-            loc = cmds.spaceLocator(n=name)
-            grp = cmds.group(loc,n=name+'_nul')
-            pos = cmds.xform(bind,q=True,t=True,ws=True)
-            cmds.move(pos[0],pos[1],pos[2],grp)
-            cmds.pointConstraint(ctl,loc,mo=True)
-        '''
     
         #EXTRA: Set Follow Attr (hard coding)
         cmds.setAttr(self.B.ctls[0]+'.followY',0,.5,0,type='double3')
@@ -422,7 +430,6 @@ class BuildRig(Namer.templateNames):
     def hideExtra(self):
         cmds.select(self.M.drivJnts,self.M.clus,self.M.cvCls,self.L.drivJnts)
         cmds.hide()
-
     
     def createGrps(self):
         cmds.group(n=self.faceRoot, em=True)
@@ -449,17 +456,16 @@ class BuildRig(Namer.templateNames):
                 self.M.bindmeshesGrp,self.M.clusGrp, self.M.folGrp,
                 self.M.drivJntGrp,
                 self.M.blendCrvGrp, self.L.rBlendCrvGrp, self.L.lBlendCrvGrp,
+                self.B.xfGrp,
                 self.rigGrp)
         except: print('rig_grp parent skipped')
         
         try:
             cmds.parent(
                 self.M.microCtlGrp, self.M.macroCtlGrp, self.M.cornerCtlGrp,
-                self.L.microCtlGrp, self.B.ctlGrp,
+                self.M.thickCtlGrp,
                 self.animGrp)
         except: print('anim_grp parent skipped')
-        
-        
         
     
 ###-----------------------------------------------------EXECUTE---------------------------------------------------------------

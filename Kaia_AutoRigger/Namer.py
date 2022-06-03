@@ -8,20 +8,29 @@ class templateNames():
         self.faceBind = 'face_bind'
         self.faceUpperBind = 'face_upper_bind' 
         self.faceLowerBind = 'face_lower_bind' 
+        
         self.mouthBind = 'mouth_bind'
+        
         self.noseBind = 'nose_bind'
         self.sneerBinds = ['sneer_r_bind','sneer_l_bind']
         self.nostrilBinds = ['nostril_r_bind','nostril_l_bind']
+        
         self.jawBind = 'jaw_bind'
         self.jawTipBind = 'jaw_tip' 
+        
         self.eyeSocketRBind = 'eye_socket_r_bind' 
         self.eyeSocketLBind = 'eye_socket_l_bind' 
         self.eyeBinds = ['eye_r_bind','eye_l_bind']
+        
         self.browBinds = ['brow_r_bind','brow_l_bind']
         self.browInBinds = ['brow_inner_r_bind','brow_inner_l_bind']
         self.browPeakBinds = ['brow_peak_r_bind','brow_peak_l_bind']
         self.browCorBinds = ['brow_corrugator_r_bind','brow_corrugator_l_bind']
-
+        
+        self.cheekUpperBinds = ['cheek_upper_r_bind','cheek_upper_l_bind']
+        self.cheekMidBinds = ['cheek_r_bind','cheek_l_bind']
+        self.cheekLowerBinds = ['cheek_lower_r_bind','cheek_lower_l_bind']
+        self.cheekBinds = self.cheekUpperBinds + self.cheekMidBinds + self.cheekLowerBinds
 
 class mouth():
     def __init__(self,verts):
@@ -160,7 +169,9 @@ class brow():
         
         self.peakDrv =[d.replace('_ctl','_driver') for d in self.peakCtls]
         self.peakLocalDrv = [d.replace('_ctl','_localDriver') for d in self.peakCtls]
-
+        
+        self.xfGrp = 'brow_xform_grp'
+        
 class nose():
     def __init__(self,verts):
         self.ctlGrp = 'nose_ctl_grp'

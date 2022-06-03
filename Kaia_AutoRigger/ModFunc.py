@@ -168,7 +168,8 @@ def _scaleOrient(ctlList):
     for i in ctlList:
         scaleVal = [1,1,1]
         if '_lower_' in i:
-            scaleVal[1] = -1 #Y value is -1 
+            #scaleVal[1] = -1 #Y value is -1 
+            pass
         if '_l_' in i:
             scaleVal[0] = -1 #X value is -1
         
@@ -294,6 +295,32 @@ def _mirrorPosX(posList):
         x,y,z = pos
         mirList.append((-x,y,z))
     return mirList
+
+### where to put?
+def _createCheekDrv(drvs,targs,parent):
+    for drv,targ in zip(drvs,targs):
+        cmds.group(em=True,w=True,n=drv)
+        cmds.connectAttr(targ+'.worldMatrix',drv+'.offsetParentMatrix')
+        cmds.disconnectAttr(targ+'.worldMatrix',drv+'.offsetParentMatrix')
+        
+        cmds.parent(drv,parent)
+        cmds.makeIdentity(drv,apply=True, t=1)
+        
+        cmds.pointConstraint(targ,drv,mo=False)
+
+
+def _createCheekAuto(ctls,cornerCtls,val):
+    for ctl,cornerCtl in zip(ctls,cornerCtls):
+        name = ctl + '_auto'
+        cmds.group(ctl,n=name)
+        mult = cmds.createNode('multiplyDivide')
+        cmds.connectAttr(cornerCtl+'.t',mult+'.input1')
+        cmds.setAttr(mult+'.input2',val[0],val[1],val[2],type='double3')
+        cmds.connectAttr(mult+'.output',name+'.t')
+    #create node 'multiplyDivide'
+    #connect attr ctl translate > input1
+    #connect attr output > nul translate
+    #customize set attr input2 #initial value = .75
 ###---------test execute--------------------------------------
 
 

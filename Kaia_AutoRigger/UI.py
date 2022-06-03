@@ -68,10 +68,29 @@ def createWindow(arg1):
     
     cmds.gridLayout( numberOfColumns=3, cellWidthHeight=(66, 20) ) #fourth layout - frame layout
     
-    for key in [*arg1.verts]: 
-        cmds.button( l='assign', c=lambda _:arg1.assignDelete(key,'ass') )
-        cmds.button( l='select', c=lambda _:arg1.assignDelete(key,'sel') )
-        cmds.button( l='delete', c=lambda _:arg1.assignDelete(key,'del') )
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('head','ass') )
+    cmds.button( l='select', c=lambda _:arg1.assignDelete('head','sel') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('head','del') )
+    
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('lipUpper','ass') )
+    cmds.button( l='select', c=lambda _:arg1.assignDelete('lipUpper','sel') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('lipUpper','del') )
+    
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('lipLower','ass') )
+    cmds.button( l='select', c=lambda _:arg1.assignDelete('lipLower','sel') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('lipLower','del') )
+    
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('lidUpperR','ass') )
+    cmds.button( l='select', c=lambda _:arg1.assignDelete('lidUpperR','sel') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('lidUpperR','del') )
+    
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('lidLowerR','ass') )
+    cmds.button( l='select', c=lambda _:arg1.assignDelete('lidLowerR','sel') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('lidLowerR','del') )
+    
+    cmds.button( l='assign', c=lambda _:arg1.assignDelete('browR','ass') )
+    cmds.button( l='select', c=lambda _:arg1.assignDelete('browR','sel') )
+    cmds.button( l='delete', c=lambda _:arg1.assignDelete('browR','del') )
     
     cmds.setParent('..')
     
@@ -124,10 +143,9 @@ def createWindow(arg1):
     cmds.setParent('..')
     cmds.setParent('..')
     ###
-    cmds.frameLayout( l='Extra', collapsable=True, collapse=False)
-    cmds.columnLayout( rowSpacing = 10 )
-    
-    cmds.button(l='select Jaw Bind',c=lambda _:cmds.select(arg1.jawBind))
+    #cmds.frameLayout( l='Extra', collapsable=True, collapse=False)
+    #cmds.columnLayout( rowSpacing = 10 )
+
 
     cmds.showWindow()
     
