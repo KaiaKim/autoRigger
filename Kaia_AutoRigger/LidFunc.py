@@ -39,9 +39,6 @@ def _skinCrv(jnts,crv):
     cmds.skinCluster(maximumInfluences=1)
 
 def _createBsCrv(crvs,names,grpName):
-    #self.eyeRCrvs = [self.lidUpperRCrv, self.lidLowerRCrv]
-    #names = ['lid_upper_r_curve_open', 'lid_upper_r_curve_closed', 'lid_upper_r_curve_neutral', 'lid_upper_r_curve_mid', ...]
-    
     grp = cmds.group(em=True,n=grpName)
     
     for name in names:
@@ -61,9 +58,6 @@ def _createBsCrv(crvs,names,grpName):
 
 
 def _createBsNode(nodes,crvs,targList):
-    #nodes = self.eyeRBsNodes = ['upper_r_open','upper_r_closed','lower_r_open','lower_r_closed']
-    #crvs = self.eyeRCrvs = [self.lidUpperRCrv, self.lidLowerRCrv]
-    #targList = self.eyeRBlendCrvs = ['lid_upper_r_curve_open', 'lid_upper_r_curve_neutral', 'lid_upper_r_curve_mid', 'lid_upper_r_curve_closed'...]
     for node in nodes:
         if 'upper' in node: x=0
         elif 'lower' in node: x=1
@@ -81,18 +75,10 @@ def _createBsNode(nodes,crvs,targList):
 
             
 def _connectCornerCtrl(blinkCtls, blendCrvs, bsNodes):
-    #print('blinkCtls:',blinkCtls)
-    #print('blendCrvs:',blendCrvs)
-    #print('bsNodes:',bsNodes)
-    #blinkCtls: ['blink_upper_r_ctl', 'blink_lower_r_ctl']
-    #blendCrvs: ['upper_lid_r_curve_open', 'upper_lid_r_curve_neutral', 'upper_lid_r_curve_mid', 'upper_lid_r_curve_closed', 'lower_lid_r_curve_open', 'lower_lid_r_curve_neutral', 'lower_lid_r_curve_mid', 'lower_lid_r_curve_closed']
-    #bsNodes: ['lid_upper_r_open_blend', 'lid_upper_r_closed_blend', 'lid_lower_r_open_blend', 'lid_lower_r_closed_blend']
-
         #upper closed
     #set driven key node1
     sdk1 = cmds.setDrivenKeyframe( bsNodes[1]+'.'+blendCrvs[3], cd=blinkCtls[0]+'.rx' )
-    sdk1 = bsNodes[1]+'_'+blendCrvs[3] #given node name is 'upper_lid_r_blend_upper_lid_r_curve_closed'
-    
+    sdk1 = bsNodes[1]+'_'+blendCrvs[3]
         #lower closed
     #reverse node
     rev = cmds.createNode('reverse')
@@ -139,7 +125,6 @@ def _connectCornerCtrl(blinkCtls, blendCrvs, bsNodes):
 
     cmds.setAttr(sdk2+'.preInfinity',1)
     cmds.setAttr(sdk2+'.postInfinity',1)
-    
 
 
 def _mirrorCVs(posList):

@@ -6,11 +6,6 @@ importlib.reload(ModFunc)
 
 ###-----------------------------------------------------FUNCTION---------------------------------------------------
 def _connectEyeCtls(ctls, rotCtl, aimCtl, aimMicroCtls, binds):
-    #aimgrp + aim constraint
-    #rotgrp + rot connection
-    #convergegrp + rot y connection
-    #eye_R_Ctl >> parentConst, scaleConst >> eye_r_bind
-        
     for i,ctl in enumerate(ctls):
         convGrp = cmds.group(em=True,p=ctl+'_nul',n=ctl+'_converge')
         rotGrp = cmds.group(convGrp, n=ctl+'_rot')

@@ -1,31 +1,28 @@
 ###-----------------------------------------------------CLASS---------------------------------------------------
-class templateNames():
+class template():
     def __init__(self):
-        
-        pass
-    def binds(self):
         #These names are from the template file. No change this!
         self.faceBind = 'face_bind'
-        self.faceUpperBind = 'face_upper_bind' 
-        self.faceLowerBind = 'face_lower_bind' 
-        
-        self.mouthBind = 'mouth_bind'
-        
-        self.noseBind = 'nose_bind'
+        self.faceUpBind = 'face_upper_bind' 
+        self.faceLoBind = 'face_lower_bind' 
+
+        self.noseBigBind = 'nose_bind'
         self.sneerBinds = ['sneer_r_bind','sneer_l_bind']
         self.nostrilBinds = ['nostril_r_bind','nostril_l_bind']
+        self.noseBinds = [self.noseBigBind] + self.sneerBinds + self.nostrilBinds
         
         self.jawBind = 'jaw_bind'
-        self.jawTipBind = 'jaw_tip' 
+        self.toungueBinds = ['tongue_01_bind', 'tongue_02_bind', 'tongue_03_bind', 'tongue_04_bind', 'tongue_05_bind', 'tongue_06_bind', 'tongue_07_bind']
+        self.teethBinds = ['teeth_upper_bind','teeth_lower_bind']
         
-        self.eyeSocketRBind = 'eye_socket_r_bind' 
-        self.eyeSocketLBind = 'eye_socket_l_bind' 
+        self.eyeSocBinds = ['eye_socket_r_bind','eye_socket_l_bind'] 
         self.eyeBinds = ['eye_r_bind','eye_l_bind']
         
-        self.browBinds = ['brow_r_bind','brow_l_bind']
+        self.browBigBinds = ['brow_r_bind','brow_l_bind']
         self.browInBinds = ['brow_inner_r_bind','brow_inner_l_bind']
         self.browPeakBinds = ['brow_peak_r_bind','brow_peak_l_bind']
         self.browCorBinds = ['brow_corrugator_r_bind','brow_corrugator_l_bind']
+        self.browBinds = self.browBigBinds + self.browInBinds + self.browPeakBinds + self.browCorBinds
         
         self.cheekUpperBinds = ['cheek_upper_r_bind','cheek_upper_l_bind']
         self.cheekMidBinds = ['cheek_r_bind','cheek_l_bind']
@@ -144,7 +141,6 @@ class lid():
 
 class eye():
     def __init__(self,verts):
-        self.rLtc = 'eye_r_ffd1'
             ###
         self.rotCtl = 'eye_rot_ctl'
         self.ctls = ['eye_r_ctl','eye_l_ctl']
