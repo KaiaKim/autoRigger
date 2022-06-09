@@ -39,11 +39,13 @@ class AutoRigFace(Builder.BuildCtls, Builder.ConnectCtls, Builder.BindGeo, UI.cr
             'attr':{}
         }
         
-        self.data['geo'] = {'head':None,'brows':None,'lashes':None,'eyeR':None,'eyeL':None,'upTeeth':None,'loTeeth':None,'toungue':None,'extra':None}
+        self.data['geo'] = {'face':None,'brow':None,'lash':None,'eyeR':None,'eyeL':None,'upTeeth':None,'loTeeth':None,'tongue':None,'extra':None}
         self.data['verts'] = {'lipUpper':None,'lipLower':None,'lidUpperR':None,'lidLowerR':None,'browR':None}
         
-    def importData(self,_):
+    def importData(self):
+        #get file path
         filePath = cmds.fileDialog2(fileFilter="*.json", dialogStyle=1, fm=1, caption ='Import Rig Data')[0]
+        
         #read json file
         with open(filePath,"r") as rfile:
             self.data = json.load(rfile)
@@ -53,6 +55,7 @@ class AutoRigFace(Builder.BuildCtls, Builder.ConnectCtls, Builder.BindGeo, UI.cr
         #get orient data
         orients = [d+'_orient' for d in self.allCtls]
         self.data['orients'] = DataFunc._getTransform(orients, t=False, r=True)
+        
         #get blendshape crv data
         allCVs = []
         for i in self.allCrv:
@@ -60,8 +63,9 @@ class AutoRigFace(Builder.BuildCtls, Builder.ConnectCtls, Builder.BindGeo, UI.cr
             allCVs += CVs
         self.data['bsCrv'] = DataFunc._getTransform(allCVs, t=True, r=False, os=True)    
             
-        
+        #get file path
         filePath = cmds.fileDialog2(fileFilter="*.json", dialogStyle=1, fm=0, caption ='Export Rig Data')[0]
+        
         #write json file
         with open(filePath, "w") as wfile:
             json.dump(self.data, wfile)
@@ -80,7 +84,7 @@ class AutoRigFace(Builder.BuildCtls, Builder.ConnectCtls, Builder.BindGeo, UI.cr
         elif flag=='sel':
             cmds.select(self.data['verts'][x])
     
-    def names(self,_):
+    def names(self):
         self.faceRoot = 'face_root'
         self.animGrp = 'anim_grp'
         self.rigGrp = 'rig_grp'
@@ -112,18 +116,11 @@ class AutoRigFace(Builder.BuildCtls, Builder.ConnectCtls, Builder.BindGeo, UI.cr
             'lash': self.L.rBinds+self.L.lBinds,
             'eyeR': [self.J.eyeBinds[0]],
             'eyeL': [self.J.eyeBinds[1]],
-            'upTeeth': [self.J.teethBinds[0]],
-            'loTeeth': [self.J.teethBinds[1]],
-            'toungue': self.J.toungueBinds,
+            'upTeeth': [self.M.teethBinds[0]],
+            'loTeeth': [self.M.teethBinds[1]],
+            'tongue': self.M.tongueBinds,
             'extra': [self.J.faceUpBind]
         }
-        
-    def orientData(self,flag=''):
-        if flag=='load': DataFunc._applyTransform(self.data['orients'])
-        
-                
-    def blendCrvData(self,flag=''):
-        if flag=='load': DataFunc._applyTransform(self.data['bsCrv'], os=True)
 
     
     def mirrorCtlOrient(self,_):
@@ -173,3 +170,5 @@ run01.createWindow()
 
 ###DQ skin > attibute editor > support Non-rigid transformation ON
 
+###auto bind skin stops when the geo already has skincluster > use try
+###parent constraint face bind to face ctl

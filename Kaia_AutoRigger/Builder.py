@@ -4,11 +4,13 @@ import importlib
 import json
 
 from Kaia_AutoRigger import ModFunc
+from Kaia_AutoRigger import DataFunc
 from Kaia_AutoRigger import MouthFunc
 from Kaia_AutoRigger import LidFunc
 from Kaia_AutoRigger import EyeFunc
 from Kaia_AutoRigger import BrowFunc
 importlib.reload(ModFunc)
+importlib.reload(DataFunc)
 importlib.reload(MouthFunc)
 importlib.reload(LidFunc)
 importlib.reload(BrowFunc)
@@ -25,6 +27,9 @@ class BuildCtls():
         self.lid01()
         self.eye01()
         self.brow01()
+        
+        DataFunc._applyTransform(self.data['orients'])
+        DataFunc._applyTransform(self.data['bsCrv'], os=True)
     
     def deleteRig01(self,_):
         pass
@@ -51,7 +56,7 @@ class BuildCtls():
          
         ModFunc._createCtlGrp(self.J.sneerBinds,self.N.sneerCtls, self.N.ctl,
          newGrp=False, const=False, size=.7, shape='arch')
-        ModFunc._offsetCtls(self.N.sneerCtls, t=(0,0,2), s=(.7,.7,.7))
+        ModFunc._offsetCtls(self.N.sneerCtls, t=(0,0,1), s=(.7,.7,.7))
         
         ModFunc._createCtlGrp(self.J.nostrilBinds,self.N.nostrilCtls, self.N.ctl,
          newGrp=False, const=False, size=.4, shape='pentagon')
@@ -110,9 +115,11 @@ class BuildCtls():
         ModFunc._offsetCtls(self.M.macroCtls, t=(0,-1.5,0), r=(0,0,45), s=(3,1,1))
 
             #big ctl
-        ModFunc._createCtlGrp([self.J.faceUpBind],[self.M.bigCtl], self.faceCtl,
+        ModFunc._createCtlGrp([self.J.jawTipBind],[self.M.bigCtl], self.faceCtl,
          newGrp=False, const=False, ori=False, size=4, shape='square')
-        ModFunc._offsetCtls([self.M.bigCtl], t=(0,-2.5,12), r=(0,0,45), s=(1,.8,1))
+        ModFunc._offsetCtls([self.M.bigCtl], t=(0,0,0), r=(0,0,45), s=(1,.8,1))
+        cmds.move(0,0,2,self.M.bigCtl+'_nul',r=True)
+        cmds.rotate(0,0,0,self.M.bigCtl+'_nul')
             #lip thick ctl
         ModFunc._createCtlGrp(self.M.macroFols,self.M.thickCtls, self.M.thickCtlGrp,
         size=.5, shape='semiCircle')
@@ -122,10 +129,27 @@ class BuildCtls():
         ModFunc._createCtlGrp(self.M.cornerFols, self.M.cornerCtls, self.M.cornerCtlGrp,
          const=False, size=.5, shape='triangle')
         ModFunc._offsetCtls(self.M.cornerCtls, t=(0,-1.5,0), r=(0,0,-30))
-        
+            #teeth ctrls
+        jawTipList = [self.J.jawTipBind, self.J.jawTipBind]
+        ModFunc._createCtlGrp(jawTipList,self.M.teethCtls,self.animGrp,
+         newGrp=False, const=False, size=1, shape='semiCircle')
+        for i,ctl in enumerate(self.M.teethCtls):
+            val=1
+            if i==1: val=-1
+            ModFunc._offsetCtls([ctl],s=(2,val,1))
+            cmds.rotate(0,0,0,ctl+'_nul')
+            cmds.move(7,val*.7,0,ctl+'_nul',r=True)
+            
+            #tongue ctrls
+        ModFunc._createCtlGrp(self.M.tongueBinds,self.M.tongueCtls,self.animGrp,
+         newGrp=False,const=False, ori=False, size=1, shape='circle')
+        ModFunc._offsetCtls(self.M.tongueCtls,r=(0,90,0),s=(1,1,1))
+        for i in range(len(self.M.tongueCtls)-1):
+            cmds.parent(self.M.tongueCtls[i+1]+'_nul',self.M.tongueCtls[i]) #child, parent /1,0 /2,1 /3,2 /4,3 /5,4 /6,5
             ###
-        ModFunc._overrideColor(self.M.microCtls, color=(1,1,0))
-        ModFunc._overrideColor(self.M.macroCtls+[self.M.bigCtl]+self.M.thickCtls+self.M.cornerCtls, color=(1,0,0))
+        ModFunc._overrideColor(self.M.microCtls, color=(1,1,0)) #yellow
+        ModFunc._overrideColor(self.M.macroCtls+[self.M.bigCtl]+self.M.thickCtls+self.M.cornerCtls, color=(1,0,0)) #red
+        ModFunc._overrideColor(self.M.teethCtls+self.M.tongueCtls,color=(1,.5,.5)) #pink
         ModFunc._scaleOrient(self.M.microCtls+self.M.macroCtls+self.M.thickCtls+self.M.cornerCtls)
         ModFunc._90dOrient(self.M.microCtls+self.M.macroCtls+self.M.thickCtls+self.M.cornerCtls)
         
@@ -216,10 +240,7 @@ class BuildCtls():
         LidFunc._createBsCrv(self.L.crvs[:2], self.L.rBlendCrvs, self.L.rBlendCrvGrp)
         LidFunc._createBsCrv(self.L.crvs[2:], self.L.lBlendCrvs, self.L.lBlendCrvGrp)
         
-        #2: Create Blendshape Node
-        LidFunc._createBsNode(self.L.rBsNodes, self.L.drivCrvs[:2], self.L.rBlendCrvs)
-        LidFunc._createBsNode(self.L.lBsNodes, self.L.drivCrvs[2:], self.L.lBlendCrvs)
-        
+
 
     
     def eye01(self):
@@ -349,12 +370,18 @@ class ConnectCtls():
         #1: Parent constraint face upper bind
         cmds.parentConstraint(self.faceUpperCtl,self.J.faceUpBind,mo=True)
         
+        #1: Parent constraint face bind to face ctl
+        cmds.parentConstraint(self.faceCtl, self.J.faceBind, mo=True)
+        
         #1: Parent constraint jaw bind
         cmds.parentConstraint(self.jawCtl,self.J.jawBind,mo=True)
-        cmds.parent(self.jawCtl+'_nul',self.M.bigCtl)
+
         
         #1: Parent constraint nose binds
         ModFunc._parentConstIterate([self.N.ctl]+self.N.sneerCtls+self.N.nostrilCtls,[self.J.noseBigBind]+self.J.sneerBinds+self.J.nostrilBinds)
+        
+        #2: Parent constraint nose ctl nul to face ctl
+        cmds.parentConstraint(self.faceCtl, self.N.ctl+'_nul',mo=True)
         
         #1: Parent constraint cheek binds
         ModFunc._parentConstIterate(self.cheekCtls,self.J.cheekBinds)
@@ -365,9 +392,20 @@ class ConnectCtls():
         ModFunc._createCheekAuto(self.cheekCtls[2:4],self.cheekDrvs,(.5,.5,.5))
     
     def mouth02(self):
+        #6: Connect Teeth Ctrl
+        cmds.parentConstraint(self.J.faceUpBind,self.M.teethCtls[0]+'_nul',mo=True)
+        cmds.parentConstraint(self.J.jawBind,self.M.teethCtls[1]+'_nul',mo=True)
+        ModFunc._parentConstIterate(self.M.teethCtls, self.M.teethBinds)
+        
+        #7: Connect Tongue Ctrl
+        ModFunc._parentConstIterate(self.M.tongueCtls, self.M.tongueBinds)
+        cmds.parent(self.M.tongueCtls[0]+'_nul',self.jawCtl)
+        
         #6: Parent Constraint mouth bind
-        cmds.parentConstraint(self.M.bigCtl,self.J.faceUpBind)
-            
+        ###cmds.parentConstraint(self.M.bigCtl,self.J.faceUpBind,mo=True)
+        ###note: this not working!!
+       
+        
         #7: Attach Jaw Clusters to Jaw
         MouthFunc.attachJawCls(self.M.clus, self.M.macroCtls, self.J.faceUpBind, self.J.jawBind)
         
@@ -389,6 +427,10 @@ class ConnectCtls():
         MouthFunc._connectCornerCtrl(self.M.cornerCtls, self.M.blendCrvs, self.M.bsNode)
 
     def lid02(self):
+        #2: Create Blendshape Node
+        LidFunc._createBsNode(self.L.rBsNodes, self.L.drivCrvs[:2], self.L.rBlendCrvs)
+        LidFunc._createBsNode(self.L.lBsNodes, self.L.drivCrvs[2:], self.L.lBlendCrvs)
+        
         #3: Connect Blendshape weight to translate value of mouth corner ctrls
         LidFunc._connectCornerCtrl(self.L.ctls[:2], self.L.rBlendCrvs, self.L.rBsNodes) # first two elements (right ctrls)
         LidFunc._connectCornerCtrl(self.L.ctls[2:], self.L.lBlendCrvs, self.L.lBsNodes) #last two elements (left ctrls)
@@ -459,15 +501,17 @@ class BindGeo():
     
     def buildRig03(self,_):
         self.skinNodes = []
-        for jnts in self.bindSets.items():
-            if 'eyeR'==jnts[0] or 'eyeL'==jnts[0] or 'extra'==jnts[0]: maxInflu=1
-            else: maxInflu=4
-            for geos in self.data['geo'].values():
-                if geos[0]==jnts[0]: 
-                    for geo in geos:#iterate geo list
-                        cmds.select(geo,jnts[1])#select bind ctl
-                        node = cmds.skinCluster(tsb=True,mi=maxInflu,sm=0)#bind skin
-                        self.skinNodes.append(node)
+        for jntKey,jnt in self.bindSets.items():
+            maxit = 4
+            if 'eyeR'==jntKey or 'eyeL'==jntKey or 'extra'==jntKey: maxit=1
+            for geoKey,geos in self.data['geo'].items():
+                if geoKey==jntKey: 
+                    for obj in geos:#iterate geo list
+                        cmds.select(obj,jnt)#select bind ctl
+                        try:
+                            node = cmds.skinCluster(tsb=True,mi=maxit,sm=0)#bind skin
+                            self.skinNodes.append(node)
+                        except: print('###'+ geo +' is already skinned ###')
                 
     def selectGeo(self,x):
         cmds.select(self.data['geo'][x])

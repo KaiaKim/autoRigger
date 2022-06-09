@@ -12,8 +12,7 @@ class template():
         self.noseBinds = [self.noseBigBind] + self.sneerBinds + self.nostrilBinds
         
         self.jawBind = 'jaw_bind'
-        self.toungueBinds = ['tongue_01_bind', 'tongue_02_bind', 'tongue_03_bind', 'tongue_04_bind', 'tongue_05_bind', 'tongue_06_bind', 'tongue_07_bind']
-        self.teethBinds = ['teeth_upper_bind','teeth_lower_bind']
+        self.jawTipBind = 'jaw_tip_bind'
         
         self.eyeSocBinds = ['eye_socket_r_bind','eye_socket_l_bind'] 
         self.eyeBinds = ['eye_r_bind','eye_l_bind']
@@ -41,6 +40,8 @@ class mouth():
         self.lowerLocs = self._lipLocs(verts['lipLower'], prefix='lip_lower')
         self.locs = self.upperLocs + self.lowerLocs
         self.binds = [d.replace('_loc', '_bind') for d in self.locs]
+        self.tongueBinds = ['tongue_01_bind', 'tongue_02_bind', 'tongue_03_bind', 'tongue_04_bind', 'tongue_05_bind', 'tongue_06_bind', 'tongue_07_bind']
+        self.teethBinds = ['teeth_upper_bind','teeth_lower_bind']
         
         self.drivJntGrp = 'mouth_driver_jnt_grp'
         driverList = ['corner_r','upper_00_r','upper_01_r','upper_m','upper_01_l','upper_00_l','corner_l','lower_00_l','lower_01_l','lower_m','lower_01_r','lower_00_r']
@@ -66,7 +67,9 @@ class mouth():
         self.cornerFols = [d for d in self.fols if '_corner_' in d]
         self.cornerCtls = [d.replace('fol','ctl') for d in self.cornerFols]
         self.cvCls = [d.replace('lip_','lipCv_').replace('_ctl','_cls') for d in self.microCtls] #ex) lipCV_corner_r_cls
-        
+        self.tongueCtlGrp = 'tongue_ctl_grp'
+        self.teethCtls = ['teeth_upper_ctl','teeth_lower_ctl']
+        self.tongueCtls = [d.replace('bind','ctl') for d in self.tongueBinds]
             ###
         self.blendCrvGrp = 'mouth_blend_crv_grp'
         suffixList = ['_wide','_small','_smile','_frown']

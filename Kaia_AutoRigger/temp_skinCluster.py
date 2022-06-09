@@ -37,7 +37,8 @@ dressBind = ['Chest_M', 'Scapula_L', 'Scapula_R', 'Spine1Part2_M', 'Spine1Part1_
 jacketGeo = ['jacket_lo', 'jacket_mid', 'jacket_hi']
 jacketBind = ['Neck_M', 'Chest_M', 'Scapula_R', 'Shoulder_R', 'ShoulderPart1_R', 'ShoulderPart2_R', 'Elbow_R', 'ElbowPart1_R', 'ElbowPart2_R', 'Wrist_R'] #
 
-
+DaisyDressBind = ['Root_M', 'Hip_R', 'HipPart1_R', 'RootPart1_M', 'RootPart2_M', 'Spine1_M', 'Spine1Part1_M', 'Spine1Part2_M', 'Chest_M', 'Neck_M', 'NeckPart1_M', 'Scapula_R', 'Shoulder_R', 'ShoulderPart1_R', 'ShoulderPart2_R', 'Elbow_R', 'ElbowPart1_R', 'ElbowPart2_R', 'Wrist_R', 'Scapula_L', 'Shoulder_L', 'ShoulderPart1_L', 'ShoulderPart2_L', 'Elbow_L', 'ElbowPart1_L', 'ElbowPart2_L', 'Wrist_L', 'Hip_L', 'HipPart1_L'] #
+cmds.select(DaisyDressBind,add=True)
 #########################################################################################
 #bind jacket
 for geo in jacketGeo:
