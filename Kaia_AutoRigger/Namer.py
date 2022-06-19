@@ -7,6 +7,7 @@ class template():
         self.faceLoBind = 'face_lower_bind' 
 
         self.noseBigBind = 'nose_bind'
+        self.noseBridgeBind = 'nose_bridge_bind'
         self.sneerBinds = ['sneer_r_bind','sneer_l_bind']
         self.nostrilBinds = ['nostril_r_bind','nostril_l_bind']
         self.noseBinds = [self.noseBigBind] + self.sneerBinds + self.nostrilBinds
@@ -55,7 +56,7 @@ class mouth():
         self.clus = [d.replace('bindmesh','cls') for d in self.bindmeshes]
         
             ###
-        self.bigCtl = 'mouth_ctl_grp'
+        self.bigCtl = 'mouth_ctl'
         self.microCtlGrp = 'lip_micro_ctl_grp'
         self.microCtls =  [d.replace('fol','ctl').replace('mouth','lip') for d in self.fols]
         self.macroCtlGrp = 'lip_macro_ctl_grp'
@@ -174,7 +175,11 @@ class brow():
 class nose():
     def __init__(self,verts):
         self.ctlGrp = 'nose_ctl_grp'
+        self.bridgeCtl = 'noseBridge_ctl'
         self.ctl = 'nose_ctl'
         self.sneerCtls = ['nose_sneer_r_ctl', 'nose_sneer_l_ctl']
         self.nostrilCtls = ['nose_nostril_r_ctl', 'nose_nostril_l_ctl']
+        
+        self.bridgeAuto = self.bridgeCtl+'_auto'
+        
         

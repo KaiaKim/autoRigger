@@ -99,7 +99,8 @@ class AutoRigFace(Builder.BuildCtls, Builder.ConnectCtls, Builder.BindGeo, UI.cr
         self.N = Namer.nose(self.data['verts'])
         
         self.faceCtl = 'face_ctl'
-        self.faceUpperCtl = 'face_upper_ctl'
+        self.faceUpCtl = 'face_upper_ctl'
+        self.faceLoCtl = 'face_lower_ctl'
         self.jawCtl = 'jaw_ctl'
         self.cheekCtlGrp = 'cheek_ctl_grp'
         self.cheekCtls = [d.replace('_bind','_ctl') for d in self.J.cheekBinds]
@@ -108,7 +109,7 @@ class AutoRigFace(Builder.BuildCtls, Builder.ConnectCtls, Builder.BindGeo, UI.cr
         self.allCtls = self.M.microCtls + self.M.macroCtls + self.M.cornerCtls + self.L.ctls + self.E.ctls + self.B.ctls + [self.jawCtl] + self.N.sneerCtls + self.N.nostrilCtls
         self.allCrv = self.M.blendCrvs + self.L.rBlendCrvs + self.L.lBlendCrvs
         self.bindSets = {
-            'face': [self.J.faceBind,self.J.faceUpBind,self.J.faceLoBind,self.J.jawBind]
+            'face': [self.J.faceBind,self.J.faceUpBind,self.J.faceLoBind,self.J.jawBind,self.J.noseBridgeBind]
                     +self.J.browBinds+self.J.cheekBinds+self.J.noseBinds+self.J.eyeSocBinds
                     +self.L.rBinds+self.L.lBinds
                     +self.M.binds,
@@ -170,5 +171,8 @@ run01.createWindow()
 
 ###DQ skin > attibute editor > support Non-rigid transformation ON
 
-###auto bind skin stops when the geo already has skincluster > use try
-###parent constraint face bind to face ctl
+### build directory (with varient)
+### set directory UI
+### Break data files
+
+### file: move brow_cor_bind one edge outer 17:50

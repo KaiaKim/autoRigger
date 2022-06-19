@@ -140,10 +140,14 @@ def _createFolsOnBindmeshes(names,bindmeshes,grpName):
         
         cmds.parent(folTrans, grp)
 
-
 def _createCtlGrp(targList, nameList, grpName, newGrp=True, ori=True, shape='circle', size=1, const=True, mid=False):
     #Nurv curves, orient group, offset group, nul group
-
+    if type(targList)!=list:
+        print ('convert targ to list')
+        targList = [targList]
+    if type(nameList)!=list:
+        print('convert name to list')
+        nameList = [nameList]
     
     if newGrp==True: bigGrp = cmds.group(em=True, n=grpName)
     else: bigGrp = grpName

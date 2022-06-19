@@ -63,7 +63,8 @@ def constMicroToMacro(inList):
             nul2 = cmds.group(i+'_orient',n=i+'_nul2') #create nul2 grp
             macro = i.replace('lip','mouth') #micro_mouth_lower_m_ctl
             cmds.parentConstraint(macro,nul2,mo=True)
-
+            
+'''
 def attachJawCls(jawCls, mouthCtls, faceLowerBind, jawBind):
     #We're gonna parent constraint jawClusters to the mouth macro controllers
     for clus in jawCls:
@@ -102,7 +103,7 @@ def _setWeightVal(child, parent00, parent01):
     cmds.setAttr(constraint+'.'+parent00+'W0', W0)
     cmds.setAttr(constraint+'.'+parent01+'W1',W1)
     cmds.setAttr(constraint+'.interpType',2) #Interpolation Type: Shortest
-
+'''
 
 def attachCornerCtls(cornerCtls,faceLowerBind,jawBind):
     for ctl in cornerCtls:

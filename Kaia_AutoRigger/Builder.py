@@ -27,6 +27,7 @@ class BuildCtls():
         self.lid01()
         self.eye01()
         self.brow01()
+        self.nose01()
         
         DataFunc._applyTransform(self.data['orients'])
         DataFunc._applyTransform(self.data['bsCrv'], os=True)
@@ -40,29 +41,19 @@ class BuildCtls():
         ModFunc._offsetCtls([self.faceCtl],r=(90,0,0))
         
         #0: Create Upper Face Ctls
-        ModFunc._createCtlGrp([self.J.faceUpBind],[self.faceUpperCtl], self.faceCtl, newGrp=False, ori=False, const=False, size=12 )
-        ModFunc._offsetCtls([self.faceUpperCtl], r=(90,0,0))
+        ModFunc._createCtlGrp([self.J.faceUpBind],[self.faceUpCtl], self.faceCtl, newGrp=False, ori=False, const=False, size=12 )
+        ModFunc._offsetCtls([self.faceUpCtl], r=(90,0,0))
         
-        ModFunc._overrideColor([self.faceCtl, self.faceUpperCtl], color=(1,1,0))
+        #0: Create Lower Face Ctls
+        ModFunc._createCtlGrp(self.J.faceLoBind, self.faceLoCtl, self.faceCtl, newGrp=False, ori=False, const=False, size=12, shape='square' )
+        ModFunc._offsetCtls([self.faceLoCtl], r=(90,0,0))
+        
+        ModFunc._overrideColor([self.faceUpCtl, self.faceLoCtl], color=(1,1,0))
         
         #0: Create Jaw Ctls
-        ModFunc._createCtlGrp([self.J.jawBind], [self.jawCtl], self.animGrp, newGrp=False, const=False, size=1.5, shape='triangle')
+        ModFunc._createCtlGrp([self.J.jawBind], [self.jawCtl], self.faceLoCtl, newGrp=False, const=False, size=1.5, shape='triangle')
         ModFunc._offsetCtls([self.jawCtl],t=(0,-2,12), r=(180,0,0),s=(-1,.7,1))
         ModFunc._overrideColor([self.jawCtl], color=(1,1,0))
-        
-        #0: Create Nose Ctls
-        ModFunc._createCtlGrp([self.J.noseBigBind],[self.N.ctl], self.animGrp,
-         newGrp=False, const=False, size=2)
-         
-        ModFunc._createCtlGrp(self.J.sneerBinds,self.N.sneerCtls, self.N.ctl,
-         newGrp=False, const=False, size=.7, shape='arch')
-        ModFunc._offsetCtls(self.N.sneerCtls, t=(0,0,1), s=(.7,.7,.7))
-        
-        ModFunc._createCtlGrp(self.J.nostrilBinds,self.N.nostrilCtls, self.N.ctl,
-         newGrp=False, const=False, size=.4, shape='pentagon')
-        ModFunc._offsetCtls(self.N.nostrilCtls, t=(0,-.6,0), r=(90,0,0))
-         
-        ModFunc._overrideColor([self.N.ctl]+self.N.sneerCtls+self.N.nostrilCtls, color=(0,1,0))
         
         #0: Create Cheek Ctls
         ModFunc._createCtlGrp(self.J.cheekBinds, self.cheekCtls, self.cheekCtlGrp, const=False, size=.5 )
@@ -115,7 +106,7 @@ class BuildCtls():
         ModFunc._offsetCtls(self.M.macroCtls, t=(0,-1.5,0), r=(0,0,45), s=(3,1,1))
 
             #big ctl
-        ModFunc._createCtlGrp([self.J.jawTipBind],[self.M.bigCtl], self.faceCtl,
+        ModFunc._createCtlGrp([self.J.jawTipBind],[self.M.bigCtl], self.faceLoCtl,
          newGrp=False, const=False, ori=False, size=4, shape='square')
         ModFunc._offsetCtls([self.M.bigCtl], t=(0,0,0), r=(0,0,45), s=(1,.8,1))
         cmds.move(0,0,2,self.M.bigCtl+'_nul',r=True)
@@ -169,7 +160,6 @@ class BuildCtls():
         #3: Set blendshape cv weight(sepereate left & right weight)
         MouthFunc._setBsCvWeight(self.M.bsNode)
         
-
         
     def lid01(self):
         #1: Mirror Lid Curves
@@ -212,7 +202,7 @@ class BuildCtls():
         ModFunc._createCtlGrp(self.L.drivJnts, self.L.microCtls, self.L.microCtlGrp, ori=False, const=False, size=.3)
         ModFunc._offsetCtls(self.L.microCtls, t=(0,0,.7))
         ModFunc._overrideColor(self.L.microCtls, color=(1,1,0))
-        cmds.parent(self.L.microCtlGrp,self.faceUpperCtl)
+        cmds.parent(self.L.microCtlGrp,self.faceUpCtl)
         
         #5: attach lid tweak ctl nuls to driver crvs
         for num,crv in enumerate(self.L.drivCrvs):
@@ -233,7 +223,7 @@ class BuildCtls():
         cmds.scale(1,-1,1,self.L.ctls[0]+'_orient') #lower_r
         cmds.scale(1,-1,1,self.L.ctls[3]+'_orient') #upper_l
         ModFunc._overrideColor(self.L.ctls, color=(0,0,1))
-        cmds.parent(self.L.ctlGrp,self.faceUpperCtl)
+        cmds.parent(self.L.ctlGrp,self.faceUpCtl)
         
             ###lid crv blendshapes
         #1: Duplicate orig curve
@@ -246,19 +236,19 @@ class BuildCtls():
     def eye01(self):
         #4: Create Eye Ctls
             #eye_rot_ctl
-        ModFunc._createCtlGrp([self.J.eyeSocBinds[1]], [self.E.rotCtl], self.faceUpperCtl, 
+        ModFunc._createCtlGrp([self.J.eyeSocBinds[1]], [self.E.rotCtl], self.faceUpCtl, 
         newGrp=False, ori=False, const=False, mid=True, size=1, shape='triangle' )
         ModFunc._offsetCtls([self.E.rotCtl], t=(0,0,7.5), r=(90,0,0))
         ModFunc._overrideColor([self.E.rotCtl], color=(0,0,1))
                 
             #eye_R_ctl, eye_L_ctl
-        ModFunc._createCtlGrp(self.J.eyeBinds, self.E.ctls, self.faceUpperCtl, 
+        ModFunc._createCtlGrp(self.J.eyeBinds, self.E.ctls, self.faceUpCtl, 
         newGrp=False, const=False, size=.7 )
         ModFunc._offsetCtls(self.E.ctls, t=(0,0,6))
         ModFunc._overrideColor(self.E.ctls, color=(0,0,1))
                 
             #eye aim macro ctl
-        ModFunc._createCtlGrp([self.J.eyeSocBinds[1]], [self.E.aimCtl], self.faceUpperCtl, 
+        ModFunc._createCtlGrp([self.J.eyeSocBinds[1]], [self.E.aimCtl], self.faceUpCtl, 
         newGrp=False, ori=False, const=False, mid=True, size=1, shape='square' )
         ModFunc._offsetCtls([self.E.aimCtl],r=(0,0,45),s=(7,1,1))
         ModFunc._overrideColor([self.E.aimCtl], color=(0,0,1))
@@ -275,7 +265,7 @@ class BuildCtls():
         cmds.move(3,0,0,self.E.aimMicroCtls[1]+'_nul',r=True)
         
             #pupil ctl
-        ModFunc._createCtlGrp(self.E.ctls, self.E.pupilCtls, self.faceUpperCtl,
+        ModFunc._createCtlGrp(self.E.ctls, self.E.pupilCtls, self.faceUpCtl,
         newGrp=False, const=False, ori=False, shape='pentagon', size=.5)
         ModFunc._overrideColor(self.E.pupilCtls, color=(0,0,1))
         
@@ -288,7 +278,7 @@ class BuildCtls():
         ModFunc._offsetCtls(self.B.ctls, r=(0,0,45), s=(5,1,1) )
         ModFunc._scaleOrient(self.B.ctls)
         ModFunc._overrideColor(self.B.ctls, color=(1,1,0))
-        cmds.parent(self.B.ctlGrp, self.faceUpperCtl)
+        cmds.parent(self.B.ctlGrp, self.faceUpCtl)
         cmds.delete(browPosLocs[0],browPosLocs[1])
         
             #orientCompensate
@@ -340,7 +330,31 @@ class BuildCtls():
         
         #6: Create Brow Meat jnts
         
-    
+    def nose01(self):
+        #0: Create Nose Bridge Ctls
+        ModFunc._createCtlGrp(self.J.noseBridgeBind,self.N.bridgeCtl,self.N.ctlGrp,
+         const=False, size=2.5, shape='square')
+        ModFunc._offsetCtls([self.N.bridgeCtl],t=(0,-2,1), r=(0,0,45), s=(1,1,1))
+        
+        #1: Create Nose Follow Driver
+        cmds.group(em=True,n=self.N.bridgeAuto)
+        cmds.parent(self.N.bridgeAuto,self.N.bridgeCtl+'_orient',a=True)
+        cmds.parent(self.N.bridgeCtl,self.N.bridgeAuto)
+        
+        #0: Create Nose Ctls
+        ModFunc._createCtlGrp([self.J.noseBigBind],[self.N.ctl], self.N.ctlGrp,
+         newGrp=False, const=False, size=2)
+         
+        ModFunc._createCtlGrp(self.J.sneerBinds,self.N.sneerCtls, self.N.ctl,
+         newGrp=False, const=False, size=.7, shape='arch')
+        ModFunc._offsetCtls(self.N.sneerCtls, t=(0,0,1), s=(.7,.7,.7))
+        
+        ModFunc._createCtlGrp(self.J.nostrilBinds,self.N.nostrilCtls, self.N.ctl,
+         newGrp=False, const=False, size=.4, shape='pentagon')
+        ModFunc._offsetCtls(self.N.nostrilCtls, t=(0,-.6,0), r=(90,0,0))
+         
+        ModFunc._overrideColor([self.N.ctl,self.N.bridgeCtl]+self.N.sneerCtls+self.N.nostrilCtls, color=(0,1,0))
+
     
     def createGrps(self):
         cmds.group(n=self.faceRoot, em=True)
@@ -359,6 +373,7 @@ class ConnectCtls():
         self.lid02()
         self.eye02()
         self.brow02()
+        self.nose02()
 
         self.hideExtra()
         self.arrangeGrps()
@@ -368,20 +383,14 @@ class ConnectCtls():
     
     def face02(self):
         #1: Parent constraint face upper bind
-        cmds.parentConstraint(self.faceUpperCtl,self.J.faceUpBind,mo=True)
-        
-        #1: Parent constraint face bind to face ctl
+        cmds.parentConstraint(self.faceUpCtl,self.J.faceUpBind,mo=True)
+        #1: Parent constraint face lower bind
+        cmds.parentConstraint(self.faceLoCtl,self.J.faceLoBind,mo=True)
+        #1: Parent constraint face bind
         cmds.parentConstraint(self.faceCtl, self.J.faceBind, mo=True)
-        
         #1: Parent constraint jaw bind
         cmds.parentConstraint(self.jawCtl,self.J.jawBind,mo=True)
-
-        
-        #1: Parent constraint nose binds
-        ModFunc._parentConstIterate([self.N.ctl]+self.N.sneerCtls+self.N.nostrilCtls,[self.J.noseBigBind]+self.J.sneerBinds+self.J.nostrilBinds)
-        
-        #2: Parent constraint nose ctl nul to face ctl
-        cmds.parentConstraint(self.faceCtl, self.N.ctl+'_nul',mo=True)
+         
         
         #1: Parent constraint cheek binds
         ModFunc._parentConstIterate(self.cheekCtls,self.J.cheekBinds)
@@ -400,12 +409,7 @@ class ConnectCtls():
         #7: Connect Tongue Ctrl
         ModFunc._parentConstIterate(self.M.tongueCtls, self.M.tongueBinds)
         cmds.parent(self.M.tongueCtls[0]+'_nul',self.jawCtl)
-        
-        #6: Parent Constraint mouth bind
-        ###cmds.parentConstraint(self.M.bigCtl,self.J.faceUpBind,mo=True)
-        ###note: this not working!!
-       
-        
+
         #7: Attach Jaw Clusters to Jaw
         MouthFunc.attachJawCls(self.M.clus, self.M.macroCtls, self.J.faceUpBind, self.J.jawBind)
         
@@ -445,7 +449,7 @@ class ConnectCtls():
         
     def brow02(self):
         #6: Connect Brow Ctls to Brow Drivers
-        wuo = self.faceUpperCtl
+        wuo = self.faceUpCtl
         BrowFunc._connectBrowCtls(self.B.ctls,self.B.localDrv,self.B.drv,self.J.browBigBinds,wuo)
         BrowFunc._connectBrowCtls(self.B.inCtls,self.B.inLocalDrv,self.B.inDrv,self.J.browInBinds,wuo)
         BrowFunc._connectBrowCtls(self.B.peakCtls,self.B.peakLocalDrv,self.B.peakDrv,self.J.browPeakBinds,wuo)
@@ -460,7 +464,48 @@ class ConnectCtls():
         cmds.setAttr(self.B.ctls[0]+'.followZ',.348,0,.937,type='double3')
         cmds.setAttr(self.B.ctls[1]+'.followY',0,.5,0,type='double3')
         cmds.setAttr(self.B.ctls[1]+'.followZ',-.348,0,.937,type='double3')
-            
+    
+    def nose02(self):
+        #1: Parent constraint nose binds
+        ModFunc._parentConstIterate([self.N.ctl]+self.N.sneerCtls+self.N.nostrilCtls,[self.J.noseBigBind]+self.J.sneerBinds+self.J.nostrilBinds)
+        
+        #2: Attach nose ctl
+         ###create noseBridge_ctl_followLoc
+        loc1 = cmds.spaceLocator()[0]
+        cmds.parent(loc1,self.N.bridgeAuto,r=True) #not preserve position
+        
+         ###noseBridge_ctl_nul is parent constraint to lowerbind
+        const1 = cmds.parentConstraint(self.J.faceUpBind,self.N.bridgeCtl+'_nul',mo=True)[0]
+         ###followLoc is parent constraint to upperbind
+        const2 = cmds.parentConstraint(self.J.faceLoBind,loc1,mo=True)[0]
+         ###break connection: constraint parent inverse matrix
+        cmds.disconnectAttr(loc1+'.parentInverseMatrix',const2+'.constraintParentInverseMatrix')
+         
+        
+         ###create blendColor node
+        rotBlend = cmds.createNode('blendColors')
+         ###connect attr noseBridge_ctl_nul.r to color1
+        cmds.connectAttr(loc1+'.r',rotBlend+'.color1')
+         ###set attr color2, 0,0,0, type='double3 #default
+         ###connect attr blendColorRot.outColor, nose_ctl_blend.r
+        cmds.connectAttr(rotBlend+'.output',self.N.bridgeAuto+'.r')
+         
+         ###switch attribute
+         ###create attr on noseBridge_ctl 'noseFollow' defaultValue=.5, minValue=0, maxValue=1
+        cmds.addAttr(self.N.bridgeCtl,shortName='noseFollow', keyable=True, defaultValue=.5, minValue=0, maxValue=1)
+         ###connect attr noseBridge_ctl.noseFollow, blendColorRot.blender
+        cmds.connectAttr(self.N.bridgeCtl+'.noseFollow',rotBlend+'.blender')
+         ###You would create another blend color node to connect translate
+        
+        #3: offset rotate value with orient grp?
+        
+        #4: Parent Constraint noseBridge bind to noseBridge ctl
+        cmds.parentConstraint(self.N.bridgeCtl, self.J.noseBridgeBind)
+        
+        #5: Parent nose ctl nul to noseBridge ctl
+        cmds.parent(self.N.ctl+'_nul',self.N.bridgeCtl)
+        
+        
     def hideExtra(self):
         cmds.select(self.M.drivJnts,self.M.clus,self.M.cvCls,self.L.drivJnts)
         cmds.hide()
@@ -510,6 +555,8 @@ class BindGeo():
                         cmds.select(obj,jnt)#select bind ctl
                         try:
                             node = cmds.skinCluster(tsb=True,mi=maxit,sm=0)#bind skin
+                            ###name the skinCluster based on geo!!!
+                            ###or auto renames the skinCluster names before export?
                             self.skinNodes.append(node)
                         except: print('###'+ geo +' is already skinned ###')
                 
@@ -524,4 +571,4 @@ class BindGeo():
         
     def deleteRig03(self,_):
         cmds.delete(self.skinNodes)
-###-----------------------------------------------------EXECUTE---------------------------------------------------------------
+#-----------------------------------------------------EXECUTE---------------------------------------------------------------
