@@ -53,10 +53,14 @@ class mouth():
         self.folGrp = 'mouth_fol_grp'
         self.fols = [d.replace('bindmesh','fol') for d in self.bindmeshes]
         self.clusGrp = 'mouth_cls_grp'
-        self.clus = [d.replace('bindmesh','cls') for d in self.bindmeshes]
+        self.clus = 'mouth_cls'
+        self.jawClus = ['jaw_upper_cls','jaw_lower_cls']
+        self.jawClusDrvs = ['jaw_upper_clsDriver','jaw_lower_clsDriver']
+        self.lipClus = [d.replace('bindmesh','cls') for d in self.bindmeshes]
+        
         
             ###
-        self.bigCtl = 'mouth_ctl'
+        self.ctl = 'mouth_ctl'
         self.microCtlGrp = 'lip_micro_ctl_grp'
         self.microCtls =  [d.replace('fol','ctl').replace('mouth','lip') for d in self.fols]
         self.macroCtlGrp = 'lip_macro_ctl_grp'

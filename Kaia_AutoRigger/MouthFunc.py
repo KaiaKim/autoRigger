@@ -2,7 +2,9 @@ import maya.cmds as cmds
 import importlib
 
 from Kaia_AutoRigger import ModFunc
+from Kaia_AutoRigger import DataFunc
 importlib.reload(ModFunc)
+importlib.reload(DataFunc)
 
 def _createMouthCrv(name, upperCrv, lowerCrv):
     upperCVs = ModFunc._getCVs(upperCrv)
@@ -104,16 +106,74 @@ def _setWeightVal(child, parent00, parent01):
     cmds.setAttr(constraint+'.'+parent01+'W1',W1)
     cmds.setAttr(constraint+'.interpType',2) #Interpolation Type: Shortest
 '''
+def _createClsOnEach(names,bindmeshes):
+    for bindmesh,name in zip(bindmeshes,names):
+        clus = cmds.cluster(bindmesh)
+        clsTrans = clus[1]
+        clsTrans = cmds.rename(clsTrans, name)
+        
+def _createClsOnAll(name, bindmeshes, weights=[]):
+    clus = cmds.cluster(bindmeshes)
+    clsTrans = clus[1]
+    clsTrans = cmds.rename(clsTrans, name)
+    
+    if weights != []:
+        for bm,val in zip(bindmeshes,weights):
+            cmds.select(bm+'.vtx[*]') #select vertex
+            cmds.percent( name+'Cluster', v=val ) # set percents on the selected items to each value
+        
+def constWithDriver(name,ctl,clus,grp):
+    #create driver
+    cmds.spaceLocator(n=name)
+    #create driver nul
+    cmds.group(name,n=name+'_nul')
+    #match jaw ctl
+    cmds.parent(name+'_nul',ctl,r=True) #or jaw ctl
+    #parent to anim grp
+    cmds.parent(name+'_nul',grp)
+    #connect translate, rotate
+    cmds.connectAttr(ctl+'.t',name+'.t')
+    cmds.connectAttr(ctl+'.r',name+'.r')
+    
+    cmds.parentConstraint(name,clus,mo=True)
+    
 
-def attachCornerCtls(cornerCtls,faceLowerBind,jawBind):
-    for ctl in cornerCtls:
-        nul=ctl+'_nul'
-        constraint = cmds.parentConstraint(faceLowerBind,jawBind,nul,mo=True)[0]
-        cmds.setAttr(constraint+'.'+faceLowerBind+'W0', .5)
-        cmds.setAttr(constraint+'.'+jawBind+'W1',.5)
-        cmds.setAttr(constraint+'.interpType',2) #Interpolation Type: Shortest
+def attachCornerCtls(ctls,P1,P2,P3):
+    for ctl in ctls:
+        ###add nul2 grp
+        cmds.group(em=True,n=ctl+'_nul2')
+        cmds.parent(ctl+'_nul2',ctl+'_nul',r=True)
+        cmds.parent(ctl+'_orient',ctl+'_nul2')
+        
+        ###parent const nul to p1,p2
+        const1 = cmds.parentConstraint(P1,P2,ctl+'_nul',mo=True)[0]
+        cmds.setAttr(const1+'.interpType',2) #Interpolation Type: Shortest
 
-
+        ###parent const nul2 to p3
+        const2 = cmds.parentConstraint(P3,ctl+'_nul2',mo=True)[0]
+         ##break connection: constraint parent inverse matrix
+        cmds.disconnectAttr(ctl+'_nul2'+'.parentInverseMatrix',const2+'.constraintParentInverseMatrix')
+        cmds.setAttr(const2+'.interpType',2)
+        
+        ###create corner pin attr
+        cmds.addAttr(ctl, shortName='cornerPin', defaultValue=0, minValue=-1, maxValue=1)
+        #set range node
+        setRanNode = cmds.createNode('setRange')
+        #cornerPin >> valueX
+        cmds.connectAttr(ctl+'.cornerPin',setRanNode+'.valueX')
+        # minX 0 maxX 1, oldMinX -1 oldMaxX 1
+        cmds.setAttr(setRanNode+'.minX',0)
+        cmds.setAttr(setRanNode+'.maxX',1)
+        cmds.setAttr(setRanNode+'.oldMinX',-1)
+        cmds.setAttr(setRanNode+'.oldMaxX',1)
+        
+        #outValueX >> face_Lower_bindW0
+        cmds.connectAttr(setRanNode+'.outValueX',const1+'.'+P1+'W0')
+        #outValueX >> inputX, outputX >> jaw_bindW1
+        revNode = cmds.createNode('reverse') #reverse node
+        cmds.connectAttr(setRanNode+'.outValueX',revNode+'.inputX')
+        cmds.connectAttr(revNode+'.outputX',const1+'.'+P2+'W1')
+'''
 def setMouthCornerCtls(mCornerCtls, mouthCtls, jawCls, faceLowerBind,jawBind):
     cornerCls = [d for d in jawCls if '_corner_' in d] #left, right
     inbetweenCls = [d for d in jawCls if '0' in d ]
@@ -127,6 +187,7 @@ def setMouthCornerCtls(mCornerCtls, mouthCtls, jawCls, faceLowerBind,jawBind):
     for ctl in mCornerCtls:
         cmds.addAttr(ctl, shortName='lipOnePull', defaultValue=0, minValue=0, maxValue=1)
         cmds.addAttr(ctl, shortName='lipTwoPull', defaultValue=0, minValue=0, maxValue=1)
+ 
     #
     _connectLipPull(mCornerCtls,inbetweenCls,mouthCtls,cornerCls)
 
@@ -161,8 +222,8 @@ def _setCornerPin(ctl,clus,parent1,parent2):
     cmds.connectAttr(setRanNode+'.outValueX',revNode+'.inputX')
     cmds.connectAttr(revNode+'.outputX',clus+'_parentConstraint1.'+parent2+'W1')
     cmds.connectAttr(revNode+'.outputX',nul+'_parentConstraint1.'+parent2+'W1')
-    
 
+   
 def _connectLipPull(cornerCtl,clsList,midCtl,cornerCls):
     #upperLip01Rcls = 'mouth_upper_r_01_cls'
     #lowerLip01Rcls = 'mouth_lower_r_01_cls'
@@ -198,6 +259,7 @@ def _connectLipPull(cornerCtl,clsList,midCtl,cornerCls):
         #lipOnePull >> inputX, outputX >> lip_corner_l_clsW1
         cmds.connectAttr(ctl+attr,revNode2+'.inputX')
         cmds.connectAttr(revNode2+'.outputX',clus+'_parentConstraint1.'+parent4+'W1')
+        '''
         
 def _createBsCrv(orig,names,grpName):
     grp = cmds.group(em=True,n=grpName)
@@ -231,7 +293,7 @@ def _symmetricMouthCrv(crvList):
     outList = []
     for crv in crvList:
         CVs = ModFunc._getCVs(crv)
-        posList = ModFunc._getTransformData(CVs, t=True, r=False, os=True)
+        posList = DataFunc._getTransform(CVs, t=True, r=False, os=True)
         for num,i in enumerate(posList):
             if num<len(CVs)/4:
                 x,y,z = i['pos']

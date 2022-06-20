@@ -30,12 +30,13 @@ class createUI():
         cmds.setParent('..')
         ###
         cmds.frameLayout( l='Data', collapsable=True, collapse=False, mw=10, mh=5 )
+        cmds.button(l='Set character data directory',c=self.setDir ,bgc=orange)
         
         cmds.rowLayout( numberOfColumns=2)
-        cmds.button( l='Import Data', c=self.handler03,w=150,h=30,bgc=orange)
-        cmds.button( l='Export Data', c=self.exportData,w=150,h=30,bgc=orange)
+        cmds.button( l='Import All Data', c=self.handler03,w=150,h=30,bgc=orange)
+        cmds.button( l='Export All Data', c=self.exportData,w=150,h=30,bgc=orange)
         cmds.setParent('..')
-        
+        '''
         cmds.columnLayout(rs=5)
         cmds.checkBox(l='All Data',cc=lambda _:print('good'),v=True,enable=True)
         cmds.rowColumnLayout(numberOfColumns=2)
@@ -47,7 +48,7 @@ class createUI():
         cmds.checkBox( l='PSDBS',v=True,enable=False)
         cmds.setParent('..')
         cmds.setParent('..')
-        
+        '''
         #
         cmds.frameLayout( l='Geo', collapsable=True, collapse=False )
         cmds.rowLayout(numberOfColumns=2,bgc=grey)

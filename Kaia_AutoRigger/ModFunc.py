@@ -108,21 +108,12 @@ def _createBindmeshesOnJnts(names,jnts,grpName):
         bindmesh = cmds.polyPlane(w=.3,h=.3,sw=1,sh=1,n=name)[0]
         cmds.move(pos[0],pos[1],pos[2],bindmesh)
         cmds.makeIdentity(bindmesh, apply=True) #freeze transformation. If I don't do this, follicles won't attach
+        cmds.delete(bindmesh,constructionHistory=True)
         
         cmds.skinCluster(jnt,bindmesh,n='bindMesh_skinCluster',tsb=True)#tsb means toSelectedBones
         
         cmds.parent(bindmesh,grp)
 
-    
-def _createClsOnBindmeshes(names,bindmeshes,grpName):
-    grp = cmds.group(em=True, n=grpName)
-    for bindmesh,name in zip(bindmeshes,names):
-        cmds.select(cl=True) #clear selection for safety
-        clus = cmds.cluster(bindmesh)
-        clsTrans = clus[1]
-        clsTrans = cmds.rename(clsTrans, name)
-        cmds.parent(clsTrans,grp)
-        
     
 def _createFolsOnBindmeshes(names,bindmeshes,grpName):
     grp = cmds.group(em=True, n=grpName)
@@ -142,12 +133,8 @@ def _createFolsOnBindmeshes(names,bindmeshes,grpName):
 
 def _createCtlGrp(targList, nameList, grpName, newGrp=True, ori=True, shape='circle', size=1, const=True, mid=False):
     #Nurv curves, orient group, offset group, nul group
-    if type(targList)!=list:
-        print ('convert targ to list')
-        targList = [targList]
-    if type(nameList)!=list:
-        print('convert name to list')
-        nameList = [nameList]
+    if type(targList)!=list: targList = [targList]
+    if type(nameList)!=list: nameList = [nameList]
     
     if newGrp==True: bigGrp = cmds.group(em=True, n=grpName)
     else: bigGrp = grpName

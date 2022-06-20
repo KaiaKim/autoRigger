@@ -37,11 +37,11 @@ class BuildCtls():
     
     def face01(self):
         #0: Create Face Ctls
-        ModFunc._createCtlGrp([self.J.faceBind],[self.faceCtl],self.animGrp, newGrp=False,ori=False,const=False,size=8)
+        ModFunc._createCtlGrp(self.J.faceBind,self.faceCtl,self.animGrp, newGrp=False,ori=False,const=False,size=8)
         ModFunc._offsetCtls([self.faceCtl],r=(90,0,0))
         
         #0: Create Upper Face Ctls
-        ModFunc._createCtlGrp([self.J.faceUpBind],[self.faceUpCtl], self.faceCtl, newGrp=False, ori=False, const=False, size=12 )
+        ModFunc._createCtlGrp(self.J.faceUpBind,self.faceUpCtl, self.faceCtl, newGrp=False, ori=False, const=False, size=12 )
         ModFunc._offsetCtls([self.faceUpCtl], r=(90,0,0))
         
         #0: Create Lower Face Ctls
@@ -51,7 +51,7 @@ class BuildCtls():
         ModFunc._overrideColor([self.faceUpCtl, self.faceLoCtl], color=(1,1,0))
         
         #0: Create Jaw Ctls
-        ModFunc._createCtlGrp([self.J.jawBind], [self.jawCtl], self.faceLoCtl, newGrp=False, const=False, size=1.5, shape='triangle')
+        ModFunc._createCtlGrp(self.J.jawBind, self.jawCtl, self.faceLoCtl, newGrp=False, const=False, size=1.5, shape='triangle')
         ModFunc._offsetCtls([self.jawCtl],t=(0,-2,12), r=(180,0,0),s=(-1,.7,1))
         ModFunc._overrideColor([self.jawCtl], color=(1,1,0))
         
@@ -81,7 +81,7 @@ class BuildCtls():
         ModFunc._aimConstLocs(self.M.locs, self.J.jawBind, upObj=self.J.faceUpBind)
         
         #2: Create lip_bind_jnts && constraint to lip_locs
-        ModFunc._createJntsOnLocs(self.M.locs,self.M.binds,self.J.faceUpBind) ###parent change!
+        ModFunc._createJntsOnLocs(self.M.locs,self.M.binds,self.J.faceUpBind)
         
         #2: Create mouth drivers
         ModFunc._createJntsOnCVs(self.M.drivJnts, self.M.crv,self.M.drivJntGrp) 
@@ -92,8 +92,18 @@ class BuildCtls():
         #4: Create Follicles on Bindmeshes
         ModFunc._createFolsOnBindmeshes(self.M.fols,self.M.bindmeshes,self.M.folGrp)
         
-        #4: Create Clusters on Bindmeshes
-        ModFunc._createClsOnBindmeshes(self.M.clus,self.M.bindmeshes,self.M.clusGrp)
+        #4: Create Clusters on Bindmeshes ###important
+            #big clus
+        MouthFunc._createClsOnAll(self.M.clus, self.M.bindmeshes)
+            #jaw clus
+        upWeights = [.5,.7,.9,1,.9,.7,.5]
+        MouthFunc._createClsOnAll(self.M.jawClus[0], self.M.bindmeshes[:7], weights=upWeights) #upper
+        loWeights = [.5,.7,.9,1,.9,.7,.5]
+        MouthFunc._createClsOnAll(self.M.jawClus[1], self.M.bindmeshes[-6:]+self.M.bindmeshes[:1], weights=loWeights) #lower
+            #lip clus
+        MouthFunc._createClsOnEach(self.M.lipClus,self.M.bindmeshes)
+        
+        cmds.group(self.M.clus,self.M.jawClus,self.M.lipClus, n=self.M.clusGrp)
         
         #4: Create Ctrls
             #lip micro ctrls
@@ -106,11 +116,10 @@ class BuildCtls():
         ModFunc._offsetCtls(self.M.macroCtls, t=(0,-1.5,0), r=(0,0,45), s=(3,1,1))
 
             #big ctl
-        ModFunc._createCtlGrp([self.J.jawTipBind],[self.M.bigCtl], self.faceLoCtl,
+        ModFunc._createCtlGrp(self.J.faceLoBind,self.M.ctl, self.faceLoCtl,
          newGrp=False, const=False, ori=False, size=4, shape='square')
-        ModFunc._offsetCtls([self.M.bigCtl], t=(0,0,0), r=(0,0,45), s=(1,.8,1))
-        cmds.move(0,0,2,self.M.bigCtl+'_nul',r=True)
-        cmds.rotate(0,0,0,self.M.bigCtl+'_nul')
+        ModFunc._offsetCtls([self.M.ctl], t=(0,-4.5,12), r=(0,0,45), s=(1,.8,1))
+
             #lip thick ctl
         ModFunc._createCtlGrp(self.M.macroFols,self.M.thickCtls, self.M.thickCtlGrp,
         size=.5, shape='semiCircle')
@@ -139,7 +148,7 @@ class BuildCtls():
             cmds.parent(self.M.tongueCtls[i+1]+'_nul',self.M.tongueCtls[i]) #child, parent /1,0 /2,1 /3,2 /4,3 /5,4 /6,5
             ###
         ModFunc._overrideColor(self.M.microCtls, color=(1,1,0)) #yellow
-        ModFunc._overrideColor(self.M.macroCtls+[self.M.bigCtl]+self.M.thickCtls+self.M.cornerCtls, color=(1,0,0)) #red
+        ModFunc._overrideColor(self.M.macroCtls+[self.M.ctl]+self.M.thickCtls+self.M.cornerCtls, color=(1,0,0)) #red
         ModFunc._overrideColor(self.M.teethCtls+self.M.tongueCtls,color=(1,.5,.5)) #pink
         ModFunc._scaleOrient(self.M.microCtls+self.M.macroCtls+self.M.thickCtls+self.M.cornerCtls)
         ModFunc._90dOrient(self.M.microCtls+self.M.macroCtls+self.M.thickCtls+self.M.cornerCtls)
@@ -236,7 +245,7 @@ class BuildCtls():
     def eye01(self):
         #4: Create Eye Ctls
             #eye_rot_ctl
-        ModFunc._createCtlGrp([self.J.eyeSocBinds[1]], [self.E.rotCtl], self.faceUpCtl, 
+        ModFunc._createCtlGrp(self.J.eyeSocBinds[1], self.E.rotCtl, self.faceUpCtl, 
         newGrp=False, ori=False, const=False, mid=True, size=1, shape='triangle' )
         ModFunc._offsetCtls([self.E.rotCtl], t=(0,0,7.5), r=(90,0,0))
         ModFunc._overrideColor([self.E.rotCtl], color=(0,0,1))
@@ -248,7 +257,7 @@ class BuildCtls():
         ModFunc._overrideColor(self.E.ctls, color=(0,0,1))
                 
             #eye aim macro ctl
-        ModFunc._createCtlGrp([self.J.eyeSocBinds[1]], [self.E.aimCtl], self.faceUpCtl, 
+        ModFunc._createCtlGrp(self.J.eyeSocBinds[1], self.E.aimCtl, self.faceUpCtl, 
         newGrp=False, ori=False, const=False, mid=True, size=1, shape='square' )
         ModFunc._offsetCtls([self.E.aimCtl],r=(0,0,45),s=(7,1,1))
         ModFunc._overrideColor([self.E.aimCtl], color=(0,0,1))
@@ -338,7 +347,7 @@ class BuildCtls():
         
         #1: Create Nose Follow Driver
         cmds.group(em=True,n=self.N.bridgeAuto)
-        cmds.parent(self.N.bridgeAuto,self.N.bridgeCtl+'_orient',a=True)
+        cmds.parent(self.N.bridgeAuto,self.N.bridgeCtl+'_orient',r=True)
         cmds.parent(self.N.bridgeCtl,self.N.bridgeAuto)
         
         #0: Create Nose Ctls
@@ -401,32 +410,44 @@ class ConnectCtls():
         ModFunc._createCheekAuto(self.cheekCtls[2:4],self.cheekDrvs,(.5,.5,.5))
     
     def mouth02(self):
+        P1 = self.J.faceUpBind
+        P2 = self.J.jawBind
+        P3 = self.M.ctl
         #6: Connect Teeth Ctrl
-        cmds.parentConstraint(self.J.faceUpBind,self.M.teethCtls[0]+'_nul',mo=True)
-        cmds.parentConstraint(self.J.jawBind,self.M.teethCtls[1]+'_nul',mo=True)
+        cmds.parentConstraint(P1,self.M.teethCtls[0]+'_nul',mo=True)
+        cmds.parentConstraint(P2,self.M.teethCtls[1]+'_nul',mo=True)
         ModFunc._parentConstIterate(self.M.teethCtls, self.M.teethBinds)
         
         #7: Connect Tongue Ctrl
         ModFunc._parentConstIterate(self.M.tongueCtls, self.M.tongueBinds)
         cmds.parent(self.M.tongueCtls[0]+'_nul',self.jawCtl)
-
-        #7: Attach Jaw Clusters to Jaw
-        MouthFunc.attachJawCls(self.M.clus, self.M.macroCtls, self.J.faceUpBind, self.J.jawBind)
-        
+            
         #8: Create lipCV Clusters on lip_curves
         MouthFunc._2CurvCvCls(self.M.cvCls, self.M.microCtls, self.M.upperCrv, self.M.lowerCrv )
         
         #9: parent constraint corner ctl nul to jaw
-        MouthFunc.attachCornerCtls(self.M.cornerCtls, self.J.faceUpBind, self.J.jawBind)
+        MouthFunc.attachCornerCtls(self.M.cornerCtls, P1, P2, P3)
+
+        
+        #10: Parent constraint big cluster to big ctl
+        cmds.parentConstraint(self.M.ctl, self.M.clus,mo=True) #bigctl
+        
+        MouthFunc.constWithDriver(self.M.jawClusDrvs[0], self.faceUpCtl, self.M.jawClus[0],self.animGrp) #upper
+        MouthFunc.constWithDriver(self.M.jawClusDrvs[1], self.jawCtl, self.M.jawClus[1],self.animGrp) #lower
+        
+        '''
+        #7: Attach Jaw Clusters to Jaw
+        MouthFunc.attachJawCls(self.M.lipClus, self.M.macroCtls, self.J.faceUpBind, self.J.jawBind)
         
         #10: Corner pin, Lip pull
-        MouthFunc.setMouthCornerCtls(self.M.cornerCtls, self.M.macroCtls, self.M.clus, self.J.faceUpBind,self.J.jawBind)
+        MouthFunc.setMouthCornerCtls(self.M.cornerCtls, self.M.macroCtls, self.M.lipClus, self.J.faceUpBind,self.J.jawBind)
         
         #set lip pull attribute
         for i in self.M.cornerCtls:
             cmds.setAttr(i+'.lipOnePull', 0.7)
             cmds.setAttr(i+'.lipTwoPull', 0.9)
-            
+        '''
+        
         #4: Connect Blendshape weight to translate value of mouth corner ctrls
         MouthFunc._connectCornerCtrl(self.M.cornerCtls, self.M.blendCrvs, self.M.bsNode)
 
@@ -507,7 +528,7 @@ class ConnectCtls():
         
         
     def hideExtra(self):
-        cmds.select(self.M.drivJnts,self.M.clus,self.M.cvCls,self.L.drivJnts)
+        cmds.select(self.M.drivJnts,self.M.lipClus,self.M.cvCls,self.L.drivJnts)
         cmds.hide()
         
     def arrangeGrps(self):
@@ -526,7 +547,7 @@ class ConnectCtls():
                 self.M.upperLocGrp, self.M.lowerLocGrp,
                 self.L.rLocGrp, self.L.lLocGrp,
                 self.M.crv,
-                self.M.bindmeshesGrp,self.M.clusGrp, self.M.folGrp,
+                self.M.bindmeshesGrp, self.M.clusGrp, self.M.folGrp,
                 self.M.drivJntGrp,
                 self.M.blendCrvGrp, self.L.rBlendCrvGrp, self.L.lBlendCrvGrp,
                 self.B.xfGrp,
@@ -536,7 +557,7 @@ class ConnectCtls():
         try:
             cmds.parent(
                 self.M.microCtlGrp, self.M.macroCtlGrp, self.M.cornerCtlGrp,
-                self.M.thickCtlGrp,
+                self.M.thickCtlGrp, self.N.ctlGrp,
                 self.animGrp)
         except: print('anim_grp parent skipped')
         

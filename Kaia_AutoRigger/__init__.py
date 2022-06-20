@@ -31,27 +31,37 @@ class AutoRigFace(Builder.BuildCtls, Builder.ConnectCtls, Builder.BindGeo, UI.cr
         self.winTitle = 'Kaia\'s auto rigger' #this is the title of the window #display name
         self.winName = 'kaiaAutoRigFace' #this needs to be ac word that has no spaces or it won't work! #node name
         
+        self.dir = None
+        
         self.data = {
-            'geo':{},
-            'verts':{},
+            'geo':{'face':None,'brow':None,'lash':None,'eyeR':None,'eyeL':None,'upTeeth':None,'loTeeth':None,'tongue':None,'extra':None},
+            'verts':{'lipUpper':None,'lipLower':None,'lidUpperR':None,'lidLowerR':None,'browR':None},
             'orients':[],
             'bsCrv':[],
             'attr':{}
         }
-        
-        self.data['geo'] = {'face':None,'brow':None,'lash':None,'eyeR':None,'eyeL':None,'upTeeth':None,'loTeeth':None,'tongue':None,'extra':None}
-        self.data['verts'] = {'lipUpper':None,'lipLower':None,'lidUpperR':None,'lidLowerR':None,'browR':None}
+    
+    def setDir(self,_):
+        #get file path
+        self.dir = cmds.fileDialog2(fileFilter="*.json", dialogStyle=1, fm=3, caption ='Set character data directory')[0]
+        print('Directory:',self.dir)
         
     def importData(self):
-        #get file path
-        filePath = cmds.fileDialog2(fileFilter="*.json", dialogStyle=1, fm=1, caption ='Import Rig Data')[0]
+        if self.dir==None:
+            print('please set directory first')
+            return
         
-        #read json file
-        with open(filePath,"r") as rfile:
-            self.data = json.load(rfile)
-
+        #read json files
+        with open(self.dir+'/geoNames.json',"r") as rfile: self.data['geo'] = json.load(rfile)
+        with open(self.dir+'/vertIndices.json',"r") as rfile: self.data['verts'] = json.load(rfile)
+        with open(self.dir+'/ctlOrient.json',"r") as rfile: self.data['orients'] = json.load(rfile)
+        with open(self.dir+'/blendshapeCrv.json',"r") as rfile: self.data['bsCrv'] = json.load(rfile)
     
     def exportData(self,_):
+        if self.dir==None:
+            print('please set directory first')
+            return
+            
         #get orient data
         orients = [d+'_orient' for d in self.allCtls]
         self.data['orients'] = DataFunc._getTransform(orients, t=False, r=True)
@@ -62,13 +72,12 @@ class AutoRigFace(Builder.BuildCtls, Builder.ConnectCtls, Builder.BindGeo, UI.cr
             CVs = ModFunc._getCVs(i)
             allCVs += CVs
         self.data['bsCrv'] = DataFunc._getTransform(allCVs, t=True, r=False, os=True)    
-            
-        #get file path
-        filePath = cmds.fileDialog2(fileFilter="*.json", dialogStyle=1, fm=0, caption ='Export Rig Data')[0]
         
-        #write json file
-        with open(filePath, "w") as wfile:
-            json.dump(self.data, wfile)
+        #write json files
+        with open(self.dir+'/geoNames.json', "w") as wfile: json.dump(self.data['geo'], wfile)
+        with open(self.dir+'/vertIndices.json',"w") as wfile: json.dump(self.data['verts'], wfile)
+        with open(self.dir+'/ctlOrient.json',"w") as wfile: json.dump(self.data['orients'], wfile)
+        with open(self.dir+'/blendshapeCrv.json',"w") as wfile: json.dump(self.data['bsCrv'], wfile)
     
     def assignGeo(self,x,flag):
         if flag=='ass':
@@ -162,8 +171,6 @@ class AutoRigFace(Builder.BuildCtls, Builder.ConnectCtls, Builder.BindGeo, UI.cr
         DataFunc._applyTransform(cvPos5, os=True)
         
 
-
-        
     
 ###-----------------------------------------------------EXECUTE---------------------------------------------------------------
 run01=AutoRigFace()
@@ -174,5 +181,3 @@ run01.createWindow()
 ### build directory (with varient)
 ### set directory UI
 ### Break data files
-
-### file: move brow_cor_bind one edge outer 17:50
