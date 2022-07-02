@@ -35,12 +35,11 @@ class mouth():
         self.lowerCrv = 'lip_lower_curve' #No change this!
         self.crv = 'mouth_curve' #No change this!
             ###
-        self.upperLocGrp = 'lip_upper_loc_grp' #Grp means group name
-        self.lowerLocGrp = 'lip_lower_loc_grp'
-        self.upperLocs = self._lipLocs(verts['lipUpper'], prefix='lip_upper')
-        self.lowerLocs = self._lipLocs(verts['lipLower'], prefix='lip_lower')
-        self.locs = self.upperLocs + self.lowerLocs
-        self.binds = [d.replace('_loc', '_bind') for d in self.locs]
+        self.upperBindGrp = 'lip_upper_bind_grp' #Grp means group name
+        self.lowerBindGrp = 'lip_lower_bind_grp'
+        self.upperBinds = self._lipBinds(verts['lipUpper'], prefix='lip_upper')
+        self.lowerBinds = self._lipBinds(verts['lipLower'], prefix='lip_lower')
+        self.binds = self.upperBinds + self.lowerBinds
         self.tongueBinds = ['tongue_01_bind', 'tongue_02_bind', 'tongue_03_bind', 'tongue_04_bind', 'tongue_05_bind', 'tongue_06_bind', 'tongue_07_bind']
         self.teethBinds = ['teeth_upper_bind','teeth_lower_bind']
         
@@ -56,6 +55,7 @@ class mouth():
         self.clus = 'mouth_cls'
         self.jawClus = ['jaw_upper_cls','jaw_lower_cls']
         self.jawClusDrvs = ['jaw_upper_clsDriver','jaw_lower_clsDriver']
+        self.cornerClus = ['mCorner_r_cls','mCorner_l_cls']
         self.lipClus = [d.replace('bindmesh','cls') for d in self.bindmeshes]
         
         
@@ -84,7 +84,7 @@ class mouth():
             self.blendCrvs.append(self.crv+'_l'+suffix)
         self.bsNode = 'mouth_curve_blend'
         
-    def _lipLocs(self,inList, prefix=''):
+    def _lipBinds(self,inList, prefix=''):
         outList = []
         for i in range(len(inList)):
             name = prefix
@@ -94,7 +94,7 @@ class mouth():
                 name += '_r_%02d'%i #result: 'lip_lower_l_00_loc'
             elif i>((len(inList)-1)/2):
                 name += '_l_%02d'%( (len(inList)-1)-i ) #result: 'lip_lower_r_00_loc'
-            name += '_loc'
+            name += '_bind'
             
             outList.append(name) #append the loc name to self.lipLocs list
         return outList
@@ -115,17 +115,15 @@ class lid():
                 self.drivJnts.append(crv.rsplit('_',1)[0]+'_'+str(i)+'_driver') 
         self.microCtls = [d.replace('_driver','_ctl') for d in self.drivJnts]
         
-        self.rLocGrp = 'lid_r_loc_grp'
-        self.lLocGrp = 'lid_l_loc_grp'
-        self.upperRLocs = self._eyeLocs(verts['lidUpperR'], prefix='lid_upper_r')
-        self.upperLLocs = self._eyeLocs(verts['lidUpperR'], prefix='lid_upper_l') #we're just getting len of the list. left&right doesn't matter
-        self.lowerRLocs = self._eyeLocs(verts['lidLowerR'], prefix='lid_lower_r')
-        self.lowerLLocs = self._eyeLocs(verts['lidLowerR'], prefix='lid_lower_l')
-        self.rLocs = self.upperRLocs + self.lowerRLocs
-        self.lLocs = self.upperLLocs + self.lowerLLocs
+        self.rBindGrp = 'lid_r_Bind_grp'
+        self.lBindGrp = 'lid_l_Bind_grp'
+        self.upperRBinds = self._eyeBinds(verts['lidUpperR'], prefix='lid_upper_r')
+        self.upperLBinds = self._eyeBinds(verts['lidUpperR'], prefix='lid_upper_l') #we're just getting len of the list. left&right doesn't matter
+        self.lowerRBinds = self._eyeBinds(verts['lidLowerR'], prefix='lid_lower_r')
+        self.lowerLBinds = self._eyeBinds(verts['lidLowerR'], prefix='lid_lower_l')
+        self.rBinds = self.upperRBinds + self.lowerRBinds
+        self.lBinds = self.upperLBinds + self.lowerLBinds
         
-        self.rBinds = [d.replace('_loc', '_bind') for d in self.rLocs]
-        self.lBinds = [d.replace('_loc', '_bind') for d in self.lLocs]
         
         self.rBlendCrvGrp = 'lid_r_blend_crv_grp'
         self.lBlendCrvGrp = 'lid_l_blend_crv_grp'
@@ -136,14 +134,14 @@ class lid():
         self.rBsNodes = ['lid_'+d+'_blend' for d in nodeNames]
         self.lBsNodes = [d.replace('_r_','_l_') for d in self.rBsNodes]
         
-    def _eyeLocs(self,inList, prefix=''):
+    def _eyeBinds(self,inList, prefix=''):
         outList = []
         for i in range(len(inList)):
             name = prefix
-            name += '_%02d' %i #'lower_lid_00_l_loc'
-            name += '_loc'
+            name += '_%02d' %i #'lower_lid_00_l_bind'
+            name += '_bind'
             
-            outList.append(name) #append the loc name to self.lipLocs list
+            outList.append(name) #append the bind name to self.lipBinds list
         return outList
 
 

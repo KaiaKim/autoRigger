@@ -13,25 +13,21 @@ def _createMouthCrv(name, upperCrv, lowerCrv):
 
     cvList = upperCVs + lowerCVs
 
-    sectionCount = len(cvList)-2
-    mouthCrv = cmds.circle(n=name, s=sectionCount )[0] #create a new curve
-    
-    cmds.makeIdentity(mouthCrv, apply=True) #freeze transformation
-    cmds.xform(mouthCrv, piv=(0,0,0), ws=True) #set pivot to 0,0,0
+    sectionCount = 11
+    mouthCrv = cmds.circle(n=name, s=sectionCount, d=1)[0] #create a new curve #cv 0~12
     cmds.delete(mouthCrv,constructionHistory=True)
-    
+
     counter = 0 #this is a counter
-    for i in range(sectionCount): #We're going to iterate through mouth curv(CVs)
+    for i in range(12): #We're going to iterate through mouth curv(CVs)
         pos=cmds.xform(cvList[counter], q=True, t=True, ws=True) #get world position from the CV
-        if counter==sectionCount/2: #there's two cvs overlapping on the corner. sectionCount/2 is the right corner CV.
+        if counter==6: #there's two cvs overlapping on the corner. 6 is the right corner CV.
             counter+=1 #We skip the overlapping cv by adding 1 to the counter
                
         mouthCV = mouthCrv + '.cv[%d]'%i #get mouth CV
         cmds.move(pos[0],pos[1],pos[2],mouthCV) #snap mouth CV to the position
 
         counter+=1 #increase counter
-    
-    return mouthCrv
+
 
 
 def _2CurvCvCls(names,ctls,upCurv,loCurv):
@@ -57,7 +53,7 @@ def _2CurvCvCls(names,ctls,upCurv,loCurv):
         
         offGrp = cmds.group(clsTrans,n=name+'_offset')
         cmds.parent(offGrp, ctl) #(child, parent)
-    return clsList
+
 
 def constMicroToMacro(inList):
     for i in inList:
@@ -66,46 +62,7 @@ def constMicroToMacro(inList):
             macro = i.replace('lip','mouth') #micro_mouth_lower_m_ctl
             cmds.parentConstraint(macro,nul2,mo=True)
             
-'''
-def attachJawCls(jawCls, mouthCtls, faceLowerBind, jawBind):
-    #We're gonna parent constraint jawClusters to the mouth macro controllers
-    for clus in jawCls:
-        if '0' not in clus: #corner or mid
-            parent1=faceLowerBind
-            parent2=jawBind
-        
-        elif '0' in clus: #inbetween
-            if 'upper' in clus:
-                parent1=mouthCtls[0] #macro_mouth_upper_ctl
-            elif 'lower' in clus:
-                parent1=mouthCtls[1] #macro_mouth_lower_ctl
-            
-            if '_r_' in clus:
-                parent2=jawCls[0] #mouth_corner_r_cls
-            if '_l_' in clus:
-                parent2=jawCls[len(jawCls)//2] #mouth_corner_l_cls
-            
-        cmds.parentConstraint(parent1,parent2,clus,mo=True)
-        #set mouth constraint weight value
-        _setWeightVal(clus, parent1,parent2)
 
-def _setWeightVal(child, parent00, parent01):
-    #should I hard coad weight values? maybe I could set up a set driven key
-    constraint = child + '_parentConstraint1'
-    W0 = 1 #Face Lower Bind W0
-    if '_corner_' in child:
-        W0=.5
-    elif '_upper_' in child:
-        W0=1
-    elif '_lower_' in child:
-        W0=0
-
-    W1 = 1-W0 #Jaw Bind W1
-    
-    cmds.setAttr(constraint+'.'+parent00+'W0', W0)
-    cmds.setAttr(constraint+'.'+parent01+'W1',W1)
-    cmds.setAttr(constraint+'.interpType',2) #Interpolation Type: Shortest
-'''
 def _createClsOnEach(names,bindmeshes):
     for bindmesh,name in zip(bindmeshes,names):
         clus = cmds.cluster(bindmesh)
@@ -138,72 +95,21 @@ def constWithDriver(name,ctl,clus,grp):
     cmds.parentConstraint(name,clus,mo=True)
     
 
-def attachCornerCtls(ctls,P1,P2,P3):
-    for ctl in ctls:
-        ###add nul2 grp
-        cmds.group(em=True,n=ctl+'_nul2')
-        cmds.parent(ctl+'_nul2',ctl+'_nul',r=True)
-        cmds.parent(ctl+'_orient',ctl+'_nul2')
-        
-        ###parent const nul to p1,p2
-        const1 = cmds.parentConstraint(P1,P2,ctl+'_nul',mo=True)[0]
-        cmds.setAttr(const1+'.interpType',2) #Interpolation Type: Shortest
+def attachCorner(ctl,clus,P1,P2,P3):
+    ###parent const clus to p1,p2
+    clsConst = cmds.parentConstraint(P1, P2, clus,mo=True)[0]
+    cmds.setAttr(clsConst+'.interpType',2)
+    ###parent const nul to p1,p2
+    const1 = cmds.parentConstraint(P1,P2,ctl+'_nul',mo=True)[0]
+    cmds.setAttr(const1+'.interpType',2) #Interpolation Type: Shortest
+    ###parent const nul2 to p3
+    const2 = cmds.parentConstraint(P3,ctl+'_nul2',mo=True)[0]
+     ##break connection: constraint parent inverse matrix
+    cmds.disconnectAttr(ctl+'_nul2'+'.parentInverseMatrix',const2+'.constraintParentInverseMatrix')
+    cmds.setAttr(const2+'.interpType',2)
 
-        ###parent const nul2 to p3
-        const2 = cmds.parentConstraint(P3,ctl+'_nul2',mo=True)[0]
-         ##break connection: constraint parent inverse matrix
-        cmds.disconnectAttr(ctl+'_nul2'+'.parentInverseMatrix',const2+'.constraintParentInverseMatrix')
-        cmds.setAttr(const2+'.interpType',2)
-        
-        ###create corner pin attr
-        cmds.addAttr(ctl, shortName='cornerPin', defaultValue=0, minValue=-1, maxValue=1)
-        #set range node
-        setRanNode = cmds.createNode('setRange')
-        #cornerPin >> valueX
-        cmds.connectAttr(ctl+'.cornerPin',setRanNode+'.valueX')
-        # minX 0 maxX 1, oldMinX -1 oldMaxX 1
-        cmds.setAttr(setRanNode+'.minX',0)
-        cmds.setAttr(setRanNode+'.maxX',1)
-        cmds.setAttr(setRanNode+'.oldMinX',-1)
-        cmds.setAttr(setRanNode+'.oldMaxX',1)
-        
-        #outValueX >> face_Lower_bindW0
-        cmds.connectAttr(setRanNode+'.outValueX',const1+'.'+P1+'W0')
-        #outValueX >> inputX, outputX >> jaw_bindW1
-        revNode = cmds.createNode('reverse') #reverse node
-        cmds.connectAttr(setRanNode+'.outValueX',revNode+'.inputX')
-        cmds.connectAttr(revNode+'.outputX',const1+'.'+P2+'W1')
-'''
-def setMouthCornerCtls(mCornerCtls, mouthCtls, jawCls, faceLowerBind,jawBind):
-    cornerCls = [d for d in jawCls if '_corner_' in d] #left, right
-    inbetweenCls = [d for d in jawCls if '0' in d ]
-    #inbetweenCls = [d for d in jawCls if re.findall('[0-9]+',d)!=[] ]
-    
-    #set corner pin
-    _setCornerPin(mCornerCtls[0], cornerCls[0], faceLowerBind,jawBind)
-    _setCornerPin(mCornerCtls[1], cornerCls[1], faceLowerBind,jawBind)
-
-    #add attribute
-    for ctl in mCornerCtls:
-        cmds.addAttr(ctl, shortName='lipOnePull', defaultValue=0, minValue=0, maxValue=1)
-        cmds.addAttr(ctl, shortName='lipTwoPull', defaultValue=0, minValue=0, maxValue=1)
- 
-    #
-    _connectLipPull(mCornerCtls,inbetweenCls,mouthCtls,cornerCls)
-
-
-def _setCornerPin(ctl,clus,parent1,parent2):
-    #ctl='mouth_corner_r_ctl'
-    #clus='mouth_corner_r_cls'
-    #parent1='face_lower_bind'
-    #parent2='jaw_bind'
-    nul=ctl+'_nul'
-    #Add Attribute: cornerPin min -1, max 1, default 0
-    cmds.addAttr(ctl, shortName='cornerPin', defaultValue=0, minValue=-1, maxValue=1)
-    
     #set range node
     setRanNode = cmds.createNode('setRange')
-    
     #cornerPin >> valueX
     cmds.connectAttr(ctl+'.cornerPin',setRanNode+'.valueX')
     # minX 0 maxX 1, oldMinX -1 oldMaxX 1
@@ -213,54 +119,15 @@ def _setCornerPin(ctl,clus,parent1,parent2):
     cmds.setAttr(setRanNode+'.oldMaxX',1)
     
     #outValueX >> face_Lower_bindW0
-    cmds.connectAttr(setRanNode+'.outValueX',clus+'_parentConstraint1.'+parent1+'W0')
-    cmds.connectAttr(setRanNode+'.outValueX',nul+'_parentConstraint1.'+parent1+'W0')
-    
-    #reverse node
-    revNode = cmds.createNode('reverse')
+    cmds.connectAttr(setRanNode+'.outValueX',const1+'.'+P1+'W0')
+    cmds.connectAttr(setRanNode+'.outValueX',clsConst+'.'+P1+'W0')
     #outValueX >> inputX, outputX >> jaw_bindW1
+    revNode = cmds.createNode('reverse') #reverse node
     cmds.connectAttr(setRanNode+'.outValueX',revNode+'.inputX')
-    cmds.connectAttr(revNode+'.outputX',clus+'_parentConstraint1.'+parent2+'W1')
-    cmds.connectAttr(revNode+'.outputX',nul+'_parentConstraint1.'+parent2+'W1')
-
-   
-def _connectLipPull(cornerCtl,clsList,midCtl,cornerCls):
-    #upperLip01Rcls = 'mouth_upper_r_01_cls'
-    #lowerLip01Rcls = 'mouth_lower_r_01_cls'
-    #parent3 = 'mouth_upper_m_ctl' #upper lower
-    #parent4 = 'mouth_corner_r_cls' #left right
+    cmds.connectAttr(revNode+'.outputX',const1+'.'+P2+'W1')
+    cmds.connectAttr(revNode+'.outputX',clsConst+'.'+P2+'W1')
     
-    # connect to upper_lip_01_l_cls_parentConstraint1, lower_lip_01_l_cls_parentConstraint1
-    # either follow the upper lip or the lip corner
-    for clus in clsList:
-        if '_00_' in clus: 
-            attr='.lipOnePull'
-        elif '_01_' in clus:
-            attr='.lipTwoPull'
-        
-        if '_upper_' in clus:
-            parent3 = midCtl[0]
-        elif '_lower_' in clus:
-            parent3 = midCtl[1]
-        
-        if '_r_' in clus:
-            ctl = cornerCtl[0]
-            parent4 = cornerCls[0]
-        elif '_l_' in clus:
-            ctl = cornerCtl[1]
-            parent4 = cornerCls[1]
-            
-        #print('ctl:',ctl,'clus:',clus, 'attr:',attr, 'p3:', parent3, 'p4:', parent4)
-        #lipOnePull >> lower_lip_ctlW0
-        cmds.connectAttr(ctl+attr,clus+'_parentConstraint1.'+parent3+'W0' )
-        
-        #reverse node
-        revNode2 = cmds.createNode('reverse')
-        #lipOnePull >> inputX, outputX >> lip_corner_l_clsW1
-        cmds.connectAttr(ctl+attr,revNode2+'.inputX')
-        cmds.connectAttr(revNode2+'.outputX',clus+'_parentConstraint1.'+parent4+'W1')
-        '''
-        
+       
 def _createBsCrv(orig,names,grpName):
     grp = cmds.group(em=True,n=grpName)
     for name in names:

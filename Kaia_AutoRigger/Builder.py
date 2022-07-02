@@ -73,16 +73,16 @@ class BuildCtls():
         
         #1: Create lip_locs on lip verts & connect to lip_curves
         upperPos = ModFunc._getPosListFromVerts(self.data['verts']['lipUpper'])
-        ModFunc._createLocsOnCurve(self.M.upperLocs, upperPos, self.M.upperCrv, self.M.upperLocGrp)
+        ModFunc._createJntsOnCurve(self.M.binds, upperPos, self.M.upperCrv, self.M.upperBindGrp)
         lowerPos = ModFunc._getPosListFromVerts(self.data['verts']['lipLower'])
-        ModFunc._createLocsOnCurve(self.M.lowerLocs, lowerPos, self.M.lowerCrv, self.M.lowerLocGrp)
-        
+        ModFunc._createJntsOnCurve(self.M.binds, lowerPos, self.M.lowerCrv, self.M.lowerBindGrp)
+        '''
         #2: Aim constraint lip_locs to jaw_bind
         ModFunc._aimConstLocs(self.M.locs, self.J.jawBind, upObj=self.J.faceUpBind)
-        
+
         #2: Create lip_bind_jnts && constraint to lip_locs
         ModFunc._createJntsOnLocs(self.M.locs,self.M.binds,self.J.faceUpBind)
-        
+        '''
         #2: Create mouth drivers
         ModFunc._createJntsOnCVs(self.M.drivJnts, self.M.crv,self.M.drivJntGrp) 
         
@@ -96,14 +96,16 @@ class BuildCtls():
             #big clus
         MouthFunc._createClsOnAll(self.M.clus, self.M.bindmeshes)
             #jaw clus
-        upWeights = [.5,.7,.9,1,.9,.7,.5]
-        MouthFunc._createClsOnAll(self.M.jawClus[0], self.M.bindmeshes[:7], weights=upWeights) #upper
-        loWeights = [.5,.7,.9,1,.9,.7,.5]
-        MouthFunc._createClsOnAll(self.M.jawClus[1], self.M.bindmeshes[-6:]+self.M.bindmeshes[:1], weights=loWeights) #lower
+        upWeights = [.7,.9,1,.9,.7]
+        MouthFunc._createClsOnAll(self.M.jawClus[0], self.M.bindmeshes[1:6], weights=upWeights) #upper
+        loWeights = [.7,.9,1,.9,.7]
+        MouthFunc._createClsOnAll(self.M.jawClus[1], self.M.bindmeshes[7:], weights=loWeights) #lower
+            #corner clus
+        MouthFunc._createClsOnEach(self.M.cornerClus,[self.M.bindmeshes[0],self.M.bindmeshes[6]])
             #lip clus
         MouthFunc._createClsOnEach(self.M.lipClus,self.M.bindmeshes)
         
-        cmds.group(self.M.clus,self.M.jawClus,self.M.lipClus, n=self.M.clusGrp)
+        cmds.group(self.M.clus,self.M.jawClus,self.M.cornerClus,self.M.lipClus, n=self.M.clusGrp)
         
         #4: Create Ctrls
             #lip micro ctrls
@@ -175,31 +177,23 @@ class BuildCtls():
         ModFunc._mirrorObj(self.L.crvs[2], self.L.crvs[0])
         ModFunc._mirrorObj(self.L.crvs[3], self.L.crvs[1])
         
-        #2: Create lid locs on lid verts & connect to lid curves
+        #2: Create lid Binds on lid verts & connect to lid curves
         upperRPos = ModFunc._getPosListFromVerts(self.data['verts']['lidUpperR'])
-        ModFunc._createLocsOnCurve(self.L.upperRLocs, upperRPos, self.L.crvs[0], self.L.rLocGrp) #names,posList,curv,
+        ModFunc._createJntsOnCurve(self.L.upperRBinds, upperRPos, self.L.crvs[0], self.L.rBindGrp) #names,posList,curv,
         
         upperLPos = ModFunc._mirrorPosX(upperRPos)
-        ModFunc._createLocsOnCurve(self.L.upperLLocs, upperLPos, self.L.crvs[2], self.L.lLocGrp)
+        ModFunc._createJntsOnCurve(self.L.upperLBinds, upperLPos, self.L.crvs[2], self.L.lBindGrp)
         
         lowerRPos = ModFunc._getPosListFromVerts(self.data['verts']['lidLowerR'])
-        ModFunc._createLocsOnCurve(self.L.lowerRLocs, lowerRPos, self.L.crvs[1], self.L.rLocGrp, newGrp=False)
+        ModFunc._createJntsOnCurve(self.L.lowerRBinds, lowerRPos, self.L.crvs[1], self.L.rBindGrp, newGrp=False)
         
         lowerLPos = ModFunc._mirrorPosX(lowerRPos)
-        ModFunc._createLocsOnCurve(self.L.lowerLLocs, lowerLPos, self.L.crvs[3], self.L.lLocGrp, newGrp=False)
+        ModFunc._createJntsOnCurve(self.L.lowerLBinds, lowerLPos, self.L.crvs[3], self.L.lBindGrp, newGrp=False)
 
         #3: Aim constraint lid locs to eye socket bind
-        ModFunc._aimConstLocs(self.L.rLocs,self.J.eyeSocBinds[0])
-        ModFunc._aimConstLocs(self.L.lLocs,self.J.eyeSocBinds[1])
-        
-        #4: Create lid bind jnts
-        ModFunc._createJntsOnLocs(self.L.rLocs,self.L.rBinds,self.J.eyeSocBinds[0])
-        ModFunc._createJntsOnLocs(self.L.lLocs,self.L.lBinds,self.J.eyeSocBinds[1])
-        
-        #5: Constraint to lid locs
-        ModFunc._parentConstIterate(self.L.rLocs,self.L.rBinds)
-        ModFunc._parentConstIterate(self.L.lLocs,self.L.lBinds)
-        
+        ModFunc._aimConstIterate(self.L.rBinds,self.J.eyeSocBinds[0])
+        ModFunc._aimConstIterate(self.L.lBinds,self.J.eyeSocBinds[1])
+
         #3: Create Lid Driver Curve
         LidFunc._createDrivCrv(self.L.drivCrvs,self.L.crvs)
 
@@ -212,14 +206,14 @@ class BuildCtls():
         ModFunc._offsetCtls(self.L.microCtls, t=(0,0,.7))
         ModFunc._overrideColor(self.L.microCtls, color=(1,1,0))
         cmds.parent(self.L.microCtlGrp,self.faceUpCtl)
-        
+        '''
         #5: attach lid tweak ctl nuls to driver crvs
         for num,crv in enumerate(self.L.drivCrvs):
             LidFunc._attachLidCtls(self.L.microCtls[num*5:num*5+5],crv)
         
         #5: parent lid Drivers to lid tweak ctls
         ModFunc._parentIterate(self.L.microCtls,self.L.drivJnts)
-        
+        '''
         #6: Skin Driver joints to lid curves
         for num,crv in enumerate(self.L.crvs):
             LidFunc._skinCrv(self.L.drivJnts[num*5:num*5+5],crv) #0,1,2,3,4
@@ -341,8 +335,8 @@ class BuildCtls():
         
     def nose01(self):
         #0: Create Nose Bridge Ctls
-        ModFunc._createCtlGrp(self.J.noseBridgeBind,self.N.bridgeCtl,self.N.ctlGrp,
-         const=False, size=2.5, shape='square')
+        ModFunc._createCtlGrp(self.J.noseBridgeBind,self.N.bridgeCtl,self.faceCtl,
+         newGrp=False,const=False, size=2.5, shape='square')
         ModFunc._offsetCtls([self.N.bridgeCtl],t=(0,-2,1), r=(0,0,45), s=(1,1,1))
         
         #1: Create Nose Follow Driver
@@ -426,14 +420,26 @@ class ConnectCtls():
         MouthFunc._2CurvCvCls(self.M.cvCls, self.M.microCtls, self.M.upperCrv, self.M.lowerCrv )
         
         #9: parent constraint corner ctl nul to jaw
-        MouthFunc.attachCornerCtls(self.M.cornerCtls, P1, P2, P3)
+        ###create corner pin attr
+        for ctl,clus in zip(self.M.cornerCtls,self.M.cornerClus):
+            cmds.addAttr(ctl, shortName='cornerPin', k=True, defaultValue=0, minValue=-1, maxValue=1)
+                ###add nul2 grp
+            cmds.group(em=True,n=ctl+'_nul2')
+            cmds.parent(ctl+'_nul2',ctl+'_nul',r=True)
+            cmds.parent(ctl+'_orient',ctl+'_nul2')
+            
+            MouthFunc.attachCorner(ctl, clus, P1, P2, P3)
 
-        
+
+
         #10: Parent constraint big cluster to big ctl
         cmds.parentConstraint(self.M.ctl, self.M.clus,mo=True) #bigctl
         
-        MouthFunc.constWithDriver(self.M.jawClusDrvs[0], self.faceUpCtl, self.M.jawClus[0],self.animGrp) #upper
-        MouthFunc.constWithDriver(self.M.jawClusDrvs[1], self.jawCtl, self.M.jawClus[1],self.animGrp) #lower
+        MouthFunc.constWithDriver(self.M.jawClusDrvs[0], self.faceUpCtl, self.M.jawClus[0],self.animGrp) #upper jaw
+        MouthFunc.constWithDriver(self.M.jawClusDrvs[1], self.jawCtl, self.M.jawClus[1],self.animGrp) #lower jaw
+        
+        
+        
         
         '''
         #7: Attach Jaw Clusters to Jaw
@@ -553,13 +559,9 @@ class ConnectCtls():
                 self.B.xfGrp,
                 self.rigGrp)
         except: print('rig_grp parent skipped')
-        
-        try:
-            cmds.parent(
-                self.M.microCtlGrp, self.M.macroCtlGrp, self.M.cornerCtlGrp,
-                self.M.thickCtlGrp, self.N.ctlGrp,
-                self.animGrp)
-        except: print('anim_grp parent skipped')
+
+#self.M.microCtlGrp, self.M.macroCtlGrp, self.M.cornerCtlGrp,self.N.ctlGrp
+
         
 class BindGeo():
     def __init__(self):

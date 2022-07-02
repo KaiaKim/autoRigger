@@ -6,7 +6,7 @@ def _getPosListFromVerts(verts):
         pos = cmds.xform(vert, q=True, ws=True, t=True) #get position from the verts
         posList.append(pos)
     return posList
-
+'''
 def _createLocsOnCurve(names,posList,curv,grpName,newGrp=True):
     ###no create locator when there's already one
     locDicList = []
@@ -50,25 +50,66 @@ def _createLocsOnCurve(names,posList,curv,grpName,newGrp=True):
         loc=i['loc']
         cmds.reorder( loc, back=True )#reorder in hierarchy
         cmds.rename(loc,name)
-
-    
+'''
+def _createJntsOnCurve(names,posList,curv,grpName,newGrp=True):
+    ###no create locator when there's already one
+    posDicList = []
+    if newGrp==True:
+        grp = cmds.group(em=True, n=grpName)
+    else:
+        grp = grpName
         
-def _aimConstLocs(locs,targ,upObj=None):
+    for pos in posList:
+        nearNode = cmds.createNode('nearestPointOnCurve') #create nearestPointOnCurve node
+        #connect position to the nearestPointOnCurve node
+        cmds.connectAttr( curv+'.worldSpace', nearNode+'.inputCurve' )
+        cmds.setAttr( nearNode+'.inPosition', pos[0], pos[1], pos[2], type='double3' )
+
+        cmds.getAttr( nearNode+'.parameter' )#get parameter attribute
+        
+        cmds.select(cl=True)
+        jnt = cmds.joint(rad=.1)#create joint
+        cmds.connectAttr( nearNode+'.position', jnt+'.t' )#feed in position attribute to the translation of the jnt
+        
+        #get parameter
+        param = cmds.getAttr(nearNode+'.parameter')
+    
+        #delete nearestPointOnCurve node
+        cmds.delete(nearNode)
+
+        #create pointOnCurve node
+        pointNode = cmds.createNode('pointOnCurveInfo')
+
+        #connect attributes
+        cmds.connectAttr(curv+'.worldSpace', pointNode+'.inputCurve')
+        cmds.setAttr(pointNode+'.parameter', param)
+        cmds.connectAttr(pointNode+'.position', jnt+'.t')
+        
+        cmds.parent(jnt,grp)
+        
+        posDicList.append( {'jnt':jnt,'param':param} ) #return list of mini dictionaries
+    posDicList.sort(key=lambda t: t['param']) #sort the list with parameter
+    
+    for i,name in zip(posDicList,names):
+        jnt=i['jnt']
+        cmds.reorder( jnt, back=True )#reorder in hierarchy
+        cmds.rename(jnt,name)
+ 
+def _aimConstIterate(locs,targ,upObj=None):
     #Create aim constraint on list of locators
     for loc in locs:
         if upObj == None:
             cmds.aimConstraint(targ, loc, aimVector=[0,0,-1], upVector=[0,1,0], worldUpType='objectrotation', worldUpVector=[0,1,0] )
         else:
             cmds.aimConstraint(targ, loc, aimVector=[0,0,-1], upVector=[0,1,0], worldUpType='objectrotation', worldUpVector=[0,1,0] , worldUpObject=upObj )
-
+''' 
 def _createJntsOnLocs(locs,names,parent): #parent should be a joint
     for loc,name in zip(locs,names):
         cmds.select(cl=True)
         jnt = cmds.joint( n=name, rad=.1 )
         const = cmds.parentConstraint(loc, jnt, mo=False)[0]
         cmds.parent(jnt,parent)
-
-
+'''
 def _createJntsOnCVs(names,curv,grpName,newGrp=True):
     jntList = []
     if newGrp==True:
@@ -83,16 +124,18 @@ def _createJntsOnCVs(names,curv,grpName,newGrp=True):
         cmds.select(cl=True)
         poc1 = cmds.createNode('pointOnCurveInfo')
         cmds.connectAttr(curvShape+'.worldSpace[0]', poc1+'.inputCurve', f=True)
-        param = num 
+        cmds.setAttr(poc1+'.turnOnPercentage',1)
+        param = num/11 
         cmds.setAttr(poc1 + '.parameter', param)
 
         jnt= cmds.joint(rad=.3)
+        
         cmds.connectAttr(poc1+'.position', jnt+'.t')
         
         cmds.parent(jnt,grp)
         jntList.append(jnt)
 
-    jntList = jntList[-1:] + jntList[:-1] #param 0 attachs to cv[1] for somehow, so I shifted last element to first position in list.
+    #jntList = jntList[-1:] + jntList[:-1] #param 0 attachs to cv[1] for somehow, so I shifted last element to first position in list.
     for name,jnt in zip(names,jntList):
         cmds.rename(jnt,name)
         
@@ -131,25 +174,28 @@ def _createFolsOnBindmeshes(names,bindmeshes,grpName):
         
         cmds.parent(folTrans, grp)
 
+try:cmds.select('baba')
+except:print('no group named baba')
+
 def _createCtlGrp(targList, nameList, grpName, newGrp=True, ori=True, shape='circle', size=1, const=True, mid=False):
     #Nurv curves, orient group, offset group, nul group
     if type(targList)!=list: targList = [targList]
     if type(nameList)!=list: nameList = [nameList]
     
-    if newGrp==True: bigGrp = cmds.group(em=True, n=grpName)
-    else: bigGrp = grpName
+    try:cmds.select(grpName)
+    except: cmds.group(em=True, n=grpName)
     
     for name,targ in zip(nameList,targList):
         ctl = _customNURBScircle(shape, size, name)
         
-        nulGrp = cmds.group(ctl, n = ctl+'_nul')
+        nul = cmds.group(ctl, n = ctl+'_nul')
         if ori==True: orientGrp = cmds.group(ctl, n=ctl+'_orient')
         
-        constNode = cmds.parentConstraint(targ, nulGrp, mo=False)
+        constNode = cmds.parentConstraint(targ, nul, mo=False)
         if const==False: cmds.delete(constNode)
-        if mid==True: cmds.move(0,nulGrp,x=True,ws=True)
+        if mid==True: cmds.move(0,nul,x=True,ws=True)
         
-        cmds.parent(nulGrp,bigGrp)
+        cmds.parent(nul,grpName)
 
 def _90dOrient(ctlList):
     for i in ctlList:

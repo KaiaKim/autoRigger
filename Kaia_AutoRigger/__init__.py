@@ -178,6 +178,20 @@ run01.createWindow()
 
 ###DQ skin > attibute editor > support Non-rigid transformation ON
 
-### build directory (with varient)
-### set directory UI
-### Break data files
+### mouth macro ctl
+### upperteeth parent constraint jawBind & mouthClus(jawCtl & mouthCtl) follow attr
+### lowerteeth nul2 parent constraint (double transform w faceLower ctl)
+### cheek lower follow
+### inner brow ctl
+### mCorner ctl double transform with lowerCtl (need driver setup)
+
+
+
+
+
+#no loc
+### linear mouth crv
+#no hierarchy on lip jnt, mouth jnt
+#mouth driver jnt order
+#mouth&eye is initially the same, but mouth has bindmesh following driver jnts
+#lipCvCls should follow follicles on bindmesh
