@@ -1,0 +1,188 @@
+###-----------------------------------------------------CLASS---------------------------------------------------
+class template():
+    def __init__(self):
+        #These names are from the template file. No change this!
+        self.allBinds = ['face_bind', 'face_upper_bind', 'brow_l_bind', 'brow_inner_l_bind', 'brow_corrugator_l_bind', 'brow_peak_l_bind', 'brow_r_bind', 'brow_inner_r_bind', 'brow_corrugator_r_bind', 'brow_peak_r_bind', 'teeth_upper_bind', 'eye_socket_l_bind', 'eye_l_bind', 'eye_socket_r_bind', 'eye_r_bind', 'cheek_upper_l_bind', 'cheek_upper_r_bind', 'face_lower_bind', 'nose_bridge_bind', 'nose_bind', 'sneer_l_bind', 'nostril_l_bind', 'sneer_r_bind', 'nostril_r_bind', 'cheek_r_bind', 'cheek_l_bind', 'jaw_trans_bind', 'jaw_bind', 'jaw_tip_bind', 'teeth_lower_bind', 'cheek_lower_r_bind', 'cheek_lower_l_bind', 'tongue_01_bind', 'tongue_02_bind', 'tongue_03_bind', 'tongue_04_bind', 'tongue_05_bind', 'tongue_06_bind', 'tongue_07_bind'] 
+        self.faceBind = 'face_bind'
+        self.faceUpBind = 'face_upper_bind' 
+        self.faceLoBind = 'face_lower_bind' 
+
+        self.noseBigBind = 'nose_bind'
+        self.noseBridgeBind = 'nose_bridge_bind'
+        self.sneerBinds = ['sneer_r_bind','sneer_l_bind']
+        self.nostrilBinds = ['nostril_r_bind','nostril_l_bind']
+        self.noseBinds = [self.noseBigBind] + self.sneerBinds + self.nostrilBinds
+        
+        self.jawBind = 'jaw_bind'
+        self.jawTipBind = 'jaw_tip_bind'
+        
+        self.eyeSocBinds = ['eye_socket_r_bind','eye_socket_l_bind'] 
+        self.eyeBinds = ['eye_r_bind','eye_l_bind']
+        
+        self.browBigBinds = ['brow_r_bind','brow_l_bind']
+        self.browInBinds = ['brow_inner_r_bind','brow_inner_l_bind']
+        self.browPeakBinds = ['brow_peak_r_bind','brow_peak_l_bind']
+        self.browCorBinds = ['brow_corrugator_r_bind','brow_corrugator_l_bind']
+        self.browBinds = self.browBigBinds + self.browInBinds + self.browPeakBinds + self.browCorBinds
+        
+        self.cheekUpperBinds = ['cheek_upper_r_bind','cheek_upper_l_bind']
+        self.cheekMidBinds = ['cheek_r_bind','cheek_l_bind']
+        self.cheekLowerBinds = ['cheek_lower_r_bind','cheek_lower_l_bind']
+        self.cheekBinds = self.cheekUpperBinds + self.cheekMidBinds + self.cheekLowerBinds
+
+class mouth():
+    def __init__(self,verts):
+        self.upperCrv = 'lip_upper_curve' #No change this!
+        self.lowerCrv = 'lip_lower_curve' #No change this!
+        self.crv = 'mouth_curve' #No change this!
+            ###
+        self.upperBindGrp = 'lip_upper_bind_grp' #Grp means group name
+        self.lowerBindGrp = 'lip_lower_bind_grp'
+        self.upperBinds = self._lipBinds(verts['lipUpper'], prefix='lip_upper')
+        self.lowerBinds = self._lipBinds(verts['lipLower'], prefix='lip_lower')
+        self.binds = self.upperBinds + self.lowerBinds
+        self.tongueBinds = ['tongue_01_bind', 'tongue_02_bind', 'tongue_03_bind', 'tongue_04_bind', 'tongue_05_bind', 'tongue_06_bind', 'tongue_07_bind']
+        self.teethBinds = ['teeth_upper_bind','teeth_lower_bind']
+        
+        driverList = ['corner_r','upper_00_r','upper_01_r','upper_m','upper_01_l','upper_00_l','corner_l','lower_00_l','lower_01_l','lower_m','lower_01_r','lower_00_r']
+        self.drivGrp = 'mouth_driver_grp'
+        self.drivs = ['mouth_'+d+'_driver' for d in driverList]
+        self.lipDrivGrp = 'lip_driver_grp'
+        self.lipDrivs = ['lip_'+d+'_driver' for d in driverList]
+        self.bindmeshesGrp = 'mouth_bindmesh_grp'
+        self.bindmeshes = ['mouth_'+d+'_bindmesh' for d in driverList]
+        self.folGrp = 'mouth_fol_grp'
+        self.fols = ['mouth_'+d+'_fol' for d in driverList]
+        
+        self.clusGrp = 'mouth_cls_grp'
+        self.clus = 'mouth_cls'
+        self.jawClus = ['jaw_upper_cls','jaw_lower_cls']
+        self.jawClusDrvs = ['jaw_upper_clsDriver','jaw_lower_clsDriver']
+        self.cornerClus = ['mCorner_r_cls','mCorner_l_cls']
+        self.lipClus = ['mouth_'+d+'_cls' for d in driverList]
+            ###
+        self.ctl = 'mouth_ctl'
+        self.microCtlGrp = 'lip_micro_ctl_grp'
+        self.microCtls =  ['lip_'+d+'_ctl' for d in driverList]
+        self.macroCtlGrp = 'lip_macro_ctl_grp'
+        self.macroFols = [d for d in self.fols if '_m_' in d] #'mouth_upper_m_fol','mouth_lower_m_fol'
+        self.macroCtls = [d.replace('fol','ctl') for d in self.macroFols]
+        self.thickCtlGrp = 'lip_thick_ctl_grp'
+        self.thickCtls = ['lip_thick_upper_ctl','lip_thick_lower_ctl']
+        #self.cornerCtlGrp = 'mouth_corner_ctl_grp'
+        self.cornerFols = [d for d in self.fols if '_corner_' in d]
+        self.cornerCtls = [d.replace('fol','ctl') for d in self.cornerFols]
+        self.tongueCtlGrp = 'tongue_ctl_grp'
+        self.teethCtls = ['teeth_upper_ctl','teeth_lower_ctl']
+        self.tongueCtls = [d.replace('bind','ctl') for d in self.tongueBinds]
+            ###
+        self.blendCrvGrp = 'mouth_blend_crv_grp'
+        suffixList = ['_wide','_small','_smile','_frown']
+        self.blendCrvs = []
+        for suffix in suffixList:
+            self.blendCrvs.append(self.crv+'_r'+suffix)
+            self.blendCrvs.append(self.crv+'_l'+suffix)
+        self.bsNode = 'mouth_curve_blend'
+        
+    def _lipBinds(self,inList, prefix=''):
+        outList = []
+        for i in range(len(inList)):
+            name = prefix
+            if i==((len(inList)-1)/2):
+                name += '_m_'
+            elif i<((len(inList)-1)/2):
+                name += '_r_%02d'%i #result: 'lip_lower_l_00_loc'
+            elif i>((len(inList)-1)/2):
+                name += '_l_%02d'%( (len(inList)-1)-i ) #result: 'lip_lower_r_00_loc'
+            name += '_bind'
+            
+            outList.append(name) #append the loc name to self.lipLocs list
+        return outList
+
+
+class lid():
+    def __init__(self,verts):
+        lidLs = ['upper_r', 'lower_r', 'upper_l', 'lower_l']
+        self.crvs = ['lid_'+d+'_curve' for d in lidLs] #No change this!
+        self.drivCrvs = ['lid_'+d+'_driver_curve' for d in lidLs] #lid driver curve
+        
+        self.ctlGrp = 'blink_ctl_grp'
+        self.ctls = ['blink_'+d+'_ctl' for d in lidLs]  
+        
+        self.drivGrp = 'blink_driver_grp'
+        self.drivs = [['blink_%s_%d_driver'%(i,d) for d in range(5)] for i in lidLs]
+        self.lidDrivGrp = 'lid_driver_grp'
+        self.lidDrivs = [['lid_%s_%d_driver'%(i,d) for d in range(5)] for i in lidLs]
+        self.microCtlGrp = 'lid_micro_ctl_grp'
+        self.microCtls = [['lid_%s_%d_ctl'%(i,d) for d in range(5)] for i in lidLs]
+        
+        self.rBindGrp = 'lid_r_bind_grp'
+        self.lBindGrp = 'lid_l_bind_grp'
+        self.upperRBinds = self._eyeBinds(verts['lidUpperR'], prefix='lid_upper_r')
+        self.upperLBinds = self._eyeBinds(verts['lidUpperR'], prefix='lid_upper_l') #we're just getting len of the list. left&right doesn't matter
+        self.lowerRBinds = self._eyeBinds(verts['lidLowerR'], prefix='lid_lower_r')
+        self.lowerLBinds = self._eyeBinds(verts['lidLowerR'], prefix='lid_lower_l')
+        self.rBinds = self.upperRBinds + self.lowerRBinds
+        self.lBinds = self.upperLBinds + self.lowerLBinds
+        
+        
+        self.rBlendCrvGrp = 'lid_r_blend_crv_grp'
+        self.lBlendCrvGrp = 'lid_l_blend_crv_grp'
+        suffixList = ['_open','_neutral','_mid','_closed']
+        self.rBlendCrvs = [self.crvs[0]+d for d in suffixList]+[self.crvs[1]+d for d in suffixList]
+        self.lBlendCrvs = [d.replace('_r_','_l_') for d in self.rBlendCrvs]
+        nodeNames = ['upper_r_open','upper_r_closed','lower_r_open','lower_r_closed']
+        self.rBsNodes = ['lid_'+d+'_blend' for d in nodeNames]
+        self.lBsNodes = [d.replace('_r_','_l_') for d in self.rBsNodes]
+        
+    def _eyeBinds(self,inList, prefix=''):
+        outList = []
+        for i in range(len(inList)):
+            name = prefix
+            name += '_%02d' %i #'lower_lid_00_l_bind'
+            name += '_bind'
+            
+            outList.append(name) #append the bind name to self.lipBinds list
+        return outList
+
+
+class eye():
+    def __init__(self,verts):
+            ###
+        self.rotCtl = 'eye_rot_ctl'
+        self.ctls = ['eye_r_ctl','eye_l_ctl']
+        self.aimCtl = 'eye_aim_ctl'
+        self.aimMicroCtls = ['eye_r_aim_ctl','eye_l_aim_ctl']
+        self.pupilCtls = ['eye_r_pupil_ctl','eye_l_pupil_ctl']
+            ###
+        self.rLoft = None
+
+class brow():
+    def __init__(self,verts):
+        self.ctlGrp = 'brow_ctl_grp'
+        self.ctls = ['brow_r_ctl','brow_l_ctl']
+        self.inCtls = ['brow_inner_r_ctl','brow_inner_l_ctl']
+        self.peakCtls = ['brow_peak_r_ctl','brow_peak_l_ctl']
+        
+        self.drv = [d.replace('_ctl','_driver') for d in self.ctls]
+        self.localDrv = [d.replace('_ctl','_localDriver') for d in self.ctls]
+        
+        self.inDrv =[d.replace('_ctl','_driver') for d in self.inCtls]
+        self.inLocalDrv = [d.replace('_ctl','_localDriver') for d in self.inCtls]
+        
+        self.peakDrv =[d.replace('_ctl','_driver') for d in self.peakCtls]
+        self.peakLocalDrv = [d.replace('_ctl','_localDriver') for d in self.peakCtls]
+        
+        self.xfGrp = 'brow_xform_grp'
+        
+class nose():
+    def __init__(self,verts):
+        self.ctlGrp = 'nose_ctl_grp'
+        self.bridgeCtl = 'noseBridge_ctl'
+        self.ctl = 'nose_ctl'
+        self.sneerCtls = ['nose_sneer_r_ctl', 'nose_sneer_l_ctl']
+        self.nostrilCtls = ['nose_nostril_r_ctl', 'nose_nostril_l_ctl']
+        
+        self.bridgeAuto = self.bridgeCtl+'_auto'
+        
+        
