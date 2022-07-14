@@ -1,4 +1,4 @@
-import maya.cmds as cmds
+import maya.cmds as mc
 from functools import partial
 import importlib
 import json
@@ -10,8 +10,7 @@ from Kaia_AutoRigger import DataFunc
 from Kaia_AutoRigger import ModFunc
 from Kaia_AutoRigger import MouthFunc
 from Kaia_AutoRigger import LidFunc
-from Kaia_AutoRigger import EyeFunc
-from Kaia_AutoRigger import BrowFunc
+
 importlib.reload(Namer)
 importlib.reload(Builder)
 importlib.reload(UI)
@@ -19,13 +18,12 @@ importlib.reload(DataFunc)
 importlib.reload(ModFunc)
 importlib.reload(MouthFunc)
 importlib.reload(LidFunc)
-importlib.reload(EyeFunc)
-importlib.reload(BrowFunc)
+
 
 ###-----------------------------------------------------CLASS---------------------------------------------------
 class AutoRigFace(Builder.BuildCtls, Builder.ConnectCtls, Builder.BindGeo, UI.createUI):
     def __init__(self):
-        self.usd = cmds.internalVar(usd=True) #result: C:/Users/user/Documents/maya/2022/scripts/
+        self.usd = mc.internalVar(usd=True) #result: C:/Users/user/Documents/maya/2022/scripts/
         self.mayascripts = '%s/%s' % (self.usd.rsplit('/', 3)[0], 'scripts') #result: C:/Users/user/Documents/maya/scripts
         
         self.winTitle = 'Kaia\'s auto rigger' #this is the title of the window #display name
@@ -43,7 +41,7 @@ class AutoRigFace(Builder.BuildCtls, Builder.ConnectCtls, Builder.BindGeo, UI.cr
     
     def setDir(self,_):
         #get file path
-        self.dir = cmds.fileDialog2(fileFilter="*.json", dialogStyle=1, fm=3, caption ='Set character data directory')[0]
+        self.dir = mc.fileDialog2(fileFilter="*.json", dialogStyle=1, fm=3, caption ='Set character data directory')[0]
         print('Directory:',self.dir)
         
     def importData(self):
@@ -71,7 +69,7 @@ class AutoRigFace(Builder.BuildCtls, Builder.ConnectCtls, Builder.BindGeo, UI.cr
         for i in self.allCrv:
             CVs = ModFunc._getCVs(i)
             allCVs += CVs
-        self.data['bsCrv'] = DataFunc._getTransform(allCVs, t=True, r=False, os=True)    
+        self.data['bsCrv'] = DataFunc._getTransform(allCVs, t=True, r=False, os=True)
         
         #write json files
         with open(self.dir+'/geoNames.json', "w") as wfile: json.dump(self.data['geo'], wfile)
@@ -81,17 +79,17 @@ class AutoRigFace(Builder.BuildCtls, Builder.ConnectCtls, Builder.BindGeo, UI.cr
     
     def assignGeo(self,x,flag):
         if flag=='ass':
-            self.data['geo'][x]=cmds.ls(sl=True)
+            self.data['geo'][x]=mc.ls(sl=True)
             #print(self.data['geo'][x])
         if flag=='sel':
-            cmds.select(self.data['geo'][x])
+            mc.select(self.data['geo'][x])
         
     def assignVerts(self,x,flag):
         if flag=='ass':
-            self.data['verts'][x]=cmds.ls(sl=True,fl=True)
+            self.data['verts'][x]=mc.ls(sl=True,fl=True)
             #print(self.data['verts'][x])
         elif flag=='sel':
-            cmds.select(self.data['verts'][x])
+            mc.select(self.data['verts'][x])
     
     def names(self):
         self.faceRoot = 'face_root'
@@ -100,36 +98,31 @@ class AutoRigFace(Builder.BuildCtls, Builder.ConnectCtls, Builder.BindGeo, UI.cr
         self.bindGrp = 'bind_grp'
         
         #execute namer class object
-        self.J = Namer.template()
+        self.F = Namer.face()
         self.M = Namer.mouth(self.data['verts'])
+        self.C = Namer.cheek()
+        self.T = Namer.teethTongue()
         self.L = Namer.lid(self.data['verts'])
-        self.E = Namer.eye(self.data['verts'])
-        self.B = Namer.brow(self.data['verts'])
-        self.N = Namer.nose(self.data['verts'])
+        self.E = Namer.eye()
+        self.B = Namer.brow()
+        self.N = Namer.nose()
         
-        self.faceCtl = 'face_ctl'
-        self.faceUpCtl = 'face_upper_ctl'
-        self.faceLoCtl = 'face_lower_ctl'
-        self.jawCtl = 'jaw_ctl'
-        self.cheekCtlGrp = 'cheek_ctl_grp'
-        self.cheekCtls = [d.replace('_bind','_ctl') for d in self.J.cheekBinds]
-        self.cheekDrvs = ['cheek_driver_r_nul','cheek_driver_l_nul']
-        
-        self.allCtls = self.M.microCtls + self.M.macroCtls + self.M.cornerCtls + self.L.ctls + self.E.ctls + self.B.ctls + [self.jawCtl] + self.N.sneerCtls + self.N.nostrilCtls
+        self.allBinds = ['face_bind', 'face_upper_bind', 'brow_l_bind', 'brow_inner_l_bind', 'brow_corrugator_l_bind', 'brow_peak_l_bind', 'brow_r_bind', 'brow_inner_r_bind', 'brow_corrugator_r_bind', 'brow_peak_r_bind', 'teeth_upper_bind', 'eye_socket_l_bind', 'eye_l_bind', 'eye_socket_r_bind', 'eye_r_bind', 'cheek_upper_l_bind', 'cheek_upper_r_bind', 'face_lower_bind', 'nose_bridge_bind', 'nose_bind', 'sneer_l_bind', 'nostril_l_bind', 'sneer_r_bind', 'nostril_r_bind', 'cheek_r_bind', 'cheek_l_bind', 'jaw_trans_bind', 'jaw_bind', 'jaw_tip_bind', 'teeth_lower_bind', 'cheek_lower_r_bind', 'cheek_lower_l_bind', 'tongue_01_bind', 'tongue_02_bind', 'tongue_03_bind', 'tongue_04_bind', 'tongue_05_bind', 'tongue_06_bind', 'tongue_07_bind'] 
+        self.allCtls = self.M.lipCtls + self.M.cornerCtls + self.L.ctls + self.E.ctls + self.B.ctls + [self.F.jawCtl] + self.N.sneerCtls
         self.allCrv = self.M.blendCrvs + self.L.rBlendCrvs + self.L.lBlendCrvs
         self.bindSets = {
-            'face': [self.J.faceBind,self.J.faceUpBind,self.J.faceLoBind,self.J.jawBind,self.J.noseBridgeBind]
-                    +self.J.browBinds+self.J.cheekBinds+self.J.noseBinds+self.J.eyeSocBinds
+            'face': [self.F.bind,self.F.upBind,self.F.loBind,self.F.jawBind,self.N.bridgeBind]
+                    +self.B.binds+self.C.binds+self.N.binds+self.E.socBinds
                     +self.L.rBinds+self.L.lBinds
                     +self.M.binds,
-            'brow': self.J.browBinds,
+            'brow': self.B.binds,
             'lash': self.L.rBinds+self.L.lBinds,
-            'eyeR': [self.J.eyeBinds[0]],
-            'eyeL': [self.J.eyeBinds[1]],
-            'upTeeth': [self.M.teethBinds[0]],
-            'loTeeth': [self.M.teethBinds[1]],
-            'tongue': self.M.tongueBinds,
-            'extra': [self.J.faceUpBind]
+            'eyeR': [self.E.binds[0]],
+            'eyeL': [self.E.binds[1]],
+            'upTeeth': [self.T.teethBinds[0]],
+            'loTeeth': [self.T.teethBinds[1]],
+            'tongue': self.T.tongueBinds,
+            'extra': [self.F.upBind]
         }
 
     
@@ -144,7 +137,6 @@ class AutoRigFace(Builder.BuildCtls, Builder.ConnectCtls, Builder.BindGeo, UI.cr
         for i in mirrorData:
             i['name'] = i['name'].replace('_r_','_l_')
             (rx,ry,rz) = i['rot']
-            
             if 'blink' in i['name']:
                 i['rot'] = (-rx,-ry, rz)
             else:
@@ -178,20 +170,3 @@ run01.createWindow()
 
 ###DQ skin > attibute editor > support Non-rigid transformation ON
 
-### mouth macro ctl
-### upperteeth parent constraint jawBind & mouthClus(jawCtl & mouthCtl) follow attr
-### lowerteeth nul2 parent constraint (double transform w faceLower ctl)
-### cheek lower follow
-### inner brow ctl
-### mCorner ctl double transform with lowerCtl (need driver setup)
-
-
-
-
-
-#no loc
-### linear mouth crv
-#no hierarchy on lip jnt, mouth jnt
-#mouth driver jnt order
-#mouth&eye is initially the same, but mouth has bindmesh following driver jnts
-#lipCvCls should follow follicles on bindmesh

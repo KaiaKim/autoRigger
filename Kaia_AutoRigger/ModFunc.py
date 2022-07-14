@@ -1,300 +1,197 @@
-import maya.cmds as cmds
+import maya.cmds as mc
 
 def _getPosListFromVerts(verts):
     posList = []
     for vert in verts:
-        pos = cmds.xform(vert, q=True, ws=True, t=True) #get position from the verts
+        pos = mc.xform(vert, q=True, ws=True, t=True) #get position from the verts
         posList.append(pos)
     return posList
-'''
-def _createLocsOnCurve(names,posList,curv,grpName,newGrp=True):
-    ###no create locator when there's already one
-    locDicList = []
-    if newGrp==True:
-        grp = cmds.group(em=True, n=grpName)
-    else:
-        grp = grpName
-        
-    for pos in posList:
-        nearNode = cmds.createNode('nearestPointOnCurve') #create nearestPointOnCurve node
-        #connect position to the nearestPointOnCurve node
-        cmds.connectAttr( curv+'.worldSpace', nearNode+'.inputCurve' )
-        cmds.setAttr( nearNode+'.inPosition', pos[0], pos[1], pos[2], type='double3' )
 
-        cmds.getAttr( nearNode+'.parameter' )#get parameter attribute
-
-        loc = cmds.spaceLocator()[0]#create space locator
-        _localScaleLoc(loc,.2)
-        cmds.connectAttr( nearNode+'.position', loc+'.t' )#feed in position attribute to the translation of the loc
-        
-        #get parameter
-        param = cmds.getAttr(nearNode+'.parameter')
-    
-        #delete nearestPointOnCurve node
-        cmds.delete(nearNode)
-
-        #create pointOnCurve node
-        pointNode = cmds.createNode('pointOnCurveInfo')
-
-        #connect attributes
-        cmds.connectAttr(curv+'.worldSpace', pointNode+'.inputCurve')
-        cmds.setAttr(pointNode+'.parameter', param)
-        cmds.connectAttr(pointNode+'.position', loc+'.t')
-        
-        cmds.parent(loc,grp)
-        
-        locDicList.append( {'loc':loc,'param':param} ) #return list of mini dictionaries
-    locDicList.sort(key=lambda t: t['param']) #sort the list with parameter
-    
-    for i,name in zip(locDicList,names):
-        loc=i['loc']
-        cmds.reorder( loc, back=True )#reorder in hierarchy
-        cmds.rename(loc,name)
-'''
-def _createJntsOnCurve(names,posList,curv,grpName,newGrp=True):
-    ###no create locator when there's already one
+def _createBindsOnCrv(names,posList,curv,grpName):
+    try:mc.select(grpName)
+    except: mc.group(em=True, n=grpName)
     posDicList = []
-    if newGrp==True:
-        grp = cmds.group(em=True, n=grpName)
-    else:
-        grp = grpName
-        
-    for pos in posList:
-        nearNode = cmds.createNode('nearestPointOnCurve') #create nearestPointOnCurve node
-        #connect position to the nearestPointOnCurve node
-        cmds.connectAttr( curv+'.worldSpace', nearNode+'.inputCurve' )
-        cmds.setAttr( nearNode+'.inPosition', pos[0], pos[1], pos[2], type='double3' )
-
-        cmds.getAttr( nearNode+'.parameter' )#get parameter attribute
-        
-        cmds.select(cl=True)
-        jnt = cmds.joint(rad=.1)#create joint
-        cmds.connectAttr( nearNode+'.position', jnt+'.t' )#feed in position attribute to the translation of the jnt
-        
-        #get parameter
-        param = cmds.getAttr(nearNode+'.parameter')
     
-        #delete nearestPointOnCurve node
-        cmds.delete(nearNode)
-
-        #create pointOnCurve node
-        pointNode = cmds.createNode('pointOnCurveInfo')
-
-        #connect attributes
-        cmds.connectAttr(curv+'.worldSpace', pointNode+'.inputCurve')
-        cmds.setAttr(pointNode+'.parameter', param)
-        cmds.connectAttr(pointNode+'.position', jnt+'.t')
+    for pos in posList:
+        nearNode = mc.createNode('nearestPointOnCurve') #create nearestPointOnCurve node
+        #connect position to the nearestPointOnCurve node
+        mc.connectAttr( curv+'.worldSpace', nearNode+'.inputCurve' )
+        mc.setAttr( nearNode+'.inPosition', pos[0], pos[1], pos[2], type='double3' )
+        mc.getAttr( nearNode+'.parameter' )#get parameter attribute
         
-        cmds.parent(jnt,grp)
+        mc.select(cl=True)
+        jnt = mc.joint(rad=.1)#create joint
+        mc.connectAttr( nearNode+'.position', jnt+'.t' )#feed in position attribute to the translation of the jnt
+        param = mc.getAttr(nearNode+'.parameter') #get parameter
+        mc.delete(nearNode) #delete nearestPointOnCurve node
+        pointNode = mc.createNode('pointOnCurveInfo') #create pointOnCurve node
+
+        mc.connectAttr(curv+'.worldSpace', pointNode+'.inputCurve') #connect attributes
+        mc.setAttr(pointNode+'.parameter', param)
+        mc.connectAttr(pointNode+'.position', jnt+'.t')
+        
+        mc.parent(jnt,grpName)
         
         posDicList.append( {'jnt':jnt,'param':param} ) #return list of mini dictionaries
     posDicList.sort(key=lambda t: t['param']) #sort the list with parameter
     
     for i,name in zip(posDicList,names):
         jnt=i['jnt']
-        cmds.reorder( jnt, back=True )#reorder in hierarchy
-        cmds.rename(jnt,name)
- 
-def _aimConstIterate(locs,targ,upObj=None):
-    #Create aim constraint on list of locators
-    for loc in locs:
-        if upObj == None:
-            cmds.aimConstraint(targ, loc, aimVector=[0,0,-1], upVector=[0,1,0], worldUpType='objectrotation', worldUpVector=[0,1,0] )
-        else:
-            cmds.aimConstraint(targ, loc, aimVector=[0,0,-1], upVector=[0,1,0], worldUpType='objectrotation', worldUpVector=[0,1,0] , worldUpObject=upObj )
-''' 
-def _createJntsOnLocs(locs,names,parent): #parent should be a joint
-    for loc,name in zip(locs,names):
-        cmds.select(cl=True)
-        jnt = cmds.joint( n=name, rad=.1 )
-        const = cmds.parentConstraint(loc, jnt, mo=False)[0]
-        cmds.parent(jnt,parent)
-'''
-def _createJntsOnCVs(names,curv,grpName,newGrp=True):
-    jntList = []
-    if newGrp==True:
-        grp = cmds.group(em=True, n=grpName)
-    elif newGrp==False:
-        grp = grpName
-    
-    curvShape = _getCrvShape(curv)
-    cvs = _getCVs(curv)
-
-    for num,cv in enumerate(cvs):
-        cmds.select(cl=True)
-        poc1 = cmds.createNode('pointOnCurveInfo')
-        cmds.connectAttr(curvShape+'.worldSpace[0]', poc1+'.inputCurve', f=True)
-        cmds.setAttr(poc1+'.turnOnPercentage',1)
-        param = num/11 
-        cmds.setAttr(poc1 + '.parameter', param)
-
-        jnt= cmds.joint(rad=.3)
-        
-        cmds.connectAttr(poc1+'.position', jnt+'.t')
-        
-        cmds.parent(jnt,grp)
-        jntList.append(jnt)
-
-    #jntList = jntList[-1:] + jntList[:-1] #param 0 attachs to cv[1] for somehow, so I shifted last element to first position in list.
-    for name,jnt in zip(names,jntList):
-        cmds.rename(jnt,name)
-        
+        mc.reorder( jnt, back=True )#reorder in hierarchy
+        mc.rename(jnt,name)
 
 
-
-
-def _createBindmeshesOnJnts(names,jnts,grpName):
-    grp = cmds.group(em=True,n=grpName)
-    for jnt,name in zip(jnts,names):
-        pos=cmds.xform(jnt,q=True,ws=True,t=True)
-        
-        bindmesh = cmds.polyPlane(w=.3,h=.3,sw=1,sh=1,n=name)[0]
-        cmds.move(pos[0],pos[1],pos[2],bindmesh)
-        cmds.makeIdentity(bindmesh, apply=True) #freeze transformation. If I don't do this, follicles won't attach
-        cmds.delete(bindmesh,constructionHistory=True)
-        
-        cmds.skinCluster(jnt,bindmesh,n='bindMesh_skinCluster',tsb=True)#tsb means toSelectedBones
-        
-        cmds.parent(bindmesh,grp)
-
-    
-def _createFolsOnBindmeshes(names,bindmeshes,grpName):
-    grp = cmds.group(em=True, n=grpName)
-    for bindmesh,name in zip(bindmeshes,names):
-        folShape = cmds.createNode('follicle', n=name+'_shape' )
-        folTrans = cmds.listRelatives(folShape, p=1)[0]
-        folTrans = cmds.rename(folTrans, name)
-        bmShape = cmds.listRelatives(bindmesh, type='mesh')[0]
-
-        cmds.connectAttr(bmShape+'.worldMesh', folShape+'.inputMesh')
-        cmds.connectAttr(folShape+'.outTranslate', folTrans+'.t')
-        cmds.connectAttr(folShape+'.outRotate', folTrans+'.r')
-        cmds.setAttr(folShape+'.parameterU', .5)
-        cmds.setAttr(folShape+'.parameterV', .5)
-        
-        cmds.parent(folTrans, grp)
-
-try:cmds.select('baba')
-except:print('no group named baba')
-
-def _createCtlGrp(targList, nameList, grpName, newGrp=True, ori=True, shape='circle', size=1, const=True, mid=False):
-    #Nurv curves, orient group, offset group, nul group
+def _createCtlGrp(targList, nameList, grp, ori=True, shape='circle', size=1, opm=False, mid=False):
     if type(targList)!=list: targList = [targList]
     if type(nameList)!=list: nameList = [nameList]
     
-    try:cmds.select(grpName)
-    except: cmds.group(em=True, n=grpName)
+    if type(grp)!=list:
+        try:mc.select(grp)
+        except: mc.group(em=True, n=grp)
     
-    for name,targ in zip(nameList,targList):
-        ctl = _customNURBScircle(shape, size, name)
+    for i,targ in enumerate(targList):
+        ctl = _customNURBScircle(shape, size, nameList[i])
+        nul = mc.group(ctl, n = ctl+'_nul')
+        if ori==True: orientGrp = mc.group(ctl, n=ctl+'_orient')
         
-        nul = cmds.group(ctl, n = ctl+'_nul')
-        if ori==True: orientGrp = cmds.group(ctl, n=ctl+'_orient')
+        if opm==True:
+            mc.connectAttr(targ+'.xformMatrix',nul+'.offsetParentMatrix')
+        else:
+            const1 = mc.parentConstraint(targ, nul, mo=False)
+            mc.delete(const1)
+        if mid==True: mc.move(0,nul,x=True,ws=True)
         
-        constNode = cmds.parentConstraint(targ, nul, mo=False)
-        if const==False: cmds.delete(constNode)
-        if mid==True: cmds.move(0,nul,x=True,ws=True)
+        if type(grp)!=list:mc.parent(nul,grp)
+        else:mc.parent(nul,grp[i])
         
-        cmds.parent(nul,grpName)
 
-def _90dOrient(ctlList):
-    for i in ctlList:
-        cmds.rotate(90,0,0,i+'_orient')
+def _createAutoGrp(child,parent,name=None):
+    if name==None: name=child+'_auto'
+    auto=mc.group(em=True,n=name)
+    mc.parent(auto,parent,r=True)
+    mc.parent(child,auto)
 
-def _scaleOrient(ctlList):
+def _handleToggle(ctl):
+    shape=_getCrvShape(ctl)
+    mc.addAttr(ctl, sn='handle', k=True, dv=1, at='bool')
+    mc.connectAttr(ctl+'.handle',ctl+'.displayHandle')
+    rev1=mc.createNode('reverse')
+    mc.connectAttr(ctl+'.handle',rev1+'.inputX')
+    mc.connectAttr(rev1+'.outputX',shape+'.visibility')
+
+def _scaleOrient(ctlList,s=(-1,1,1)):
     for i in ctlList:
-        scaleVal = [1,1,1]
-        if '_lower_' in i:
-            #scaleVal[1] = -1 #Y value is -1 
-            pass
         if '_l_' in i:
-            scaleVal[0] = -1 #X value is -1
-        
-        cmds.scale(scaleVal[0],scaleVal[1],scaleVal[2],i+'_orient')
+            mc.scale(s[0],s[1],s[2],i+'_orient')
+            
+    
 
 def _offsetCtls(ctlList, r=(0,0,0), s=(1,1,1), t=(0,0,0)):
+    if type(ctlList)!=list: ctlList = [ctlList]
     for ctl in ctlList:
         CVs = _getCVs(ctl)
-        cmds.rotate(r[0],r[1],r[2], CVs, r=True)
-        cmds.scale(s[0],s[1],s[2], CVs, r=True)
-        cmds.move(t[0],t[1],t[2], CVs, r=True)
+        mc.rotate(r[0],r[1],r[2], CVs, r=True)
+        mc.scale(s[0],s[1],s[2], CVs, r=True)
+        mc.move(t[0],t[1],t[2], CVs, r=True)
         
     
 def _normalizeCtls(ctls,val=(1,1,1)):
     val = list(val)
     for i in ctls:
-        cmds.scale(1/val[0], 1/val[1], 1/val[2],i)
-        cmds.scale(val[0], val[1], val[2], i+'_orient',r=True)
+        _offsetCtls(i, s=(1/val[0], 1/val[1], 1/val[2]))
+        mc.scale(val[0], val[1], val[2], i+'_orient',r=True)
 
+def _bindSkin(jnts,geos,maxi=4):
+    if type(geos)!=list: geos = [geos]
+    mc.select(jnts,geos)
+    for geo in geos:
+        try:mc.skinCluster(tsb=True,mi=maxi,sm=0,n=geo+'_skinCluster')#name the skinCluster based on geo!
+        except: print('###'+ geo +' is already skinned ###')
+
+def _connectTransform(driver,driven):
+    mc.connectAttr(driver+'.t',driven+'.t')
+    mc.connectAttr(driver+'.r',driven+'.r')
+    #mc.connectAttr(driver+'.s',driven+'.s')
 
 def _parentConstIterate(parents,childs):
     for parent,child in zip(parents,childs):
-        cmds.parentConstraint(parent,child,mo=True)
+        const1 = mc.parentConstraint(parent,child,mo=True)
+        mc.setAttr(const1+'.interpType', 2) #shortest
 
 def _parentIterate(parents,childs):
     for parent,child in zip(parents,childs):
-        cmds.parent(child,parent)
+        mc.parent(child,parent)
+
+def _aimConstIterate(locs,targ,upObj=None):
+    for loc in locs:
+        if upObj == None:
+            mc.aimConstraint(targ, loc, aimVector=[0,0,-1], upVector=[0,1,0], worldUpType='objectrotation', worldUpVector=[0,1,0] )
+        else:
+            mc.aimConstraint(targ, loc, aimVector=[0,0,-1], upVector=[0,1,0], worldUpType='objectrotation', worldUpVector=[0,1,0] , worldUpObject=upObj )
 
 def _localScaleLoc(loc,num):
-    locShape = cmds.listRelatives(loc)[0]
-    cmds.setAttr(locShape+'.localScale',num,num,num)
+    locShape = mc.listRelatives(loc)[0]
+    mc.setAttr(locShape+'.localScale',num,num,num)
     
-def _overrideColor(Crvlist, color=(1,1,0)):
-    for crv in Crvlist:
-        shape = cmds.listRelatives(crv, shapes=True)[0]
-        rgb = ('R','G','B')
+def _overrideColor(crvList, color=(1,1,0)):
+    if type(crvList)!=list: crvList = [crvList]
+    for crv in crvList:
+        try:
+            shape = mc.listRelatives(crv, shapes=True)[0]
+            rgb = ('R','G','B')
+            
+            mc.setAttr(shape + '.overrideEnabled',1)
+            mc.setAttr(shape + '.overrideRGBColors',1)
+            
+            for channel, col in zip(rgb, color):
+                mc.setAttr(shape + '.overrideColor%s' %channel, col)
+        except:print('ERROR: _overrideColor:',crv,'is not curve')
         
-        cmds.setAttr(shape + '.overrideEnabled',1)
-        cmds.setAttr(shape + '.overrideRGBColors',1)
-        
-        for channel, col in zip(rgb, color):
-            cmds.setAttr(shape + '.overrideColor%s' %channel, col)
-
 def _getCrvShape(crv):
-    return cmds.listRelatives(crv, type = 'nurbsCurve')[0]
+    return mc.listRelatives(crv, type = 'nurbsCurve')[0]
 
 def _getCVs(crv):
-    return cmds.ls(crv + '.cv[*]', fl=1)
+    return mc.ls(crv + '.cv[*]', fl=1)
     
 def _customNURBScircle(shape, size, name):
     if shape=='circle':
-        ctl = cmds.circle(n=name, r=size, d=1)[0] #degree=1(linear)
+        ctl = mc.circle(n=name, r=size, d=1)[0] #degree=1(linear)
     elif shape== 'semiCircle':
-        ctl = cmds.circle(n=name, r=size, d=1)[0]
-        cmds.move(0,ctl+'.cv[3:5]',y=True,a=True)
-        cmds.move(-.5*size,ctl+'.cv[*]',y=True,r=True)
+        ctl = mc.circle(n=name, r=size, d=1)[0]
+        mc.move(0,ctl+'.cv[3:5]',y=True,a=True)
+        mc.move(-.5*size,ctl+'.cv[*]',y=True,r=True)
     elif shape=='square':
-        ctl = cmds.circle(n=name, r=size, sections=4, d=1)[0]
+        ctl = mc.circle(n=name, r=size, sections=4, d=1)[0]
+        mc.rotate(0,0,45,ctl+'.cv[*]')
     elif shape=='triangle':
-        ctl = cmds.circle(n=name, r=size, sections=3, d=1)[0]
-        cmds.move(0,-.25*size,0,ctl+'.cv[*]',r=True)
+        ctl = mc.circle(n=name, r=size, sections=3, d=1)[0]
+        mc.move(0,-.25*size,0,ctl+'.cv[*]',r=True)
     elif shape=='arch':
-        ctl = cmds.circle(n=name, r=size, sections=6, d=0)[0]
-        cmds.move(0,2*size,0,ctl+'.cv[4]',r=True)
-        cmds.move(0,-.3*size,0,ctl+'.cv[*]',r=True)
+        ctl = mc.circle(n=name, r=size, sections=6, d=0)[0]
+        mc.move(0,2*size,0,ctl+'.cv[4]',r=True)
+        mc.move(0,-.3*size,0,ctl+'.cv[*]',r=True)
     elif shape== 'pentagon':
-        ctl = cmds.circle(n=name, r=size, sections=5, d=1)[0]
+        ctl = mc.circle(n=name, r=size, sections=5, d=1)[0]
     else:
         print('wrong shape name')
-    cmds.delete(ctl, constructionHistory=True)
+    mc.delete(ctl, constructionHistory=True)
     return ctl
 
 
-
 def _mirrorObj(name,right):
-    left = cmds.duplicate(right, n=name)[0]
-    cmds.scale(-1,1,1,left)
-    cmds.makeIdentity(left, apply=True)
-    cmds.delete(left, constructionHistory=True)
+    left = mc.duplicate(right, n=name)[0]
+    mc.scale(-1,1,1,left)
+    mc.makeIdentity(left, apply=True)
+    mc.delete(left, constructionHistory=True)
 
 def _mirrorIterate(rightList):
     leftList = []
     for right in rightList:
-        left = cmds.duplicate(right)[0]
-        left = cmds.rename(left,right.replace('_r_','_l_'))
-        cmds.scale(-1,1,1,left)
-        cmds.makeIdentity(left, apply=True)
-        cmds.delete(left, constructionHistory=True)
+        left = mc.duplicate(right)[0]
+        left = mc.rename(left,right.replace('_r_','_l_'))
+        mc.scale(-1,1,1,left)
+        mc.makeIdentity(left, apply=True)
+        mc.delete(left, constructionHistory=True)
         leftList.append(left)
     return leftList
 
@@ -305,31 +202,9 @@ def _mirrorPosX(posList):
         mirList.append((-x,y,z))
     return mirList
 
-### where to put?
-def _createCheekDrv(drvs,targs,parent):
-    for drv,targ in zip(drvs,targs):
-        cmds.group(em=True,w=True,n=drv)
-        cmds.connectAttr(targ+'.worldMatrix',drv+'.offsetParentMatrix')
-        cmds.disconnectAttr(targ+'.worldMatrix',drv+'.offsetParentMatrix')
-        
-        cmds.parent(drv,parent)
-        cmds.makeIdentity(drv,apply=True, t=1)
-        
-        cmds.pointConstraint(targ,drv,mo=False)
+###nose func
 
 
-def _createCheekAuto(ctls,cornerCtls,val):
-    for ctl,cornerCtl in zip(ctls,cornerCtls):
-        name = ctl + '_auto'
-        cmds.group(ctl,n=name)
-        mult = cmds.createNode('multiplyDivide')
-        cmds.connectAttr(cornerCtl+'.t',mult+'.input1')
-        cmds.setAttr(mult+'.input2',val[0],val[1],val[2],type='double3')
-        cmds.connectAttr(mult+'.output',name+'.t')
-    #create node 'multiplyDivide'
-    #connect attr ctl translate > input1
-    #connect attr output > nul translate
-    #customize set attr input2 #initial value = .75
 ###---------test execute--------------------------------------
-
-
+if __name__ == "__main__":
+    pass

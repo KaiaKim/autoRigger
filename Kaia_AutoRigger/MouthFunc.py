@@ -1,4 +1,4 @@
-import maya.cmds as cmds
+import maya.cmds as mc
 import importlib
 
 from Kaia_AutoRigger import ModFunc
@@ -10,134 +10,108 @@ def _createMouthCrv(name, upperCrv, lowerCrv):
     upperCVs = ModFunc._getCVs(upperCrv)
     lowerCVs = ModFunc._getCVs(lowerCrv)
     lowerCVs.reverse() #reverse list order so that it comes back to the start, as a circle
-
     cvList = upperCVs + lowerCVs
 
     sectionCount = 11
-    mouthCrv = cmds.circle(n=name, s=sectionCount, d=1)[0] #create a new curve #cv 0~12
-    cmds.delete(mouthCrv,constructionHistory=True)
+    mouthCrv = mc.circle(n=name, s=sectionCount, d=1)[0] #create a new curve #cv 0~11
+    mc.delete(mouthCrv,constructionHistory=True)
 
     counter = 0 #this is a counter
     for i in range(12): #We're going to iterate through mouth curv(CVs)
-        pos=cmds.xform(cvList[counter], q=True, t=True, ws=True) #get world position from the CV
+        pos=mc.xform(cvList[counter], q=True, t=True, ws=True) #get world position from the CV
         if counter==6: #there's two cvs overlapping on the corner. 6 is the right corner CV.
             counter+=1 #We skip the overlapping cv by adding 1 to the counter
                
         mouthCV = mouthCrv + '.cv[%d]'%i #get mouth CV
-        cmds.move(pos[0],pos[1],pos[2],mouthCV) #snap mouth CV to the position
+        mc.move(pos[0],pos[1],pos[2],mouthCV) #snap mouth CV to the position
 
         counter+=1 #increase counter
 
-
-
-def _2CurvCvCls(names,ctls,upCurv,loCurv):
-    #can use this for lip_upper_curve & lip_lower_curve, or eye_upper_curve & eye_lower_curve
-    clsList = []
-    
-    upCurvShape = ModFunc._getCrvShape(upCurv)
-    loCurvShape = ModFunc._getCrvShape(loCurv)
-    
-    upCVs = ModFunc._getCVs(upCurv)
-    loCVs = ModFunc._getCVs(loCurv)
-    leftCorner = (upCVs.pop(0) , loCVs.pop(0))
-    rightCorner = (upCVs.pop(-1), loCVs.pop(-1))
-    
-    loCVs.reverse()
-
-    cvList = [leftCorner]+upCVs+[rightCorner]+loCVs
-    
-    for cv,name,ctl in zip(cvList,names,ctls):
-        clus = cmds.cluster(cv)
-        clsTrans = clus[1]
-        clsTrans = cmds.rename(clsTrans, name)
+def _createBindmeshesOnJnts(names,jnts,grpName):
+    grp = mc.group(em=True,n=grpName)
+    for jnt,name in zip(jnts,names):
+        pos=mc.xform(jnt,q=True,ws=True,t=True)
+        bindmesh = mc.polyPlane(w=.3,h=.3,sw=1,sh=1,n=name)[0]
+        mc.move(pos[0],pos[1],pos[2],bindmesh)
+        mc.makeIdentity(bindmesh, apply=True) #freeze transformation. If I don't do this, follicles won't attach
+        mc.delete(bindmesh,constructionHistory=True)
+        mc.skinCluster(jnt,bindmesh,n='bindMesh_skinCluster',tsb=True)#tsb means toSelectedBones
         
-        offGrp = cmds.group(clsTrans,n=name+'_offset')
-        cmds.parent(offGrp, ctl) #(child, parent)
+        mc.parent(bindmesh,grp)
+
+    
+def _createUvPin(names,bindmeshes):
+    for bm,name in zip(bindmeshes,names):
+        pin1=mc.createNode('uvPin')
+        pin1=mc.rename(pin1,name)
+        mc.setAttr(pin1+'.coordinate[0].coordinateU', 0.5)
+        mc.setAttr(pin1+'.coordinate[0].coordinateV', 0.5)
+        mc.setAttr(pin1+'.normalAxis', 1) #Y
+        mc.setAttr(pin1+'.tangentAxis', 0) #X
+        mc.connectAttr(bm+'Shape.worldMesh[0]', pin1+'.deformedGeometry')
+        mc.connectAttr(bm+'ShapeOrig.outMesh', pin1+'.originalGeometry')    
 
 
-def constMicroToMacro(inList):
-    for i in inList:
-        if '_m_' in i:
-            nul2 = cmds.group(i+'_orient',n=i+'_nul2') #create nul2 grp
-            macro = i.replace('lip','mouth') #micro_mouth_lower_m_ctl
-            cmds.parentConstraint(macro,nul2,mo=True)
-            
+def _createMouthDrivers(names,curv,grpName):
+    mc.group(em=True, n=grpName)
+    curvShape = ModFunc._getCrvShape(curv)
+    cvs = ModFunc._getCVs(curv)
 
-def _createClsOnEach(names,bindmeshes):
-    for bindmesh,name in zip(bindmeshes,names):
-        clus = cmds.cluster(bindmesh)
-        clsTrans = clus[1]
-        clsTrans = cmds.rename(clsTrans, name)
-        
-def _createClsOnAll(name, bindmeshes, weights=[]):
-    clus = cmds.cluster(bindmeshes)
-    clsTrans = clus[1]
-    clsTrans = cmds.rename(clsTrans, name)
+    for num,cv in enumerate(cvs):
+        mc.select(cl=True)
+        poc1 = mc.createNode('pointOnCurveInfo')
+        mc.connectAttr(curvShape+'.worldSpace[0]', poc1+'.inputCurve', f=True)
+        mc.setAttr(poc1+'.turnOnPercentage',1)
+        mc.setAttr(poc1 + '.parameter', num/11)
+        jnt= mc.joint(rad=.5,n=names[num])
+        mc.connectAttr(poc1+'.position', jnt+'.t')
+        mc.parent(jnt,grpName)
+
+def _lipDrivers(names,pins,ctls,grpName):
+    mc.group(em=True,n=grpName)
+
+    for name,pin,ctl in zip(names,pins,ctls):  
+        mc.select(cl=True)
+        jnt = mc.joint(n=name,rad=.3)#create joint
+        nul = mc.group(jnt,n=name+'_nul')
+        mc.connectAttr(ctl+'_orient.r',nul+'.r')
+        mc.connectAttr(pin+'.outputMatrix[0]',nul+'.offsetParentMatrix')
+        mc.connectAttr(pin+'.outputMatrix[0]',ctl+'_nul'+'.offsetParentMatrix',force=True)
+        ModFunc._connectTransform(ctl,jnt)
+        mc.parent(nul,grpName)
+
+###       
+def _createClsGrp(name, targ, bindmeshes, grpName, weights=[]):
+    try:mc.select(grpName)
+    except: mc.group(em=True, n=grpName)
+    
+    clus = mc.cluster(bindmeshes)[1]
+    clus = mc.rename(clus, name)
+    mc.connectAttr(targ+'.worldInverseMatrix',clus+'.offsetParentMatrix')
+    mc.disconnectAttr(targ+'.worldInverseMatrix',clus+'.offsetParentMatrix')
+    
+    nul = mc.group(em=True, n=name+'_nul')
+    mc.connectAttr(targ+'.worldMatrix',nul+'.offsetParentMatrix')
+    mc.disconnectAttr(targ+'.worldMatrix',nul+'.offsetParentMatrix')
+    
+    mc.parent(clus,nul,r=True)
+    mc.parent(nul,grpName)
     
     if weights != []:
         for bm,val in zip(bindmeshes,weights):
-            cmds.select(bm+'.vtx[*]') #select vertex
-            cmds.percent( name+'Cluster', v=val ) # set percents on the selected items to each value
-        
-def constWithDriver(name,ctl,clus,grp):
-    #create driver
-    cmds.spaceLocator(n=name)
-    #create driver nul
-    cmds.group(name,n=name+'_nul')
-    #match jaw ctl
-    cmds.parent(name+'_nul',ctl,r=True) #or jaw ctl
-    #parent to anim grp
-    cmds.parent(name+'_nul',grp)
-    #connect translate, rotate
-    cmds.connectAttr(ctl+'.t',name+'.t')
-    cmds.connectAttr(ctl+'.r',name+'.r')
-    
-    cmds.parentConstraint(name,clus,mo=True)
-    
-
-def attachCorner(ctl,clus,P1,P2,P3):
-    ###parent const clus to p1,p2
-    clsConst = cmds.parentConstraint(P1, P2, clus,mo=True)[0]
-    cmds.setAttr(clsConst+'.interpType',2)
-    ###parent const nul to p1,p2
-    const1 = cmds.parentConstraint(P1,P2,ctl+'_nul',mo=True)[0]
-    cmds.setAttr(const1+'.interpType',2) #Interpolation Type: Shortest
-    ###parent const nul2 to p3
-    const2 = cmds.parentConstraint(P3,ctl+'_nul2',mo=True)[0]
-     ##break connection: constraint parent inverse matrix
-    cmds.disconnectAttr(ctl+'_nul2'+'.parentInverseMatrix',const2+'.constraintParentInverseMatrix')
-    cmds.setAttr(const2+'.interpType',2)
-
-    #set range node
-    setRanNode = cmds.createNode('setRange')
-    #cornerPin >> valueX
-    cmds.connectAttr(ctl+'.cornerPin',setRanNode+'.valueX')
-    # minX 0 maxX 1, oldMinX -1 oldMaxX 1
-    cmds.setAttr(setRanNode+'.minX',0)
-    cmds.setAttr(setRanNode+'.maxX',1)
-    cmds.setAttr(setRanNode+'.oldMinX',-1)
-    cmds.setAttr(setRanNode+'.oldMaxX',1)
-    
-    #outValueX >> face_Lower_bindW0
-    cmds.connectAttr(setRanNode+'.outValueX',const1+'.'+P1+'W0')
-    cmds.connectAttr(setRanNode+'.outValueX',clsConst+'.'+P1+'W0')
-    #outValueX >> inputX, outputX >> jaw_bindW1
-    revNode = cmds.createNode('reverse') #reverse node
-    cmds.connectAttr(setRanNode+'.outValueX',revNode+'.inputX')
-    cmds.connectAttr(revNode+'.outputX',const1+'.'+P2+'W1')
-    cmds.connectAttr(revNode+'.outputX',clsConst+'.'+P2+'W1')
-    
-       
+            mc.select(bm+'.vtx[*]') #select vertex
+            mc.percent( name+'Cluster', v=val ) # set percents on the selected items to each value
+           
 def _createBsCrv(orig,names,grpName):
-    grp = cmds.group(em=True,n=grpName)
+    grp = mc.group(em=True,n=grpName)
     for name in names:
-        crv = cmds.duplicate(orig, n=name)[0]
-        cmds.parent(crv,grp)
+        crv = mc.duplicate(orig, n=name)[0]
+        mc.parent(crv,grp)
 
 def _createBsNode(name, orig, targList):
-    bs = cmds.blendShape(orig, n=name, o='local')[0] #o is origin
+    bs = mc.blendShape(orig, n=name, o='local')[0] #o is origin
     for num,targ in enumerate(targList):
-        cmds.blendShape(bs, e=True, t=(orig, num, targ, 1.0) )
+        mc.blendShape(bs, e=True, t=(orig, num, targ, 1.0) )
 
 def _setBsCvWeight(bs):
     for i in range(8):
@@ -151,8 +125,8 @@ def _setBsCvWeight(bs):
             elif j in [4,5,6,7,8]: #right side vertex
                 if i%2==0: #i is 0,2,4,6. right side target
                     val=0
-            cmds.setAttr(bs+'.inputTarget[0].inputTargetGroup[%d].targetWeights[%d]'%(i,j), val)
-            #myVal = cmds.getAttr('mouth_curve_blend.inputTarget[0].inputTargetGroup[%d].targetWeights[%d]'%(i,j))
+            mc.setAttr(bs+'.inputTarget[0].inputTargetGroup[%d].targetWeights[%d]'%(i,j), val)
+            #myVal = mc.getAttr('mouth_curve_blend.inputTarget[0].inputTargetGroup[%d].targetWeights[%d]'%(i,j))
             #print('targetGrp:',i, 'targetW:', j, myVal)
             
             
@@ -171,7 +145,7 @@ def _symmetricMouthCrv(crvList):
         outList += posList
     return outList
 
-def _connectCornerCtrl(mCornerCtls, blendCrvs, bs):
+def _connectBs(mCornerCtls, blendCrvs, bs):
     #rCtl = mCornerCtls[0]
     #lCtl = mCornerCtls[1]
     #blendCrvs = 
@@ -179,27 +153,27 @@ def _connectCornerCtrl(mCornerCtls, blendCrvs, bs):
     #[ 0     1     2      3      4      5      6      7      ]
     for num,ctl in enumerate(mCornerCtls):
         ###
-        clp = cmds.createNode('clamp')
-        cmds.setAttr(clp+'.maxR',10)
-        cmds.setAttr(clp+'.minG',-10)
-        cmds.connectAttr(ctl+'.tx',clp+'.inputR')
-        cmds.connectAttr(ctl+'.tx',clp+'.inputG')
-        cmds.connectAttr(clp+'.outputR',bs+'.'+blendCrvs[0+num]) #0 or 1
+        clp = mc.createNode('clamp')
+        mc.setAttr(clp+'.maxR',10)
+        mc.setAttr(clp+'.minG',-10)
+        mc.connectAttr(ctl+'.tx',clp+'.inputR')
+        mc.connectAttr(ctl+'.tx',clp+'.inputG')
+        mc.connectAttr(clp+'.outputR',bs+'.'+blendCrvs[2+num]) #2 or 3
         
-        mul = cmds.createNode('multDoubleLinear')
-        cmds.setAttr(mul+'.input2',-1)
-        cmds.connectAttr(clp+'.outputG',mul+'.input1')
-        cmds.connectAttr(mul+'.output',bs+'.'+blendCrvs[2+num]) #2 or 3
+        mul = mc.createNode('multDoubleLinear')
+        mc.setAttr(mul+'.input2',-1)
+        mc.connectAttr(clp+'.outputG',mul+'.input1')
+        mc.connectAttr(mul+'.output',bs+'.'+blendCrvs[0+num]) #0 or 1
         ###
-        rng = cmds.createNode('setRange')
-        cmds.setAttr(rng+'.minX',10)
-        cmds.setAttr(rng+'.oldMinX',-10)
-        cmds.setAttr(rng+'.maxY',10)
-        cmds.setAttr(rng+'.oldMaxY',10)
-        cmds.connectAttr(ctl+'.ty',rng+'.valueX')
-        cmds.connectAttr(ctl+'.ty',rng+'.valueY')
-        cmds.connectAttr(rng+'.outValueX',bs+'.'+blendCrvs[6+num]) #6 or 7
-        cmds.connectAttr(rng+'.outValueY',bs+'.'+blendCrvs[4+num]) #4 or 5
+        rng = mc.createNode('setRange')
+        mc.setAttr(rng+'.minX',10)
+        mc.setAttr(rng+'.oldMinX',-10)
+        mc.setAttr(rng+'.maxY',10)
+        mc.setAttr(rng+'.oldMaxY',10)
+        mc.connectAttr(ctl+'.ty',rng+'.valueX')
+        mc.connectAttr(ctl+'.ty',rng+'.valueY')
+        mc.connectAttr(rng+'.outValueX',bs+'.'+blendCrvs[6+num]) #6 or 7
+        mc.connectAttr(rng+'.outValueY',bs+'.'+blendCrvs[4+num]) #4 or 5
         
     
 def _matchCrvRtoL(posList):
@@ -211,3 +185,37 @@ def _matchCrvRtoL(posList):
         l['pos'] = r['pos']
     outList = rPosList+lPosList
     return outList
+    
+def _connectBigClus(C1,P1,P2):
+    mm1 = mc.createNode('multMatrix')
+    mc.connectAttr(P1+'.matrix',mm1+'.matrixIn[0]')
+    mc.connectAttr(P2+'.matrix',mm1+'.matrixIn[1]')
+    dm1 = mc.createNode('decomposeMatrix')
+    mc.connectAttr(mm1+'.matrixSum',dm1+'.inputMatrix')
+    mc.connectAttr(dm1+'.outputTranslate',C1+'.t')
+    mc.connectAttr(dm1+'.outputRotate',C1+'.r')
+
+def _cornerCtls(ctl,clus,P1,P2):
+    auto=ctl+'_auto'
+    bm1 = mc.createNode('blendMatrix')
+    mc.connectAttr(P2+'.matrix',bm1+'.target[0].targetMatrix')
+    mc.connectAttr(P1+'.matrix',bm1+'.inputMatrix')
+    mc.setAttr(bm1+'.target[0].weight',.5)
+    dm1 = mc.createNode('decomposeMatrix')
+    mc.connectAttr(bm1+'.outputMatrix',dm1+'.inputMatrix')
+    mc.connectAttr(dm1+'.outputRotate',auto+'.r') #connect ctl auto
+    mc.connectAttr(dm1+'.outputRotate',clus+'_nul'+'.r') #connect clus nul
+    
+    #add corner pin attr
+    mc.addAttr(ctl, sn='cornerPin', k=True, dv=0, min=-1, max=1)
+    #set range node
+    ran1 = mc.createNode('setRange')
+    #cornerPin >> valueX
+    mc.connectAttr(ctl+'.cornerPin',ran1+'.valueX')
+    # minX 0 maxX 1, oldMinX -1 oldMaxX 1
+    mc.setAttr(ran1+'.minX',0)
+    mc.setAttr(ran1+'.maxX',1)
+    mc.setAttr(ran1+'.oldMinX',-1)
+    mc.setAttr(ran1+'.oldMaxX',1)
+    #outValueX >> face_Lower_bindW0
+    mc.connectAttr(ran1+'.outValueX',bm1+'.target[0].weight')

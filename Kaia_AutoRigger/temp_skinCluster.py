@@ -1,6 +1,6 @@
 import maya.cmds as cmds
 
-#cmds.ls(sl=True)
+#mc.ls(sl=True)
 
 #button for select bind joints
 #template names + lid jnts + lip jnts
@@ -38,40 +38,40 @@ jacketGeo = ['jacket_lo', 'jacket_mid', 'jacket_hi']
 jacketBind = ['Neck_M', 'Chest_M', 'Scapula_R', 'Shoulder_R', 'ShoulderPart1_R', 'ShoulderPart2_R', 'Elbow_R', 'ElbowPart1_R', 'ElbowPart2_R', 'Wrist_R'] #
 
 DaisyDressBind = ['Root_M', 'Hip_R', 'HipPart1_R', 'RootPart1_M', 'RootPart2_M', 'Spine1_M', 'Spine1Part1_M', 'Spine1Part2_M', 'Chest_M', 'Neck_M', 'NeckPart1_M', 'Scapula_R', 'Shoulder_R', 'ShoulderPart1_R', 'ShoulderPart2_R', 'Elbow_R', 'ElbowPart1_R', 'ElbowPart2_R', 'Wrist_R', 'Scapula_L', 'Shoulder_L', 'ShoulderPart1_L', 'ShoulderPart2_L', 'Elbow_L', 'ElbowPart1_L', 'ElbowPart2_L', 'Wrist_L', 'Hip_L', 'HipPart1_L'] #
-cmds.select(DaisyDressBind,add=True)
+mc.select(DaisyDressBind,add=True)
 #########################################################################################
 #bind jacket
 for geo in jacketGeo:
-    cmds.skinCluster(jacketBind,geo,tsb=True,mi=4,sm=1)
+    mc.skinCluster(jacketBind,geo,tsb=True,mi=4,sm=1)
 
 #bind face
-cmds.select(DaisyfaceJntList,faceGeo)
-cmds.skinCluster(tsb=True,mi=4,sm=1)
+mc.select(DaisyfaceJntList,faceGeo)
+mc.skinCluster(tsb=True,mi=4,sm=1)
 
 #bind lash
-cmds.select(lidJntList,lashGeo)
-cmds.skinCluster(tsb=True,mi=2,sm=1)
+mc.select(lidJntList,lashGeo)
+mc.skinCluster(tsb=True,mi=2,sm=1)
 
 #bind brow
-cmds.select(browGeo,browJntList)
-cmds.skinCluster(tsb=True,mi=4,sm=1)
+mc.select(browGeo,browJntList)
+mc.skinCluster(tsb=True,mi=4,sm=1)
 
 #bind eyes
 for geo in eyeRGeo:
-    cmds.skinCluster(eyeRBind,geo,tsb=True,mi=1,sm=0)
+    mc.skinCluster(eyeRBind,geo,tsb=True,mi=1,sm=0)
 for geo in eyeLGeo:
-    cmds.skinCluster(eyeLBind,geo,tsb=True,mi=1,sm=0)
+    mc.skinCluster(eyeLBind,geo,tsb=True,mi=1,sm=0)
 
 #bind teeth
 for geo in upperTeethGeo:
-    cmds.skinCluster(upperTeethBind,geo,tsb=True,mi=1,sm=0)
+    mc.skinCluster(upperTeethBind,geo,tsb=True,mi=1,sm=0)
 for geo in lowerTeethGeo:
-    cmds.skinCluster(lowerTeethBind,geo,tsb=True,mi=1,sm=0)
+    mc.skinCluster(lowerTeethBind,geo,tsb=True,mi=1,sm=0)
 
 #bind toungue
-cmds.select(toungue,toungueBind)
-cmds.skinCluster(tsb=True,mi=3)
+mc.select(toungue,toungueBind)
+mc.skinCluster(tsb=True,mi=3)
 
 #bind hair
 for geo in hairGeo:
-    cmds.skinCluster(faceUpperBind,geo,tsb=True,mi=1,sm=0)
+    mc.skinCluster(faceUpperBind,geo,tsb=True,mi=1,sm=0)
