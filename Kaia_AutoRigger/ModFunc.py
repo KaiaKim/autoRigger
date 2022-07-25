@@ -1,5 +1,7 @@
 import maya.cmds as mc
 
+#utility
+
 def _getPosListFromVerts(verts):
     posList = []
     for vert in verts:
@@ -8,10 +10,9 @@ def _getPosListFromVerts(verts):
     return posList
 
 def _createBindsOnCrv(names,posList,curv,grpName):
-    try:mc.select(grpName)
-    except: mc.group(em=True, n=grpName)
-    posDicList = []
+    if mc.ls(grpName)==[]: mc.group(em=True, n=grpName)
     
+    posDicList = []
     for pos in posList:
         nearNode = mc.createNode('nearestPointOnCurve') #create nearestPointOnCurve node
         #connect position to the nearestPointOnCurve node
@@ -46,8 +47,7 @@ def _createCtlGrp(targList, nameList, grp, ori=True, shape='circle', size=1, opm
     if type(nameList)!=list: nameList = [nameList]
     
     if type(grp)!=list:
-        try:mc.select(grp)
-        except: mc.group(em=True, n=grp)
+        if mc.ls(grp)==[]: mc.group(em=True, n=grp)
     
     for i,targ in enumerate(targList):
         ctl = _customNURBScircle(shape, size, nameList[i])
@@ -82,17 +82,18 @@ def _handleToggle(ctl):
 def _scaleOrient(ctlList,s=(-1,1,1)):
     for i in ctlList:
         if '_l_' in i:
-            mc.scale(s[0],s[1],s[2],i+'_orient')
-            
+            mc.scale(s[0],s[1],s[2],i+'_orient')    
     
 
-def _offsetCtls(ctlList, r=(0,0,0), s=(1,1,1), t=(0,0,0)):
+def _offsetCtls(ctlList, r=(0,0,0), s=(1,1,1), t=(0,0,0), reverseZ=False):
     if type(ctlList)!=list: ctlList = [ctlList]
     for ctl in ctlList:
         CVs = _getCVs(ctl)
         mc.rotate(r[0],r[1],r[2], CVs, r=True)
         mc.scale(s[0],s[1],s[2], CVs, r=True)
-        mc.move(t[0],t[1],t[2], CVs, r=True)
+        if reverseZ==True and '_l_' in ctl:
+            mc.move(t[0],t[1],-t[2], CVs, r=True)
+        else: mc.move(t[0],t[1],t[2], CVs, r=True)
         
     
 def _normalizeCtls(ctls,val=(1,1,1)):
@@ -105,12 +106,27 @@ def _bindSkin(jnts,geos,maxi=4):
     if type(geos)!=list: geos = [geos]
     mc.select(jnts,geos)
     for geo in geos:
-        try:mc.skinCluster(tsb=True,mi=maxi,sm=0,n=geo+'_skinCluster')#name the skinCluster based on geo!
+        try:mc.skinCluster(tsb=True,mi=maxi,sm=0,n=geo+'_skinClst')#name the skinCluster based on geo!
         except: print('###'+ geo +' is already skinned ###')
 
-def _connectTransform(driver,driven):
-    mc.connectAttr(driver+'.t',driven+'.t')
-    mc.connectAttr(driver+'.r',driven+'.r')
+def _connectTransform(driver,driven,reverseZ=False):
+    mc.connectAttr(driver+'.tx',driven+'.tx')
+    mc.connectAttr(driver+'.ty',driven+'.ty')  
+    mc.connectAttr(driver+'.rx',driven+'.rx')
+    mc.connectAttr(driver+'.rz',driven+'.rz')   
+    if reverseZ==True and '_l_' in driver:
+        mult1=mc.createNode('multDoubleLinear')
+        mc.connectAttr(driver+'.tz',mult1+'.input1')
+        mc.setAttr(mult1+'.input2',-1)
+        mc.connectAttr(mult1+'.output',driven+'.tz')
+        mult2=mc.createNode('multDoubleLinear')
+        mc.connectAttr(driver+'.ry',mult2+'.input1')
+        mc.setAttr(mult2+'.input2',-1)
+        mc.connectAttr(mult2+'.output',driven+'.ry')
+    else:
+        mc.connectAttr(driver+'.ry',driven+'.ry')
+        mc.connectAttr(driver+'.tz',driven+'.tz')
+        
     #mc.connectAttr(driver+'.s',driven+'.s')
 
 def _parentConstIterate(parents,childs):

@@ -29,4 +29,12 @@ def _connectBinds(ctls,binds):
         col1 = mc.createNode('colorMath')
         mc.connectAttr(ctl+'.t',col1+'.colorA')
         mc.connectAttr(mult1+'.output',col1+'.colorB')
-        mc.connectAttr(col1+'.outColor',bind+'.t')
+        
+        mc.connectAttr(col1+'.outColorR',bind+'.tx')
+        mc.connectAttr(col1+'.outColorG',bind+'.ty')
+    if '_l_' in bind:
+        mult1=mc.createNode('multDoubleLinear')
+        mc.connectAttr(col1+'.outColorB',mult1+'.input1')
+        mc.setAttr(mult1+'.input2',-1)
+        mc.connectAttr(mult1+'.output',bind+'.tz')
+    else: mc.connectAttr(col1+'.outColor',bind+'.tz')

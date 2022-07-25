@@ -107,7 +107,7 @@ class AutoRigFace(Builder.BuildCtls, Builder.ConnectCtls, Builder.BindGeo, UI.cr
         self.B = Namer.brow()
         self.N = Namer.nose()
         
-        self.allBinds = ['face_bind', 'face_upper_bind', 'brow_l_bind', 'brow_inner_l_bind', 'brow_corrugator_l_bind', 'brow_peak_l_bind', 'brow_r_bind', 'brow_inner_r_bind', 'brow_corrugator_r_bind', 'brow_peak_r_bind', 'teeth_upper_bind', 'eye_socket_l_bind', 'eye_l_bind', 'eye_socket_r_bind', 'eye_r_bind', 'cheek_upper_l_bind', 'cheek_upper_r_bind', 'face_lower_bind', 'nose_bridge_bind', 'nose_bind', 'sneer_l_bind', 'nostril_l_bind', 'sneer_r_bind', 'nostril_r_bind', 'cheek_r_bind', 'cheek_l_bind', 'jaw_trans_bind', 'jaw_bind', 'jaw_tip_bind', 'teeth_lower_bind', 'cheek_lower_r_bind', 'cheek_lower_l_bind', 'tongue_01_bind', 'tongue_02_bind', 'tongue_03_bind', 'tongue_04_bind', 'tongue_05_bind', 'tongue_06_bind', 'tongue_07_bind'] 
+        self.allBinds = mc.ls('*_bind')
         self.allCtls = self.M.lipCtls + self.M.cornerCtls + self.L.ctls + self.E.ctls + self.B.ctls + [self.F.jawCtl] + self.N.sneerCtls
         self.allCrv = self.M.blendCrvs + self.L.rBlendCrvs + self.L.lBlendCrvs
         self.bindSets = {
@@ -147,6 +147,7 @@ class AutoRigFace(Builder.BuildCtls, Builder.ConnectCtls, Builder.BindGeo, UI.cr
     def mirrorBlendCrvMouth(self,_):
         #modify data mouth
         cvPos2 = MouthFunc._symmetricMouthCrv(self.M.blendCrvs)
+        #print('cvPos2:',cvPos2)
         DataFunc._applyTransform(cvPos2, os=True)
         cvPos3 = MouthFunc._matchCrvRtoL(cvPos2)
         DataFunc._applyTransform(cvPos3, os=True)
@@ -170,3 +171,4 @@ run01.createWindow()
 
 ###DQ skin > attibute editor > support Non-rigid transformation ON
 
+###lid blendcrv mirror not working
