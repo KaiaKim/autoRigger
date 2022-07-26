@@ -1,4 +1,9 @@
+### utility functions
+
 import maya.cmds as mc
+
+from Kaia_AutoRigger.modules import getset
+
 
 def getPosListFromVerts(verts):
     posList = []
@@ -70,7 +75,7 @@ def createAutoGrp(child,parent,name=None):
     mc.parent(child,auto)
 
 def handleToggle(ctl):
-    shape=_getCrvShape(ctl)
+    shape=getset.getCrvShape(ctl)
     mc.addAttr(ctl, sn='handle', k=True, dv=1, at='bool')
     mc.connectAttr(ctl+'.handle',ctl+'.displayHandle')
     rev1=mc.createNode('reverse')
@@ -86,7 +91,7 @@ def scaleOrient(ctlList,s=(-1,1,1)):
 def offsetCtls(ctlList, r=(0,0,0), s=(1,1,1), t=(0,0,0), reverseZ=False):
     if type(ctlList)!=list: ctlList = [ctlList]
     for ctl in ctlList:
-        CVs = _getCVs(ctl)
+        CVs = getset.getCVs(ctl)
         mc.rotate(r[0],r[1],r[2], CVs, r=True)
         mc.scale(s[0],s[1],s[2], CVs, r=True)
         if reverseZ==True and '_l_' in ctl:

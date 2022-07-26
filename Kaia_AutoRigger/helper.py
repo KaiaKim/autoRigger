@@ -35,10 +35,10 @@ class HelpExtra():
             
     def mirrorBlendCrvMouth(self,_):
         #modify data mouth
-        cvPos2 = mouth._symmetricMouthCrv(self.M.blendCrvs)
+        cvPos2 = mouth.symmetricMouthCrv(self.M.blendCrvs)
         #print('cvPos2:',cvPos2)
         getset.applyTransform(cvPos2, os=True)
-        cvPos3 = mouth._matchCrvRtoL(cvPos2)
+        cvPos3 = mouth.matchCrvRtoL(cvPos2)
         getset.applyTransform(cvPos3, os=True)
         
     def mirrorBlendCrvEyes(self,_):

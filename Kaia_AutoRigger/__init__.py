@@ -9,9 +9,6 @@ from Kaia_AutoRigger import builder
 from Kaia_AutoRigger import helper
 from Kaia_AutoRigger import binder
 
-from Kaia_AutoRigger.modules import getset
-from Kaia_AutoRigger.modules import util
-
 from Kaia_AutoRigger.ui import main
 from Kaia_AutoRigger.ui import handler
 
@@ -20,9 +17,6 @@ importlib.reload(data_)
 importlib.reload(builder)
 importlib.reload(helper)
 importlib.reload(binder)
-
-importlib.reload(getset)
-importlib.reload(util)
 
 importlib.reload(main)
 importlib.reload(handler)

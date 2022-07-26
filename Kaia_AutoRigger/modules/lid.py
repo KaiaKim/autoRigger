@@ -12,8 +12,8 @@ def _createDrivCrv(name,orig):
 def _createBlinkDrivers(names,curv,grpName):
     try:mc.select(grpName)
     except: mc.group(em=True, n=grpName)
-    curvShape = util.getCrvShape(curv)
-    cvs = util.getCVs(curv)
+    curvShape = getset.getCrvShape(curv)
+    cvs = getset.getCVs(curv)
 
     for num,cv in enumerate(cvs):
         poc1 = mc.createNode('pointOnCurveInfo')

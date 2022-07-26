@@ -42,7 +42,7 @@ class ImportExport():
         #get blendshape crv data
         allCVs = []
         for i in self.allCrv:
-            CVs = util.getCVs(i)
+            CVs = getset.getCVs(i)
             allCVs += CVs
         self.data['bsCrv'] = getset.getTransform(allCVs, t=True, r=False, os=True)
         
