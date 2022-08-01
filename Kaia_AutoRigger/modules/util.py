@@ -1,9 +1,10 @@
 ### utility functions
 
 import maya.cmds as mc
+import importlib
 
-from Kaia_AutoRigger.modules import getset
-
+from . import getset
+importlib.reload(getset)
 
 def getPosListFromVerts(verts):
     posList = []
@@ -53,7 +54,7 @@ def createCtlGrp(targList, nameList, grp, ori=True, shape='circle', size=1, opm=
         if mc.ls(grp)==[]: mc.group(em=True, n=grp)
     
     for i,targ in enumerate(targList):
-        ctl = _customNURBScircle(shape, size, nameList[i])
+        ctl = customNURBScircle(shape, size, nameList[i])
         nul = mc.group(ctl, n = ctl+'_nul')
         if ori==True: orientGrp = mc.group(ctl, n=ctl+'_orient')
         
@@ -102,7 +103,7 @@ def offsetCtls(ctlList, r=(0,0,0), s=(1,1,1), t=(0,0,0), reverseZ=False):
 def normalizeCtls(ctls,val=(1,1,1)):
     val = list(val)
     for i in ctls:
-        _offsetCtls(i, s=(1/val[0], 1/val[1], 1/val[2]))
+        offsetCtls(i, s=(1/val[0], 1/val[1], 1/val[2]))
         mc.scale(val[0], val[1], val[2], i+'_orient',r=True)
 
 def bindSkin(jnts,geos,mi=4):

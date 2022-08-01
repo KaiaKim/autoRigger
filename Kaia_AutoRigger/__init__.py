@@ -48,7 +48,6 @@ class AutoRigFace(data_.ImportExport, builder.BuildRig, helper.HelpExtra, binder
     
 
     def names(self):
-        self.faceRoot = 'face_root'
         self.animGrp = 'anim_grp'
         self.rigGrp = 'rig_grp'
         self.bindGrp = 'bind_grp'
@@ -89,3 +88,14 @@ run01=AutoRigFace()
 run01.createWindow()
 
 ###DQ skin > attibute editor > support Non-rigid transformation ON
+
+###face ctl > face nul
+
+###lip ctl grp unparent
+###mouth curve constraint to face root
+
+###no cls nul
+###setAttr "cluster1.relative" 1;
+###parent constraint clusters on ctrl
+###parent cls
+

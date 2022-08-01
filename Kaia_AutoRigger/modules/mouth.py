@@ -80,7 +80,8 @@ def lipDrivers(names,pins,ctls,grpName):
         util.connectTransform(ctl, jnt)
         mc.parent(nul, grpName)
 
-###       
+###  
+'''     
 def createClsGrp(name, targ, bindmeshes, grpName, weights=[]):
     try:mc.select(grpName)
     except: mc.group(em=True, n=grpName)
@@ -101,7 +102,26 @@ def createClsGrp(name, targ, bindmeshes, grpName, weights=[]):
         for bm,val in zip(bindmeshes,weights):
             mc.select(bm+'.vtx[*]')
             mc.percent( name+'Cluster', v=val ) #set percents on the selected items to each value
+'''
+def createClsGrp(name, targ, bindmeshes, grpName, weights=[]):
+    try:mc.select(grpName)
+    except: mc.group(em=True, n=grpName)
+    
+    clus = mc.cluster(bindmeshes)
+    clusNode = clus[0]
+    clusHandle = clus[1]
+    
+    mc.setAttr(clusNode+'.relative',1)
+    clusHandle = mc.rename(clusHandle, name)
+
+    mc.parent(clusHandle ,grpName)
+    
+    if weights != []:
+        for bm,val in zip(bindmeshes,weights):
+            mc.select(bm+'.vtx[*]')
+            mc.percent( name+'Cluster', v=val ) #set percents on the selected items to each value
            
+        
 def createBsCrv(orig,names, grpName):
     grp = mc.group(em=True, n=grpName)
     for name in names:
@@ -183,7 +203,7 @@ def matchCrvRtoL(posList):
         l['pos'] = r['pos']
     outList = rPosList + lPosList
     return outList
-    
+'''
 def connectBigClus(C1, P1, P2):
     mm1 = mc.createNode('multMatrix')
     mc.connectAttr(P1+'.matrix', mm1+'.matrixIn[0]')
@@ -192,7 +212,7 @@ def connectBigClus(C1, P1, P2):
     mc.connectAttr(mm1+'.matrixSum', dm1+'.inputMatrix')
     mc.connectAttr(dm1+'.outputTranslate', C1+'.t')
     mc.connectAttr(dm1+'.outputRotate', C1+'.r')
-
+'''
 def cornerCtls(ctl, clus, P1, P2):
     auto=ctl+'_auto'
     bm1 = mc.createNode('blendMatrix')

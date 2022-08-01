@@ -49,5 +49,5 @@ class HelpExtra():
             allCVs += CVs
             
         cvPos = getset.getTransform(allCVs, t=True, r=False, os=True)
-        cvPos5 = LidFunc._mirrorCVs(cvPos)
+        cvPos5 = getset.mirrorCVs(cvPos)
         getset.applyTransform(cvPos5, os=True)

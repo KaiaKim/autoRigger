@@ -4,7 +4,7 @@ import importlib
 from . import util
 importlib.reload(util)
 
-def _createDrv(drvs,targs,parent):
+def createDrv(drvs,targs,parent):
     for drv,targ in zip(drvs,targs):
         mc.group(em=True,w=True,n=drv)
         mc.connectAttr(targ+'.worldMatrix',drv+'.offsetParentMatrix')
@@ -15,7 +15,7 @@ def _createDrv(drvs,targs,parent):
         
         mc.pointConstraint(targ,drv,mo=False)
 
-def _connectCtls(ctls,cornerCtls,val):
+def connectCtls(ctls,cornerCtls,val):
     for ctl,cornerCtl in zip(ctls,cornerCtls):
         auto = ctl + '_auto'
         mult1 = mc.createNode('multiplyDivide',n=ctl+'_mult')
@@ -23,7 +23,7 @@ def _connectCtls(ctls,cornerCtls,val):
         mc.setAttr(mult1+'.input2',val[0],val[1],val[2],type='double3')
         mc.connectAttr(mult1+'.output',auto+'.t')
         
-def _connectBinds(ctls,binds):
+def connectBinds(ctls,binds):
     for ctl,bind in zip(ctls,binds):
         mult1 = ctl+'_mult'
         col1 = mc.createNode('colorMath')

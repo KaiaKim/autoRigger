@@ -24,7 +24,7 @@ class createUI():
 
         ###
         mc.frameLayout(l='Prepare', collapsable=True, collapse=False, mw=10, mh=5)
-        mc.button(l='Import Face Skeleton',c=lambda x:mc.file(self.mayascripts+'/Kaia_AutoRigger/templateFiles/faceBindJoints.ma',i=True),bgc=blue)
+        mc.button(l='Import Face Skeleton',c=lambda x:mc.file(self.mayascripts+'/Kaia_AutoRigger/prepare/faceSkeleton.ma',i=True),bgc=blue)
         mc.setParent('..')
         ###
         mc.frameLayout(l='Data', collapsable=True, collapse=False, mw=10, mh=5)

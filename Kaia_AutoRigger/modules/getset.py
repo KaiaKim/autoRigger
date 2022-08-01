@@ -49,4 +49,12 @@ def mirrorPosX(posList):
         x,y,z = pos
         mirList.append((-x,y,z))
     return mirList
-         
+
+def mirrorCVs(posList):
+    rPos = [d for d in posList if '_r_' in d['name']]
+    lPos = [d for d in posList if '_l_' in d['name']]
+    for r,l in zip(rPos,lPos):
+        x,y,z = r['pos']
+        l['pos']=(-x,y,z)
+    outList = rPos+lPos
+    return outList

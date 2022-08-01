@@ -13,7 +13,7 @@ class ButtonHandler():
     def __init__(self):
         pass
 
-    def handler01(self,x,flag,_):
+    def handler01(self,x,flag):
         self.assignVerts(x,flag)
         
         checker=True

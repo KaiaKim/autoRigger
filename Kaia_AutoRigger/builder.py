@@ -57,6 +57,9 @@ class BuildRig():
             ori=False, size=8
             )
         util.offsetCtls(self.F.ctl, r=(90,0,0))
+        #hide face ctls
+        shape1=getset.getCrvShape(self.F.ctl)
+        mc.hide(shape1)
         
         #0: Create Upper Face Ctls
         util.createCtlGrp(
@@ -83,6 +86,7 @@ class BuildRig():
     def mouth01(self):
         #1: Generate mouth_curve from lip_curves
         mouth.createMouthCrv(self.M.crv, self.M.upCrv, self.M.loCrv)
+        mc.parentConstraint(self.M.crv, self.F.ctl)
         
         #1: Create lip binds
         upperPos = util.getPosListFromVerts(self.data['verts']['lipUpper'])
@@ -119,7 +123,7 @@ class BuildRig():
         util.offsetCtls(self.M.cornerCtls, t=(0,0,1.2), r=(0,0,-30))
 
         util.scaleOrient(self.M.lipCtls+self.M.cornerCtls)
-        mc.parent(self.M.lipCtlGrp, self.F.ctl)
+        mc.parent(self.M.lipCtlGrp, self.animGrp)
         
         #5: Add handle toggle attribute on corner ctl
         for ctl in self.M.cornerCtls: util.handleToggle(ctl)
@@ -195,9 +199,9 @@ class BuildRig():
 
         for i in range(4):
             #3: Create Lid Driver Curve
-            lid._createDrivCrv(self.L.drivCrvs[i], self.L.crvs[i])
+            lid.createDrivCrv(self.L.drivCrvs[i], self.L.crvs[i])
             #4: Create Blink Driver Joints
-            lid._createBlinkDrivers(self.L.drivs[i], self.L.drivCrvs[i], self.L.drivGrp)
+            lid.createBlinkDrivers(self.L.drivs[i], self.L.drivCrvs[i], self.L.drivGrp)
     
             #5: Create Lid tweak Ctls
             util.createCtlGrp(
@@ -207,7 +211,7 @@ class BuildRig():
             util.offsetCtls(self.L.microCtls[i], t=(0,0,.7))
             
             #5: Create Lid Driver Joints
-            lid._createlidDrivers(self.L.lidDrivs[i], self.L.drivs[i], self.L.microCtls[i], self.L.lidDrivGrp)
+            lid.createlidDrivers(self.L.lidDrivs[i], self.L.drivs[i], self.L.microCtls[i], self.L.lidDrivGrp)
             
             #6: Skin Driver joints to lid curves
             util.bindSkin(self.L.lidDrivs[i], self.L.crvs[i]) #0,1,2,3,4
@@ -229,8 +233,8 @@ class BuildRig():
         
             ###lid crv blendshapes
         #1: Duplicate orig curve
-        lid._createBsCrv(self.L.crvs[:2], self.L.rBlendCrvs, self.L.rBlendCrvGrp)
-        lid._createBsCrv(self.L.crvs[2:], self.L.lBlendCrvs, self.L.lBlendCrvGrp)
+        lid.createBsCrv(self.L.crvs[:2], self.L.rBlendCrvs, self.L.rBlendCrvGrp)
+        lid.createBsCrv(self.L.crvs[2:], self.L.lBlendCrvs, self.L.lBlendCrvGrp)
         
         
     def eye01(self):
@@ -321,7 +325,6 @@ class BuildRig():
         util.offsetCtls(self.N.sneerCtls, t=(0,0,1.7))
     
     def createGrps(self):
-        mc.group(n=self.faceRoot, em=True)
         mc.group(n=self.animGrp, em=True)
         mc.group(n=self.rigGrp, em=True)
         mc.group(n=self.bindGrp, em=True)
@@ -411,15 +414,18 @@ class BuildRig():
             )
         
         #2: Connect Ctls
+        '''
             #big ctl
         mouth.connectBigClus(self.M.clus+'_nul', P3, self.F.loCtl)
             #jaw ctl
         util.connectTransform(P1, self.M.jawClus[0]+'_nul')
         util.connectTransform(P2, self.M.jawClus[1]+'_nul')
+        
             #corner ctl
         for clus, ctl in zip(self.M.cornerClus, self.M.cornerCtls):
             util.createAutoGrp(ctl+'_nul', P3, name=ctl+'_auto')
             mouth.cornerCtls(ctl, clus, P1, P2)
+        '''
         
         #1: Create&connect lip drivers&lip ctls to uvPins
         mouth.lipDrivers(
@@ -435,15 +441,15 @@ class BuildRig():
     
     def cheek02(self):
         #1: Cheek ctls follow mCorner ctls
-        cheek._createDrv(self.C.drvs,self.M.cornerCtls,self.F.ctl)
+        cheek.createDrv(self.C.drvs,self.M.cornerCtls,self.F.ctl)
         #2: Create Auto grp
         for ctl in self.C.ctls: util.createAutoGrp(ctl, ctl+'_orient')
         #3: Connect Auto grp
-        cheek._connectCtls(self.C.ctls[0:2], self.C.drvs, (-.2,.5,.1)) #upper
-        cheek._connectCtls(self.C.ctls[2:4], self.C.drvs, (-.5,.7,.5)) #mid
-        cheek._connectCtls(self.C.ctls[4:6], self.C.drvs, (-.5,1.4,.2)) #low
+        cheek.connectCtls(self.C.ctls[0:2], self.C.drvs, (-.2,.5,.1)) #upper
+        cheek.connectCtls(self.C.ctls[2:4], self.C.drvs, (-.5,.7,.5)) #mid
+        cheek.connectCtls(self.C.ctls[4:6], self.C.drvs, (-.5,1.4,.2)) #low
         #2: Cheek binds follow mCorner ctls
-        cheek._connectBinds(self.C.ctls, self.C.binds)
+        cheek.connectBinds(self.C.ctls, self.C.binds)
         
     def teethTongue02(self):
         P1 = self.F.upBind
@@ -462,26 +468,26 @@ class BuildRig():
         
     def lid02(self):
         #2: Create Blendshape Node
-        lid._createBsNode(
+        lid.createBsNode(
             self.L.rBsNodes, self.L.drivCrvs[:2], self.L.rBlendCrvs
             )
-        lid._createBsNode(
+        lid.createBsNode(
             self.L.lBsNodes, self.L.drivCrvs[2:], self.L.lBlendCrvs
             )
         
         #3: Connect Blendshape weight to translate value of mouth corner ctrls
         #first two elements (right ctrls)
         #last two elements (left ctrls)
-        lid._connectBs(
+        lid.connectBs(
             self.L.ctls[:2], self.L.rBlendCrvs, self.L.rBsNodes
             ) 
-        lid._connectBs(
+        lid.connectBs(
             self.L.ctls[2:], self.L.lBlendCrvs, self.L.lBsNodes
             ) 
     
     def eye02(self):
         #5: Connect Eye Ctls
-        eye._connectEyeCtls(
+        eye.connectEyeCtls(
             self.E.ctls, self.E.rotCtl, self.E.aimCtl,
             self.E.aimMicroCtls, self.E.binds
             )

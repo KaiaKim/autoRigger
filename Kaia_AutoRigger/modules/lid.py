@@ -2,14 +2,15 @@ import maya.cmds as mc
 import importlib
 
 from . import util
+from . import getset
 importlib.reload(util)
-
+importlib.reload(getset)
 ###-----------------------------------------------------FUNCTION---------------------------------------------------
-def _createDrivCrv(name,orig):
+def createDrivCrv(name,orig):
         mc.duplicate(orig,n=name)
         mc.rebuildCurve(name,d=1,kcp=True)
 
-def _createBlinkDrivers(names,curv,grpName):
+def createBlinkDrivers(names,curv,grpName):
     try:mc.select(grpName)
     except: mc.group(em=True, n=grpName)
     curvShape = getset.getCrvShape(curv)
@@ -26,7 +27,7 @@ def _createBlinkDrivers(names,curv,grpName):
         mc.parent(loc,grpName)
 
 
-def _createlidDrivers(names,locs,ctls,grpName):
+def createlidDrivers(names,locs,ctls,grpName):
     try:mc.select(grpName)
     except: mc.group(em=True, n=grpName)
     
@@ -41,7 +42,7 @@ def _createlidDrivers(names,locs,ctls,grpName):
 
 
 
-def _createBsCrv(crvs,names,grpName):
+def createBsCrv(crvs,names,grpName):
     grp = mc.group(em=True,n=grpName)
     
     for name in names:
@@ -60,7 +61,7 @@ def _createBsCrv(crvs,names,grpName):
 
 
 
-def _createBsNode(nodes,crvs,targList):
+def createBsNode(nodes,crvs,targList):
     for node in nodes:
         if 'upper' in node: x=0
         elif 'lower' in node: x=1
@@ -76,7 +77,7 @@ def _createBsNode(nodes,crvs,targList):
             mc.blendShape(node, e=True, ib=True, t=(orig, 1, targList[2+4*x], 0.666))
             
             
-def _connectBs(blinkCtls, blendCrvs, bsNodes):
+def connectBs(blinkCtls, blendCrvs, bsNodes):
         #upper closed
     #set driven key node1
     sdk1 = mc.setDrivenKeyframe( bsNodes[1]+'.'+blendCrvs[3], cd=blinkCtls[0]+'.rx' )
@@ -129,17 +130,4 @@ def _connectBs(blinkCtls, blendCrvs, bsNodes):
     mc.setAttr(sdk2+'.postInfinity',1)
 
 
-def _mirrorCVs(posList):
-    rPos = [d for d in posList if '_r_' in d['name']]
-    lPos = [d for d in posList if '_l_' in d['name']]
-    for r,l in zip(rPos,lPos):
-        x,y,z = r['pos']
-        l['pos']=(-x,y,z)
-    outList = rPos+lPos
-    return outList
     
-def _createLoftBall():
-    pass
-    
-def _SlideOnSurface():
-    pass

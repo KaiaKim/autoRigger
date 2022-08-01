@@ -5,7 +5,7 @@ from . import util
 importlib.reload(util)
 
 ###-----------------------------------------------------FUNCTION---------------------------------------------------
-def _connectEyeCtls(ctls, rotCtl, aimCtl, aimMicroCtls, binds):
+def connectEyeCtls(ctls, rotCtl, aimCtl, aimMicroCtls, binds):
     for i,ctl in enumerate(ctls):
         convGrp = mc.group(em=True,p=ctl+'_nul',n=ctl+'_converge')
         rotGrp = mc.group(convGrp, n=ctl+'_rot')

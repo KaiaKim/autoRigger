@@ -7,7 +7,7 @@ class Face():
         self.jawBind = 'jaw_bind'
         self.jawTipBind = 'jaw_tip_bind'
         
-        self.ctl = 'face_ctl'
+        self.ctl = 'face_root'
         self.upCtl = 'face_upper_ctl'
         self.loCtl = 'face_lower_ctl'
         self.jawCtl = 'jaw_ctl'
@@ -21,8 +21,8 @@ class Mouth():
 
         self.upBindGrp = 'lip_upper_bind_grp' #Grp means group name
         self.loBindGrp = 'lip_lower_bind_grp'
-        self.upBinds = self._lipBinds(verts['lipUpper'], prefix='lip_upper')
-        self.loBinds = self._lipBinds(verts['lipLower'], prefix='lip_lower')
+        self.upBinds = self.lipBinds(verts['lipUpper'], prefix='lip_upper')
+        self.loBinds = self.lipBinds(verts['lipLower'], prefix='lip_lower')
         self.binds = self.upBinds + self.loBinds
         
         mList = ['_corner_r','_upper_00_r','_upper_01_r','_upper_m','_upper_01_l','_upper_00_l','_corner_l','_lower_00_l','_lower_01_l','_lower_m','_lower_01_r','_lower_00_r']
@@ -49,7 +49,7 @@ class Mouth():
         self.blendCrvs = ['mouth'+d+'_blendCurve' for d in mbList]
         self.bsNode = 'mouth_curve_blend'
 
-    def _lipBinds(self,inList, prefix=''):
+    def lipBinds(self,inList, prefix=''):
         outList = []
         for i in range(len(inList)):
             name = prefix
@@ -103,10 +103,10 @@ class Lid():
         
         self.rBindGrp = 'lid_r_bind_grp'
         self.lBindGrp = 'lid_l_bind_grp'
-        self.upperRBinds = self._eyeBinds(verts['lidUpperR'], prefix='lid_upper_r')
-        self.upperLBinds = self._eyeBinds(verts['lidUpperR'], prefix='lid_upper_l') #we're just getting len of the list. left&right doesn't matter
-        self.lowerRBinds = self._eyeBinds(verts['lidLowerR'], prefix='lid_lower_r')
-        self.lowerLBinds = self._eyeBinds(verts['lidLowerR'], prefix='lid_lower_l')
+        self.upperRBinds = self.eyeBinds(verts['lidUpperR'], prefix='lid_upper_r')
+        self.upperLBinds = self.eyeBinds(verts['lidUpperR'], prefix='lid_upper_l') #we're just getting len of the list. left&right doesn't matter
+        self.lowerRBinds = self.eyeBinds(verts['lidLowerR'], prefix='lid_lower_r')
+        self.lowerLBinds = self.eyeBinds(verts['lidLowerR'], prefix='lid_lower_l')
         self.rBinds = self.upperRBinds + self.lowerRBinds
         self.lBinds = self.upperLBinds + self.lowerLBinds
         
@@ -119,7 +119,7 @@ class Lid():
         self.rBsNodes = ['lid_'+d+'_blend' for d in nodeNames]
         self.lBsNodes = [d.replace('_r_', '_l_') for d in self.rBsNodes]
         
-    def _eyeBinds(self,inList, prefix=''):
+    def eyeBinds(self,inList, prefix=''):
         outList = []
         for i in range(len(inList)):
             name = prefix
