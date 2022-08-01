@@ -7,7 +7,7 @@ class Face():
         self.jawBind = 'jaw_bind'
         self.jawTipBind = 'jaw_tip_bind'
         
-        self.root = 'face_root'
+        self.root = 'face_ctl_root'
         self.upCtl = 'face_upper_ctl'
         self.loCtl = 'face_lower_ctl'
         self.jawCtl = 'jaw_ctl'

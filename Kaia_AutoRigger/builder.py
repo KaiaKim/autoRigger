@@ -55,12 +55,12 @@ class BuildRig():
         #0: Create Face Ctls
         mc.group(em=True,n=self.F.root)
         
-        const1 = mc.parentConstraint(self.F.bind, self.F.root, mo=False)
-        mc.delete(const1)
-        
-        opm_baker.bake_transform_to_offset_parent_matrix(self.F.root)
-        
-        mc.parent(self.F.root,self.animGrp)
+        mc.connectAttr(
+                self.F.bind+'.worldMatrix', self.F.root+'.offsetParentMatrix'
+                )
+        mc.disconnectAttr(
+                self.F.bind+'.worldMatrix', self.F.root+'.offsetParentMatrix'
+                )
         
         #0: Create Upper Face Ctls
         util.createCtlGrp(
@@ -91,12 +91,20 @@ class BuildRig():
         #1: Create lip binds
         upperPos = util.getPosListFromVerts(self.data['verts']['lipUpper'])
         util.createBindsOnCrv(
-            self.M.upBinds, upperPos, self.M.upCrv, self.M.upBindGrp
+            self.M.upBinds, upperPos, self.M.upCrv, self.F.loBind
             )
         lowerPos = util.getPosListFromVerts(self.data['verts']['lipLower'])
         util.createBindsOnCrv(
-            self.M.loBinds, lowerPos, self.M.loCrv, self.M.loBindGrp
+            self.M.loBinds, lowerPos, self.M.loCrv, self.F.loBind
             )
+    
+        for bind in self.M.binds:
+            mc.connectAttr(
+                self.F.loBind+'.worldInverseMatrix', bind+'.offsetParentMatrix'
+                )
+            mc.disconnectAttr(
+                self.F.loBind+'.worldInverseMatrix', bind+'.offsetParentMatrix'
+                )
         
         ###temp: aim constraint lip binds
         util.aimConstIterate(self.M.binds, self.F.loBind)
@@ -178,24 +186,40 @@ class BuildRig():
         
         #2: Create lid Binds on lid verts & connect to lid curves
         upperRPos = util.getPosListFromVerts(self.data['verts']['lidUpperR'])
-        util.createBindsOnCrv(self.L.upperRBinds, upperRPos, self.L.crvs[0], self.L.rBindGrp)
+        util.createBindsOnCrv(self.L.upperRBinds, upperRPos, self.L.crvs[0], self.E.socBinds[0])
         
         upperLPos = getset.mirrorPosX(upperRPos)
-        util.createBindsOnCrv(self.L.upperLBinds, upperLPos, self.L.crvs[2], self.L.lBindGrp)
+        util.createBindsOnCrv(self.L.upperLBinds, upperLPos, self.L.crvs[2], self.E.socBinds[1])
         
         lowerRPos = util.getPosListFromVerts(self.data['verts']['lidLowerR'])
-        util.createBindsOnCrv(self.L.lowerRBinds, lowerRPos, self.L.crvs[1], self.L.rBindGrp)
+        util.createBindsOnCrv(self.L.lowerRBinds, lowerRPos, self.L.crvs[1], self.E.socBinds[0])
         
         lowerLPos = getset.mirrorPosX(lowerRPos)
-        util.createBindsOnCrv(self.L.lowerLBinds, lowerLPos, self.L.crvs[3], self.L.lBindGrp)
+        util.createBindsOnCrv(self.L.lowerLBinds, lowerLPos, self.L.crvs[3], self.E.socBinds[1])
         
-        #3: Parent Constraint lid bind grp to face upper bind
-        mc.parentConstraint(self.F.upBind, self.L.rBindGrp, mo=True)
-        mc.parentConstraint(self.F.upBind, self.L.lBindGrp, mo=True)
-        
+        #3: set world inverse matrix for lids
+        for bind in self.L.rBinds:
+            mc.connectAttr(
+                self.E.socBinds[0]+'.worldInverseMatrix', bind+'.offsetParentMatrix'
+                )
+            mc.disconnectAttr(
+                self.E.socBinds[0]+'.worldInverseMatrix', bind+'.offsetParentMatrix'
+                )        
+
+        for bind in self.L.lBinds:
+            mc.connectAttr(
+                self.E.socBinds[1]+'.worldInverseMatrix', bind+'.offsetParentMatrix'
+                )
+            mc.disconnectAttr(
+                self.E.socBinds[1]+'.worldInverseMatrix', bind+'.offsetParentMatrix'
+                ) 
+
         #3: Aim constraint lid binds to eye socket bind
         util.aimConstIterate(self.L.rBinds, self.E.socBinds[0])
         util.aimConstIterate(self.L.lBinds, self.E.socBinds[1])
+
+
+
 
         for i in range(4):
             #3: Create Lid Driver Curve
@@ -325,9 +349,8 @@ class BuildRig():
         util.offsetCtls(self.N.sneerCtls, t=(0,0,1.7))
     
     def createGrps(self):
-        mc.group(n=self.animGrp, em=True)
-        mc.group(n=self.rigGrp, em=True)
-        mc.group(n=self.bindGrp, em=True)
+        mc.group(n=self.NTGrp, em=True)
+
 
     def colorCtls(self):
         red=(1,0,0)
@@ -512,17 +535,6 @@ class BuildRig():
         #these are rather simple parent commands,
         #we keep going even if there's an error.
         try:
-            mc.parent(self.animGrp,self.rigGrp,self.bindGrp,self.faceRoot)
-        except: print('face_grp parent skipped')
-        
-        try:
-            mc.parent(self.F.bind,
-            self.L.rBindGrp,self.L.lBindGrp, 
-            self.M.upBindGrp,self.M.loBindGrp,
-            self.C.bindGrp, self.bindGrp)
-        except: print('bind_grp parent skipped')
-        
-        try:
             mc.parent(
                     self.M.upCrv, self.M.loCrv,self.M.crv,
                     self.M.bindmeshesGrp, self.M.clusGrp,
@@ -531,7 +543,7 @@ class BuildRig():
                     self.L.crvs,self.L.drivCrvs,
                     self.L.drivGrp,self.L.lidDrivGrp,
                     self.L.rBlendCrvGrp, self.L.lBlendCrvGrp,
-                    self.rigGrp)
+                    self.NTGrp)
         except: print('rig_grp parent skipped')
 
 #-----------------------------------------------------EXECUTE---------------------------------------------------------------

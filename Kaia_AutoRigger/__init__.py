@@ -48,9 +48,7 @@ class AutoRigFace(data_.ImportExport, builder.BuildRig, helper.HelpExtra, binder
     
 
     def names(self):
-        self.animGrp = 'anim_grp'
-        self.rigGrp = 'rig_grp'
-        self.bindGrp = 'bind_grp'
+        self.NTGrp = 'face_NT_grp'
         
         #execute namer class object
         self.F = namer.Face()
