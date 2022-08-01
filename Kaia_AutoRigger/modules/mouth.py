@@ -16,30 +16,32 @@ def createMouthCrv(name, upperCrv, lowerCrv):
     mouthCrv = mc.circle(n=name, s=sectionCount, d=1)[0] #create a new curve #cv 0~11
     mc.delete(mouthCrv,constructionHistory=True)
 
-    counter = 0 #this is a counter
+    counter = 0
     for i in range(12): #We're going to iterate through mouth curv(CVs)
-        pos=mc.xform(cvList[counter], q=True, t=True, ws=True) #get world position from the CV
-        if counter==6: #there's two cvs overlapping on the corner. 6 is the right corner CV.
-            counter+=1 #We skip the overlapping cv by adding 1 to the counter
+        pos = mc.xform(cvList[counter], q=True, t=True, ws=True) #get world position from the CV
+        if counter == 6: #there's two cvs overlapping on the corner. 6 is the right corner CV.
+            counter += 1 #We skip the overlapping cv by adding 1 to the counter
                
         mouthCV = mouthCrv + '.cv[%d]'%i #get mouth CV
         mc.move(pos[0], pos[1], pos[2], mouthCV) #snap mouth CV to the position
 
-        counter+=1 #increase counter
+        counter += 1
 
-def createBindmeshesOnJnts(names, jnts, grpName):
+def createBindmeshes(names, targs, grpName):
     grp = mc.group(em=True, n=grpName)
-    for jnt,name in zip(jnts, names):
-        pos=mc.xform(jnt, q=True, ws=True, t=True)
+    for targ,name in zip(targs, names):
+        pos=mc.xform(targ, q=True, ws=True, t=True)
         bindmesh = mc.polyPlane(w=.3, h=.3, sw=1, sh=1, n=name)[0]
         mc.move(pos[0],pos[1],pos[2], bindmesh)
         mc.makeIdentity(bindmesh, apply=True) #freeze transformation
         mc.delete(bindmesh, constructionHistory=True)
-        mc.skinCluster(jnt,bindmesh,n='bindMesh_skinClst', tsb=True)
         
         mc.parent(bindmesh,grp)
 
-    
+def skinBindmeshes(bms, jnts):
+    for jnt, bm in zip(jnts, bms):
+        mc.skinCluster(jnt, bm, n='bindMesh_skinClst', tsb=True)
+
 def createUvPin(names, bindmeshes):
     for bm,name in zip(bindmeshes, names):
         pin1=mc.createNode('uvPin')
@@ -52,7 +54,7 @@ def createUvPin(names, bindmeshes):
         mc.connectAttr(bm+'ShapeOrig.outMesh', pin1+'.originalGeometry')    
 
 
-def createMouthDrivers(names,curv,grpName):
+def createMouthDrivers(names, curv, grpName):
     mc.group(em=True, n=grpName)
     curvShape = getset.getCrvShape(curv)
     cvs = getset.getCVs(curv)
@@ -61,13 +63,13 @@ def createMouthDrivers(names,curv,grpName):
         mc.select(cl=True)
         poc1 = mc.createNode('pointOnCurveInfo')
         mc.connectAttr(curvShape+'.worldSpace[0]', poc1+'.inputCurve', f=True)
-        mc.setAttr(poc1+'.turnOnPercentage',1)
-        mc.setAttr(poc1 + '.parameter', num/11)
+        mc.setAttr(poc1+'.turnOnPercentage', 1)
+        mc.setAttr(poc1+'.parameter', num/11)
         jnt= mc.joint(rad=.5, n=names[num])
         mc.connectAttr(poc1+'.position', jnt+'.t')
         mc.parent(jnt, grpName)
 
-def lipDrivers(names,pins,ctls,grpName):
+def lipDrivers(names, pins, ctls, grpName):
     mc.group(em=True, n=grpName)
 
     for name,pin,ctl in zip(names,pins,ctls):  
@@ -80,8 +82,7 @@ def lipDrivers(names,pins,ctls,grpName):
         util.connectTransform(ctl, jnt)
         mc.parent(nul, grpName)
 
-###  
-'''     
+###   
 def createClsGrp(name, targ, bindmeshes, grpName, weights=[]):
     try:mc.select(grpName)
     except: mc.group(em=True, n=grpName)
@@ -102,25 +103,7 @@ def createClsGrp(name, targ, bindmeshes, grpName, weights=[]):
         for bm,val in zip(bindmeshes,weights):
             mc.select(bm+'.vtx[*]')
             mc.percent( name+'Cluster', v=val ) #set percents on the selected items to each value
-'''
-def createClsGrp(name, targ, bindmeshes, grpName, weights=[]):
-    try:mc.select(grpName)
-    except: mc.group(em=True, n=grpName)
-    
-    clus = mc.cluster(bindmeshes)
-    clusNode = clus[0]
-    clusHandle = clus[1]
-    
-    mc.setAttr(clusNode+'.relative',1)
-    clusHandle = mc.rename(clusHandle, name)
 
-    mc.parent(clusHandle ,grpName)
-    
-    if weights != []:
-        for bm,val in zip(bindmeshes,weights):
-            mc.select(bm+'.vtx[*]')
-            mc.percent( name+'Cluster', v=val ) #set percents on the selected items to each value
-           
         
 def createBsCrv(orig,names, grpName):
     grp = mc.group(em=True, n=grpName)
@@ -131,7 +114,7 @@ def createBsCrv(orig,names, grpName):
 def createBsNode(name, orig, targList):
     bs = mc.blendShape(orig, n=name, o='local')[0] #o is origin
     for num,targ in enumerate(targList):
-        mc.blendShape(bs, e=True, t=(orig, num, targ, 1.0) )
+        mc.blendShape(bs, e=True, t=(orig, num, targ, 1.0))
 
 def setBsCvWeight(bs):
     for i in range(8):
@@ -214,7 +197,7 @@ def connectBigClus(C1, P1, P2):
     mc.connectAttr(dm1+'.outputRotate', C1+'.r')
 '''
 def cornerCtls(ctl, clus, P1, P2):
-    auto=ctl+'_auto'
+    auto = ctl+'_auto'
     bm1 = mc.createNode('blendMatrix')
     mc.connectAttr(P2+'.matrix', bm1+'.target[0].targetMatrix')
     mc.connectAttr(P1+'.matrix', bm1+'.inputMatrix')

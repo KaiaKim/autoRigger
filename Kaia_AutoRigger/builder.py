@@ -34,7 +34,7 @@ class BuildRig():
         self.brow01()
         self.nose01()
         
-    
+        
         self.face02()
         self.mouth02()
         self.cheek02()
@@ -49,28 +49,29 @@ class BuildRig():
         
         getset.applyTransform(self.data['orients'])
         getset.applyTransform(self.data['bsCrv'], os=True)
-    
+
+
     def face01(self):
         #0: Create Face Ctls
-        util.createCtlGrp(
-            self.F.bind, self.F.ctl, self.animGrp,
-            ori=False, size=8
-            )
-        util.offsetCtls(self.F.ctl, r=(90,0,0))
-        #hide face ctls
-        shape1=getset.getCrvShape(self.F.ctl)
-        mc.hide(shape1)
+        mc.group(em=True,n=self.F.root)
+        
+        const1 = mc.parentConstraint(self.F.bind, self.F.root, mo=False)
+        mc.delete(const1)
+        
+        opm_baker.bake_transform_to_offset_parent_matrix(self.F.root)
+        
+        mc.parent(self.F.root,self.animGrp)
         
         #0: Create Upper Face Ctls
         util.createCtlGrp(
-            self.F.upBind, self.F.upCtl, self.F.ctl,
+            self.F.upBind, self.F.upCtl, self.F.root,
             ori=False, size=1, shape='triangle'
             )
         util.offsetCtls(self.F.upCtl, t=(0,-1.5,12), s=(1,.4,1))
         
         #0: Create Lower Face Ctls
         util.createCtlGrp(
-            self.F.loBind, self.F.loCtl, self.F.ctl,
+            self.F.loBind, self.F.loCtl, self.F.root,
             ori=False, size=12, shape='semiCircle'
             )
         util.offsetCtls(self.F.loCtl, t=(0,-6,0), r=(180,0,0))
@@ -86,8 +87,7 @@ class BuildRig():
     def mouth01(self):
         #1: Generate mouth_curve from lip_curves
         mouth.createMouthCrv(self.M.crv, self.M.upCrv, self.M.loCrv)
-        mc.parentConstraint(self.M.crv, self.F.ctl)
-        
+
         #1: Create lip binds
         upperPos = util.getPosListFromVerts(self.data['verts']['lipUpper'])
         util.createBindsOnCrv(
@@ -123,7 +123,7 @@ class BuildRig():
         util.offsetCtls(self.M.cornerCtls, t=(0,0,1.2), r=(0,0,-30))
 
         util.scaleOrient(self.M.lipCtls+self.M.cornerCtls)
-        mc.parent(self.M.lipCtlGrp, self.animGrp)
+        mc.parent(self.M.lipCtlGrp, self.F.root)
         
         #5: Add handle toggle attribute on corner ctl
         for ctl in self.M.cornerCtls: util.handleToggle(ctl)
@@ -147,12 +147,12 @@ class BuildRig():
         #scale orient in z
         util.scaleOrient(self.C.ctls,s=(1,1,-1))
 
-        mc.parent(self.C.ctlGrp,self.F.ctl)
+        mc.parent(self.C.ctlGrp,self.F.root)
 
     def teethTongue01(self):
         #teeth ctrls
         jawTipList = [self.F.jawTipBind, self.F.jawTipBind]
-        util.createCtlGrp(jawTipList, self.T.teethCtls, self.F.ctl,
+        util.createCtlGrp(jawTipList, self.T.teethCtls, self.F.root,
            size=.7, shape='semiCircle')
         for i,ctl in enumerate(self.T.teethCtls):
             val=1
@@ -162,7 +162,7 @@ class BuildRig():
             mc.move(7,val*.7,0,ctl+'_nul',r=True)
             
         #tongue ctrls
-        util.createCtlGrp(self.T.tongueBinds, self.T.tongueCtls, self.F.ctl,
+        util.createCtlGrp(self.T.tongueBinds, self.T.tongueCtls, self.F.root,
           ori=False, size=1, shape='circle')
         util.offsetCtls(self.T.tongueCtls,r=(0,90,0),s=(1,1,1))
         for i in range(len(self.T.tongueCtls)-1):
@@ -378,14 +378,12 @@ class BuildRig():
         P1=self.F.upCtl
         P2=self.F.jawCtl
         P3=self.M.ctl
-        #3: Create Bindmeshes on driver
-        mouth.createBindmeshesOnJnts(
+        #1: Create Bindmeshes
+        mouth.createBindmeshes(
             self.M.bindmeshes, self.M.drivs, self.M.bindmeshesGrp
             )
-        #4: Create uvPin on Bindmeshes
-        mouth.createUvPin(self.M.uvPins, self.M.bindmeshes)
-        
-        #1: Create Clusters on Bindmeshes
+
+        #2: Create Clusters on Bindmeshes
             #big clus
         mouth.createClsGrp(
             self.M.clus, self.F.loBind, self.M.bindmeshes, self.M.clusGrp
@@ -412,9 +410,11 @@ class BuildRig():
             self.M.cornerClus[1], self.M.ctl,
             self.M.bindmeshes[6], self.M.clusGrp
             )
-        
-        #2: Connect Ctls
-        '''
+            
+        #3: Skin bindmeshes with driver
+        mouth.skinBindmeshes(self.M.bindmeshes, self.M.drivs)
+
+        #4: Connect Ctls
             #big ctl
         mouth.connectBigClus(self.M.clus+'_nul', P3, self.F.loCtl)
             #jaw ctl
@@ -425,13 +425,15 @@ class BuildRig():
         for clus, ctl in zip(self.M.cornerClus, self.M.cornerCtls):
             util.createAutoGrp(ctl+'_nul', P3, name=ctl+'_auto')
             mouth.cornerCtls(ctl, clus, P1, P2)
-        '''
+
+        #5: Create uvPin on Bindmeshes
+        mouth.createUvPin(self.M.uvPins, self.M.bindmeshes)
         
-        #1: Create&connect lip drivers&lip ctls to uvPins
+        #6: Create&connect lip drivers&lip ctls to uvPins
         mouth.lipDrivers(
             self.M.lipDrivs, self.M.uvPins, self.M.lipCtls, self.M.lipDrivGrp
             )
-        #2: Skin lip driver joints to lip curves
+        #7: Skin lip driver joints to lip curves
          #0,1,2,3,4,5,6
         util.bindSkin(self.M.lipDrivs[0:7], self.M.upCrv)
          #6,7,8,9,10,11,0
@@ -441,7 +443,7 @@ class BuildRig():
     
     def cheek02(self):
         #1: Cheek ctls follow mCorner ctls
-        cheek.createDrv(self.C.drvs,self.M.cornerCtls,self.F.ctl)
+        cheek.createDrv(self.C.drvs,self.M.cornerCtls,self.F.root)
         #2: Create Auto grp
         for ctl in self.C.ctls: util.createAutoGrp(ctl, ctl+'_orient')
         #3: Connect Auto grp
