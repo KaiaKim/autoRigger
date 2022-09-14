@@ -32,7 +32,7 @@ class createUI():
         
         mc.rowLayout( numberOfColumns=2)
         mc.button(l='Import All Data', c=self.handler03, w=150, h=30, bgc=orange)
-        mc.button(l='Export All Data', c=self.exportData, w=150, h=30, bgc=orange)
+        mc.button(l='Export All Data', c=self.handler04, w=150, h=30, bgc=orange)
         mc.setParent('..')
         #
         mc.frameLayout( l='Geo', collapsable=True, collapse=False )

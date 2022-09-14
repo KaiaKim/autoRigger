@@ -45,6 +45,8 @@ class AutoRigFace(data_.ImportExport, builder.BuildRig, helper.HelpExtra, binder
             'bsCrv':[],
             'attr':{}
         }
+
+        self.built = False
     
 
     def names(self):

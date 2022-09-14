@@ -23,34 +23,6 @@ class BuildRig():
     def __init__(self):
         pass
         
-    def buildRig01(self,_):
-        self.createGrps()
-        self.face01()
-        self.mouth01()
-        self.cheek01()
-        #self.teethTongue01()
-        self.lid01()
-        #self.eye01()
-        self.brow01()
-        self.nose01()
-        
-        
-        self.face02()
-        self.mouth02()
-        self.cheek02()
-        #self.teethTongue02()
-        self.lid02()
-        #self.eye02()
-        self.brow02()
-        self.nose02()
-        self.arrangeGrps()
-        
-        self.colorCtls()
-        
-        getset.applyTransform(self.data['orients'])
-        getset.applyTransform(self.data['bsCrv'], os=True)
-
-
     def face01(self):
         #0: Create Face Ctls
         mc.group(em=True,n=self.F.root)

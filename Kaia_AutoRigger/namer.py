@@ -164,6 +164,7 @@ class Nose():
         self.tipBind = 'nose_bind'
         self.bridgeBind = 'nose_bridge_bind'
         self.sneerBinds = ['sneer_r_bind','sneer_l_bind']
+        self.nostrilBinds = ['r','l'] ###whatever name
         self.binds = [self.tipBind,self.bridgeBind] + self.sneerBinds
         
         self.ctlGrp = 'nose_ctl_grp'

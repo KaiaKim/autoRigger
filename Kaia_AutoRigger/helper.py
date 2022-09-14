@@ -16,8 +16,8 @@ class HelpExtra():
         pass
     
     def mirrorGuide(self):
-        left = ['brow_l_bind', 'sneer_l_bind', 'cheek_upper_l_bind', 'cheek_l_bind', 'cheek_lower_l_bind', 'eye_socket_l_bind']
-        right = [d.replace('_l_','_r_') for d in left]
+        left = [self.B.bigBinds[1], self.N.sneerBinds[1], self.C.binds[1], self.C.binds[3], self.C.binds[5], self.E.socBinds[1]]
+        right = [self.B.bigBinds[0], self.N.sneerBinds[0], self.C.binds[0], self.C.binds[2], self.C.binds[4], self.E.socBinds[0]]
 
         for lf,rt in zip(left,right):
             pos = mc.getAttr(rt+'.t')[0]
@@ -29,9 +29,9 @@ class HelpExtra():
             mc.setAttr(rt+'.jointOrient',0,0,0,type='double3')
             mc.setAttr(lf+'.jointOrient',0,180,0,type='double3')
             
-            
-        cLeft = ['brow_peak_l_bind', 'brow_corrugator_l_bind', 'brow_inner_l_bind', 'nostril_l_bind']
-        cRight = [d.replace('_l_','_r_') for d in cLeft]
+
+        cLeft = [self.B.peakBinds[1], self.B.corBinds[1], self.B.inBinds[1], self.N.nostrilBinds[1]]
+        cRight = [self.B.peakBinds[0], self.B.corBinds[0], self.B.inBinds[0], self.N.nostrilBinds[0]]
 
         for lf,rt in zip(cLeft,cRight):
             pos = mc.getAttr(rt+'.t')[0]

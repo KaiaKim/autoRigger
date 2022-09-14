@@ -14,7 +14,20 @@ class ImportExport():
         self.dir = mc.fileDialog2(
             fileFilter="*.json", dialogStyle=1, fm=3, caption='Set character data directory'
             )[0]
-        
+
+    def getOrientsData(self):
+        #get ctrl orient data
+        orients = [d+'_orient' for d in self.allCtls]
+        self.data['orients'] = getset.getTransform(orients, t=False, r=True)
+    
+    def getBsCrvData(self):
+        #get blendshape crv data
+        allCVs = []
+        for i in self.allCrv:
+            CVs = getset.getCVs(i)
+            allCVs += CVs
+        self.data['bsCrv'] = getset.getTransform(allCVs, t=True, r=False, os=True)
+
     def importData(self):
         if self.dir == None:
             print('please set directory first')
@@ -34,18 +47,7 @@ class ImportExport():
         if self.dir == None:
             print('please set directory first')
             return
-            
-        #get orient data
-        orients = [d+'_orient' for d in self.allCtls]
-        self.data['orients'] = getset.getTransform(orients, t=False, r=True)
-        
-        #get blendshape crv data
-        allCVs = []
-        for i in self.allCrv:
-            CVs = getset.getCVs(i)
-            allCVs += CVs
-        self.data['bsCrv'] = getset.getTransform(allCVs, t=True, r=False, os=True)
-        
+
         #write json files
         with open(self.dir+'/geoNames.json', "w") as wfile:
             json.dump(self.data['geo'], wfile)
