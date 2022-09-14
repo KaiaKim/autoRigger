@@ -95,4 +95,11 @@ run01.createWindow()
 ###no cls nul
 ###setAttr "cluster1.relative" 1;
 ###parent constraint clusters on ctrl
-###parent cls
+
+
+###nose bind not connected
+#cheek seperate, lower face seperate
+
+###1. mirror guide button
+###2. new data directory when there's no json
+###3. mirror guide function

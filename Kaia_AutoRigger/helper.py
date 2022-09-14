@@ -14,7 +14,33 @@ importlib.reload(lid)
 class HelpExtra():
     def __init__(self):
         pass
-        
+    
+    def mirrorGuide(self):
+        left = ['brow_l_bind', 'sneer_l_bind', 'cheek_upper_l_bind', 'cheek_l_bind', 'cheek_lower_l_bind', 'eye_socket_l_bind']
+        right = [d.replace('_l_','_r_') for d in left]
+
+        for lf,rt in zip(left,right):
+            pos = mc.getAttr(rt+'.t')[0]
+            rot = mc.getAttr(rt+'.r')[0]
+            
+            mc.setAttr(lf+'.t',-pos[0],pos[1],pos[2],type='double3')
+            mc.setAttr(lf+'.r',-rot[0],-rot[1],rot[2],type='double3')
+            
+            mc.setAttr(rt+'.jointOrient',0,0,0,type='double3')
+            mc.setAttr(lf+'.jointOrient',0,180,0,type='double3')
+            
+            
+        cLeft = ['brow_peak_l_bind', 'brow_corrugator_l_bind', 'brow_inner_l_bind', 'nostril_l_bind']
+        cRight = [d.replace('_l_','_r_') for d in cLeft]
+
+        for lf,rt in zip(cLeft,cRight):
+            pos = mc.getAttr(rt+'.t')[0]
+            rot = mc.getAttr(rt+'.r')[0]
+            
+            mc.setAttr(lf+'.t',pos[0],pos[1],-pos[2],type='double3')
+            mc.setAttr(lf+'.r',-rot[0],-rot[1],rot[2],type='double3')
+    
+    
     def mirrorCtlOrient(self,_):
         #get transform
         orients = [d+'_orient' for d in self.allCtls]
@@ -45,7 +71,7 @@ class HelpExtra():
         #modify data eyes
         allCVs = []
         for i in self.L.rBlendCrvs + self.L.lBlendCrvs:
-            CVs = util.getCVs(i)
+            CVs = getset.getCVs(i)
             allCVs += CVs
             
         cvPos = getset.getTransform(allCVs, t=True, r=False, os=True)

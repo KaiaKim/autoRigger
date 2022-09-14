@@ -135,7 +135,7 @@ def symmetricMouthCrv(crvList):
     outList = []
     for crv in crvList:
         CVs = getset.getCVs(crv)
-        posList = getset._getTransform(CVs, t=True, r=False, os=True)
+        posList = getset.getTransform(CVs, t=True, r=False, os=True)
         for num,i in enumerate(posList):
             if num<len(CVs)/4:
                 x,y,z = i['pos']
@@ -186,7 +186,7 @@ def matchCrvRtoL(posList):
         l['pos'] = r['pos']
     outList = rPosList + lPosList
     return outList
-'''
+
 def connectBigClus(C1, P1, P2):
     mm1 = mc.createNode('multMatrix')
     mc.connectAttr(P1+'.matrix', mm1+'.matrixIn[0]')
@@ -195,7 +195,7 @@ def connectBigClus(C1, P1, P2):
     mc.connectAttr(mm1+'.matrixSum', dm1+'.inputMatrix')
     mc.connectAttr(dm1+'.outputTranslate', C1+'.t')
     mc.connectAttr(dm1+'.outputRotate', C1+'.r')
-'''
+
 def cornerCtls(ctl, clus, P1, P2):
     auto = ctl+'_auto'
     bm1 = mc.createNode('blendMatrix')
@@ -220,3 +220,7 @@ def cornerCtls(ctl, clus, P1, P2):
     mc.setAttr(ran1+'.oldMaxX', 1)
     #outValueX >> face_Lower_bindW0
     mc.connectAttr(ran1+'.outValueX', bm1+'.target[0].weight')
+
+
+
+

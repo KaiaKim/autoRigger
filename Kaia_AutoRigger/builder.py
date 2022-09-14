@@ -218,9 +218,6 @@ class BuildRig():
         util.aimConstIterate(self.L.rBinds, self.E.socBinds[0])
         util.aimConstIterate(self.L.lBinds, self.E.socBinds[1])
 
-
-
-
         for i in range(4):
             #3: Create Lid Driver Curve
             lid.createDrivCrv(self.L.drivCrvs[i], self.L.crvs[i])
@@ -248,12 +245,20 @@ class BuildRig():
         util.createCtlGrp(socketBinds, self.L.ctls, self.L.ctlGrp, size=1, shape='arch')
         util.offsetCtls(self.L.ctls[:2], t=(0,0,7), s=(1.2,-.7,1)) #r
         util.offsetCtls(self.L.ctls[2:], t=(0,0,7), s=(1.2,.7,1)) #l
-        mc.scale(1,-1,1, self.L.ctls[0]+'_orient') #lower_r
-        mc.scale(1,-1,1, self.L.ctls[3]+'_orient') #upper_l
+        mc.scale(1,-1,1, self.L.ctls[1]+'_orient') #lower_r
+        mc.scale(1,-1,1, self.L.ctls[2]+'_orient') #upper_l
         mc.parent(self.L.ctlGrp, self.F.upCtl)
+        
         #5: Create handle toggle attribute
         for ctl in self.L.ctls:
             util.handleToggle(ctl)
+        
+        #6: Offset Handle
+        mc.setAttr(self.L.ctls[0]+'.selectHandleY', .5)
+        mc.setAttr(self.L.ctls[1]+'.selectHandleY', .5)
+        mc.setAttr(self.L.ctls[2]+'.selectHandleY', -.5)
+        mc.setAttr(self.L.ctls[3]+'.selectHandleY', -.5)
+
         
             ###lid crv blendshapes
         #1: Duplicate orig curve
@@ -470,9 +475,9 @@ class BuildRig():
         #2: Create Auto grp
         for ctl in self.C.ctls: util.createAutoGrp(ctl, ctl+'_orient')
         #3: Connect Auto grp
-        cheek.connectCtls(self.C.ctls[0:2], self.C.drvs, (-.2,.5,.1)) #upper
-        cheek.connectCtls(self.C.ctls[2:4], self.C.drvs, (-.5,.7,.5)) #mid
-        cheek.connectCtls(self.C.ctls[4:6], self.C.drvs, (-.5,1.4,.2)) #low
+        cheek.connectCtls(self.C.ctls[0:2], self.C.drvs, (.2,.5,.1)) #upper
+        cheek.connectCtls(self.C.ctls[2:4], self.C.drvs, (.5,.7,.5)) #mid
+        cheek.connectCtls(self.C.ctls[4:6], self.C.drvs, (.5,1.4,.2)) #low
         #2: Cheek binds follow mCorner ctls
         cheek.connectBinds(self.C.ctls, self.C.binds)
         

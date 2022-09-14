@@ -106,7 +106,7 @@ def connectBs(blinkCtls, blendCrvs, bsNodes):
     mc.connectAttr( clmp+'.outputR', bsNodes[3]+'.'+ blendCrvs[7] )
     
     ###
-    mc.keyframe(sdk1,index=(0,0),a=True,fc=-20,vc=0)
+    mc.keyframe(sdk1,index=[(0,0)],a=True,fc=-20,vc=0)
     mc.setKeyframe(sdk1,i=True,f=0)
     mc.setKeyframe(sdk1,i=True,f=40)
     mc.keyframe(sdk1,index=(1,1),a=True,vc=1/3)

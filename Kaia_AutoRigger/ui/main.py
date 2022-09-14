@@ -139,7 +139,10 @@ class createUI():
         ########
         mc.frameLayout(l='Helper', collapsable=True, collapse=True, w=220, mw=10, mh=5 )
         mc.columnLayout()
-        hBut01 = mc.button(l='Mirror ctl orient R to L', c=self.mirrorCtlOrient, w=230)
+        mc.text('X- to X+ (R to L)')
+        hbut00 = mc.button(l='Mirror Guide',c=self.mirrorGuide, w=230)
+        hBut02 = mc.button(l='Mirror face skeleton', c=self.mirrorCtlOrient, w=230)
+        hBut01 = mc.button(l='Mirror ctl orient', c=self.mirrorCtlOrient, w=230)
         hBut03 = mc.button(l='mirror Mouth BS curve', c=self.mirrorBlendCrvMouth, w=230)
         hBut04 = mc.button(l='mirror Eyes BS curve', c=self.mirrorBlendCrvEyes, w=230)
         mc.setParent('..')
