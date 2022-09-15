@@ -8,6 +8,7 @@ from Kaia_AutoRigger import data_
 from Kaia_AutoRigger import builder
 from Kaia_AutoRigger import helper
 from Kaia_AutoRigger import binder
+from Kaia_AutoRigger import checker
 
 from Kaia_AutoRigger.ui import main
 from Kaia_AutoRigger.ui import handler
@@ -17,6 +18,7 @@ importlib.reload(data_)
 importlib.reload(builder)
 importlib.reload(helper)
 importlib.reload(binder)
+importlib.reload(checker)
 
 importlib.reload(main)
 importlib.reload(handler)
@@ -46,7 +48,7 @@ class AutoRigFace(data_.ImportExport, builder.BuildRig, helper.HelpExtra, binder
             'attr':{}
         }
 
-        self.built = False
+        self.ctrlSet = 'ctrlSet'
     
 
     def names(self):
@@ -102,6 +104,3 @@ run01.createWindow()
 ###nose bind not connected
 #cheek seperate, lower face seperate
 
-###1. mirror guide button
-###2. new data directory when there's no json
-###3. mirror guide function

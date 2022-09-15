@@ -73,15 +73,38 @@ class Cheek():
         self.ctls = ['cheek'+d+'_ctl' for d in cList]
         self.drvs = ['cheek_driver_r_nul','cheek_driver_l_nul']
         
-class TeethTongue():
+class Tongue():
     def __init__(self):
+        prefix = 'tongue_'
+
         tList=['_01','_02','_03','_04','_05','_06','_07',]
-        self.tongueCtlGrp = 'tongue_ctl_grp'
-        self.tongueBinds = ['tongue'+d+'_bind' for d in tList]
-        self.tongueCtls = ['tongue'+d+'_ctl' for d in tList]
+        self.binds = ['tongue'+d+'_bind' for d in tList]
+        ###
+        self.crv = prefix + 'spineIk_Crv'
+        self.ikHand = prefix + 'spineIk'
+        self.ikEff = prefix + 'effector'
         
-        self.teethBinds = ['teeth_upper_bind','teeth_lower_bind']
-        self.teethCtls = ['teeth_upper_ctl','teeth_lower_ctl']
+        nameRef = ['start']+['%02d'%d for d in range(section)]+['end']
+        nameRef = [prefix + d for d in nameRef]
+        
+        self.clsGrp = prefix + 'cls_Grp'
+        self.clsNodes = [d+'_cls' for d in nameRef]
+        self.clsHandles = [d+'_clsHandle' for d in nameRef]
+        
+        self.ctlGrp = 'tongue_ctl_grp'
+        self.fKCtls = [d+'_FK_ctl' for d in nameRef]
+        self.iKCtls = [d+'_IK_ctl' for d in nameRef]
+        ###
+
+        
+
+        
+
+class Teeth():
+    def __init__(self):
+
+        self.binds = ['teeth_upper_bind','teeth_lower_bind']
+        self.ctls = ['teeth_upper_ctl','teeth_lower_ctl']
         
 
 

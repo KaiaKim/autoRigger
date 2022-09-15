@@ -1,9 +1,8 @@
 import maya.cmds as mc
 import importlib
-
 from Kaia_AutoRigger.modules import getset
-
 importlib.reload(getset)
+
 ###------------------------------------------Global Variables-------------------------------------------------
 grey = (.3,.3,.3)
 red = (.9,.65,.65)
@@ -26,18 +25,28 @@ class ButtonHandler():
         mc.frameLayout(self.frame01,e=True,enable=checker)
         for but in self.blueButs01:
             mc.button(but,e=True,bgc=blue)
-        
+    
+    def setDirHandler(self,_):
+        self.setDir()
+
+        mc.button(self.importBut, e=True, enable=True, bgc=orange)
+        mc.button(self.exportBut, e=True, enable=True, bgc=orange)
+
+
     def handler02(self,_):
         self.names()
+
         mc.frameLayout(self.frame02,e=True,enable=True)
-        for but in self.blueButs02:
-            mc.button(but,e=True,bgc=blue)
-        for but in self.redButs01:
-            mc.button(but,e=True,bgc=red)
-        for but in self.greenButs01:
-            mc.button(but,e=True,bgc=green)
+        for b in self.blueButs02:
+            mc.button(b,e=True,bgc=blue)
+        for b in self.redButs01:
+            mc.button(b,e=True,bgc=red)
+        for b in self.greenButs01:
+            mc.button(b,e=True,bgc=green)
+    
     
     def handler03(self,_):
+        self.createDefaultData()
         self.importData()
         
         checker = True
@@ -47,12 +56,12 @@ class ButtonHandler():
         for but in self.blueButs01:
             mc.button(but, e=True, bgc=blue)
 
-    def handler04(self,_):
-        if self.built == True:
-            self.getOrientsData()
-            self.getBsCrvData()
 
+    def handler04(self,_):
+        self.getOrientsData()
+        self.getBsCrvData()
         self.exportData()
+
 
     def buildRig(self,_):
         ###duplicate out the guide
@@ -61,7 +70,7 @@ class ButtonHandler():
         self.face01()
         self.mouth01()
         self.cheek01()
-        #self.teethTongue01()
+        self.teethTongue01()
         self.lid01()
         #self.eye01()
         self.brow01()
@@ -70,18 +79,17 @@ class ButtonHandler():
         self.face02()
         self.mouth02()
         self.cheek02()
-        #self.teethTongue02()
+        self.teethTongue02()
         self.lid02()
         #self.eye02()
         self.brow02()
         self.nose02()
+
         self.arrangeGrps()
-        
         self.colorCtls()
-        
+        self.createSets()
+
         if self.data['orients'] != []:
             getset.applyTransform(self.data['orients'])
         if self.data['bsCrv'] != []:
             getset.applyTransform(self.data['bsCrv'], os=True)
-
-        self.built = True

@@ -1,6 +1,7 @@
 import maya.cmds as mc
 import importlib
 import json
+from os.path import exists
 
 from Kaia_AutoRigger.modules import getset
 from Kaia_AutoRigger.modules import util
@@ -9,7 +10,7 @@ importlib.reload(getset)
 importlib.reload(util)
 ###-----------------------------------------------------CLASS---------------------------------------------------
 class ImportExport():
-    def setDir(self,_):
+    def setDir(self):
         #get file path
         self.dir = mc.fileDialog2(
             fileFilter="*.json", dialogStyle=1, fm=3, caption='Set character data directory'
@@ -28,11 +29,32 @@ class ImportExport():
             allCVs += CVs
         self.data['bsCrv'] = getset.getTransform(allCVs, t=True, r=False, os=True)
 
+
+    def createDefaultData(self):
+        #if json files doesn't exist
+        #notify users
+        #write default json files
+        if exists(self.dir+'/geoNames.json') == False:
+            print('### geoNames.json doesn\'t exist. Writing default files...')
+            with open(self.dir+'/geoNames.json', "w") as wfile:
+                json.dump(self.data['geo'], wfile)
+
+        if exists(self.dir+'/vertIndices.json') == False:
+            print('### vertIndices.json doesn\'t exist. Writing default files...')
+            with open(self.dir+'/vertIndices.json',"w") as wfile:
+                json.dump(self.data['verts'], wfile)
+
+        if exists(self.dir+'/ctlOrient.json') == False:
+            print('### ctlOrient.json doesn\'t exist. Writing default files...')   
+            with open(self.dir+'/ctlOrient.json',"w") as wfile:
+                json.dump(self.data['orients'], wfile)
+
+        if exists(self.dir+'/blendshapeCrv.json') == False:
+            print('### blendshapeCrv.json doesn\'t exist. Writing default files...')       
+            with open(self.dir+'/blendshapeCrv.json',"w") as wfile:
+                json.dump(self.data['bsCrv'], wfile)
+
     def importData(self):
-        if self.dir == None:
-            print('please set directory first')
-            return
-        
         #read json files
         with open(self.dir + '/geoNames.json', "r") as rfile:
             self.data['geo'] = json.load(rfile)
@@ -44,10 +66,6 @@ class ImportExport():
             self.data['bsCrv'] = json.load(rfile)
     
     def exportData(self,_):
-        if self.dir == None:
-            print('please set directory first')
-            return
-
         #write json files
         with open(self.dir+'/geoNames.json', "w") as wfile:
             json.dump(self.data['geo'], wfile)
