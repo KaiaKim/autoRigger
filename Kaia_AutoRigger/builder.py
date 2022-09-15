@@ -9,6 +9,7 @@ from Kaia_AutoRigger.modules import eye
 from Kaia_AutoRigger.modules import nose
 from Kaia_AutoRigger.modules import cheek
 from Kaia_AutoRigger.modules import opm_baker
+from Kaia_AutoRigger.modules import stretchyIk
 
 importlib.reload(util)
 importlib.reload(getset)
@@ -17,6 +18,7 @@ importlib.reload(lid)
 importlib.reload(nose)
 importlib.reload(cheek)
 importlib.reload(opm_baker)
+importlib.reload(stretchyIk)
 
 ###-----------------------------------------------------CLASS---------------------------------------------------
 class BuildRig():
@@ -131,23 +133,12 @@ class BuildRig():
 
     def teethTongue01(self):
         #teeth ctrls
-        jawTipList = [self.F.jawTipBind, self.F.jawTipBind]
-        util.createCtlGrp(jawTipList, self.T.teethCtls, self.F.root,
+        util.createCtlGrp(self.TE.binds, self.TE.ctls, self.F.root,
            size=.7, shape='semiCircle')
-        for i,ctl in enumerate(self.T.teethCtls):
-            val=1
-            if i==1: val=-1
-            util.offsetCtls(ctl,s=(2,val,1))
-            mc.rotate(0,0,0,ctl+'_nul')
-            mc.move(7,val*.7,0,ctl+'_nul',r=True)
-            
+        util.offsetCtls(self.TE.ctls,s=(2,0,1))
+
         #tongue ctrls
-        util.createCtlGrp(self.T.tongueBinds, self.T.tongueCtls, self.F.root,
-          ori=False, size=1, shape='circle')
-        util.offsetCtls(self.T.tongueCtls,r=(0,90,0),s=(1,1,1))
-        for i in range(len(self.T.tongueCtls)-1):
-            mc.parent(self.T.tongueCtls[i+1]+'_nul',self.T.tongueCtls[i])
-            #child, parent /1,0 /2,1 /3,2 /4,3 /5,4 /6,5
+        stretchyIk.stretchyIKMaker(self.TO, section=2, degree=3)
 
 
         
@@ -339,7 +330,7 @@ class BuildRig():
         
         util.overrideColor(
             [self.F.upCtl, self.F.jawCtl]
-            + self.T.teethCtls
+            + self.TE.ctls
             + self.T.tongueCtls,
             color=yellow
             )
@@ -456,16 +447,14 @@ class BuildRig():
     def teethTongue02(self):
         P1 = self.F.upBind
         P2 = self.F.jawBind
-        '''
+
         #6: Connect Teeth Ctrl
-        mc.parentConstraint(P1,self.T.teethCtls[0]+'_nul',mo=True)
-        mc.parentConstraint(P2,self.T.teethCtls[1]+'_nul',mo=True)
-        util.parentConstIterate(self.T.teethCtls, self.T.teethBinds)
+        mc.parentConstraint(P1,self.TE.ctls[0]+'_nul',mo=True)
+        mc.parentConstraint(P2,self.TE.ctls[1]+'_nul',mo=True)
+        util.parentConstIterate(self.TE.ctls, self.TE.binds)
         
         #7: Connect Tongue Ctrl
-        util.parentConstIterate(self.T.tongueCtls, self.T.tongueBinds)
-        '''
-        mc.parent(self.T.tongueCtls[0]+'_nul', self.F.jawCtl)
+        mc.parentConstraint(P2,self.TO.ctls[0]+'_nul',mo=True)
         
         
     def lid02(self):
@@ -522,6 +511,11 @@ class BuildRig():
                     self.L.rBlendCrvGrp, self.L.lBlendCrvGrp,
                     self.NTGrp)
         except: print('rig_grp parent skipped')
+
+    def createSets(self):
+        ctls = mc.ls('*_ctl')
+        mc.sets(ctls, n=self.ctrlSet) #create ctrl set
+        
 
 #-----------------------------------------------------EXECUTE---------------------------------------------------------------
 

@@ -28,11 +28,11 @@ class createUI():
         mc.setParent('..')
         ###
         mc.frameLayout(l='Data', collapsable=True, collapse=False, mw=10, mh=5)
-        mc.button(l='Set character data directory',c=self.setDir ,bgc=orange)
+        mc.button(l='Set character data directory',c=self.setDirHandler ,bgc=orange)
         
         mc.rowLayout( numberOfColumns=2)
-        mc.button(l='Import All Data', c=self.handler03, w=150, h=30, bgc=orange)
-        mc.button(l='Export All Data', c=self.handler04, w=150, h=30, bgc=orange)
+        self.importBut = mc.button(l='Import All Data', c=self.handler03, w=150, h=30, enable=False, bgc=grey)
+        self.exportBut = mc.button(l='Export All Data', c=self.handler04, w=150, h=30, enable=False, bgc=grey)
         mc.setParent('..')
         #
         mc.frameLayout( l='Geo', collapsable=True, collapse=False )
