@@ -6,6 +6,7 @@ class Face():
         self.loBind = 'face_lower_bind' 
         self.jawBind = 'jaw_bind'
         self.jawTipBind = 'jaw_tip_bind'
+        self.binds = [self.bind, self.upBind, self.loBind, self.jawBind, self.jawTipBind]
         
         self.root = 'face_ctl_root'
         self.upCtl = 'face_upper_ctl'
@@ -15,6 +16,8 @@ class Face():
 
 class Mouth():
     def __init__(self,verts):
+        self.upGuide = 'lip_upper_guideCrv'
+        self.loGuide = 'lip_lower_guideCrv'
         self.upCrv = 'lip_upper_curve' #No change this!
         self.loCrv = 'lip_lower_curve' #No change this!
         self.crv = 'mouth_curve' #No change this!
@@ -46,6 +49,7 @@ class Mouth():
 
         self.blendCrvGrp = 'mouth_blend_crv_grp'
         mbList = ['_r_wide','_l_wide','_r_small','_l_small','_r_smile','_l_smile','_r_frown','_l_frown']
+        self.blendGuides = [('lip_upper'+d+'_guideCrv','lip_lower'+d+'_guideCrv') for d in mbList]
         self.blendCrvs = ['mouth'+d+'_blendCurve' for d in mbList]
         self.bsNode = 'mouth_curve_blend'
 
@@ -84,6 +88,7 @@ class Tongue():
         self.ikHand = prefix + 'spineIk'
         self.ikEff = prefix + 'effector'
         
+        section = 2
         nameRef = ['start']+['%02d'%d for d in range(section)]+['end']
         nameRef = [prefix + d for d in nameRef]
         
@@ -92,13 +97,10 @@ class Tongue():
         self.clsHandles = [d+'_clsHandle' for d in nameRef]
         
         self.ctlGrp = 'tongue_ctl_grp'
-        self.fKCtls = [d+'_FK_ctl' for d in nameRef]
-        self.iKCtls = [d+'_IK_ctl' for d in nameRef]
+        self.fkCtls = [d+'_FK_ctl' for d in nameRef]
+        self.ikCtls = [d+'_IK_ctl' for d in nameRef]
         ###
 
-        
-
-        
 
 class Teeth():
     def __init__(self):
@@ -110,6 +112,7 @@ class Teeth():
 
 class Lid():
     def __init__(self,verts):
+        self.guides = ['lid_upper_r_guideCrv','lid_lower_r_guideCrv']
         lList = ['_upper_r', '_lower_r', '_upper_l', '_lower_l']
         self.crvs = ['lid'+d+'_curve' for d in lList] #No change this!
         self.drivCrvs = ['lid'+d+'_driver_curve' for d in lList] #lid driver curve

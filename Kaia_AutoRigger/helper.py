@@ -15,7 +15,7 @@ class HelpExtra():
     def __init__(self):
         pass
     
-    def mirrorGuide(self):
+    def mirrorGuide(self,_):
         left = [self.B.bigBinds[1], self.N.sneerBinds[1], self.C.binds[1], self.C.binds[3], self.C.binds[5], self.E.socBinds[1]]
         right = [self.B.bigBinds[0], self.N.sneerBinds[0], self.C.binds[0], self.C.binds[2], self.C.binds[4], self.E.socBinds[0]]
 

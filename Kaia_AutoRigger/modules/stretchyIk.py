@@ -5,24 +5,24 @@ from Kaia_AutoRigger.modules import util
 importlib.reload(util)
 ###------------------------------CLASS---------------------------------
 class stretchyIKMaker():
-    def __init__(self, object, section=1, degree=3):
-        self.chain = object.binds
-        self.start = object.binds[0]
-        self.end = object.binds[-1]
+    def __init__(self, obj, section=2, degree=3):
+        self.chain = obj.binds
+        self.start = obj.binds[0]
+        self.end = obj.binds[-1]
         self.span = section + 1
         self.degree = degree
         
-        self.crv = 
-        self.ikHand = 
-        self.ikEff = 
+        self.crv = obj.crv
+        self.ikHand = obj.ikHand
+        self.ikEff = obj.ikEff
         
-        self.clsGrp = 
-        self.clsNodes = 
-        self.clsHandles = 
+        self.clsGrp = obj.clsGrp
+        self.clsNodes = obj.clsNodes
+        self.clsHandles = obj.clsHandles
         
-        self.ctlGrp = 
-        self.FKCtls = 
-        self.IKCtls = 
+        self.ctlGrp = obj.ctlGrp
+        self.FKCtls = obj.fkCtls
+        self.IKCtls = obj.ikCtls
         
         ###
         self.createCrv()
@@ -57,21 +57,23 @@ class stretchyIKMaker():
     def clsOnCrv(self):
         CVs = mc.ls(self.crv + '.cv[*]', fl=1)
 
-        clsTarget = [CVs[0:2]] + [c for c in CVs[2:-2]] + [CVs[-2],CVs[-1]]
-    
-        for cv, clus in zip(clsTarget, self.clsNodes):
-            mc.cluster(cv, n=clus, rel=True)
+        targs = [
+            CVs[0:2],
+            [c for c in CVs[2:-2]],
+            [CVs[-2],CVs[-1]]
+            ]
+
+        for targ, clus in zip(targs, self.clsNodes):
+            mc.cluster(targ, n=clus, rel=True)
 
         
         mc.group(self.clsHandles,n=self.clsGrp)
     
     def ctlOnCls(self):
         
-        util.createCtlGrp(self.IKCtls, self.clsHandles, shape='square', size=8)
-        util.createCtlGrp(self.FKCtls, self.clsHandles, shape='circle', size=4)
-        
-        util.overrideColor(self.IKCtls, color='yellow')
-        util.overrideColor(self.FKCtls, color='magenta')
+        util.createCtlGrp(self.clsHandles, self.IKCtls, self.ctlGrp, shape='square', size=1)
+        util.createCtlGrp(self.clsHandles, self.FKCtls, self.ctlGrp, shape='circle', size=.7)
+        util.offsetCtls(self.IKCtls+self.FKCtls, r=(0,90,0), s=(1.5,1.5,2))
         
         FKNul=[d+'_nul' for d in self.FKCtls]
         util.parentIterate(self.IKCtls, FKNul)

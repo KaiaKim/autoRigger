@@ -19,7 +19,8 @@ class BindGeo():
                 else: x=4
                 
                 if geoKey==jntKey:
-                    util.bindSkin(jnts,geos,mi=x)
+                    if mc.ls(jnts) != [] and mc.ls(geos) != []:
+                        util.bindSkin(jnts,geos,mi=x)
                 
     def selectGeo(self,x):
         mc.select(self.data['geo'][x])

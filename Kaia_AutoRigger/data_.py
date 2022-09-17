@@ -34,26 +34,30 @@ class ImportExport():
         #if json files doesn't exist
         #notify users
         #write default json files
+        missingFiles = []
         if exists(self.dir+'/geoNames.json') == False:
-            print('### geoNames.json doesn\'t exist. Writing default files...')
+            missingFiles.append('geoNames.json')
             with open(self.dir+'/geoNames.json', "w") as wfile:
                 json.dump(self.data['geo'], wfile)
 
         if exists(self.dir+'/vertIndices.json') == False:
-            print('### vertIndices.json doesn\'t exist. Writing default files...')
+            missingFiles.append('vertIndices.json')
             with open(self.dir+'/vertIndices.json',"w") as wfile:
                 json.dump(self.data['verts'], wfile)
 
         if exists(self.dir+'/ctlOrient.json') == False:
-            print('### ctlOrient.json doesn\'t exist. Writing default files...')   
+            missingFiles.append('ctlOrient.json')
             with open(self.dir+'/ctlOrient.json',"w") as wfile:
                 json.dump(self.data['orients'], wfile)
 
         if exists(self.dir+'/blendshapeCrv.json') == False:
-            print('### blendshapeCrv.json doesn\'t exist. Writing default files...')       
+            missingFiles.append('blendshapeCrv.json')
             with open(self.dir+'/blendshapeCrv.json',"w") as wfile:
                 json.dump(self.data['bsCrv'], wfile)
-
+        
+        if missingFiles != []:
+            mc.warning(', '.join([x for x in missingFiles])+' doesn\'t exist. Writing default files...')
+        
     def importData(self):
         #read json files
         with open(self.dir + '/geoNames.json', "r") as rfile:
@@ -65,7 +69,7 @@ class ImportExport():
         with open(self.dir + '/blendshapeCrv.json', "r") as rfile:
             self.data['bsCrv'] = json.load(rfile)
     
-    def exportData(self,_):
+    def exportData(self):
         #write json files
         with open(self.dir+'/geoNames.json', "w") as wfile:
             json.dump(self.data['geo'], wfile)

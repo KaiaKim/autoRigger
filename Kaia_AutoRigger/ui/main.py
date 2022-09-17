@@ -25,15 +25,18 @@ class createUI():
         ###
         mc.frameLayout(l='Prepare', collapsable=True, collapse=False, mw=10, mh=5)
         mc.button(l='Import Face Skeleton',c=lambda x:mc.file(self.mayascripts+'/Kaia_AutoRigger/prepare/faceSkeleton.ma',i=True),bgc=blue)
-        mc.setParent('..')
-        ###
-        mc.frameLayout(l='Data', collapsable=True, collapse=False, mw=10, mh=5)
+        
         mc.button(l='Set character data directory',c=self.setDirHandler ,bgc=orange)
         
         mc.rowLayout( numberOfColumns=2)
         self.importBut = mc.button(l='Import All Data', c=self.handler03, w=150, h=30, enable=False, bgc=grey)
         self.exportBut = mc.button(l='Export All Data', c=self.handler04, w=150, h=30, enable=False, bgc=grey)
         mc.setParent('..')
+        
+        mc.setParent('..')
+        ###
+        mc.frameLayout(l='Data', collapsable=True, collapse=False, mw=10, mh=5)
+
         #
         mc.frameLayout( l='Geo', collapsable=True, collapse=False )
         mc.rowLayout(numberOfColumns=2,bgc=grey)
@@ -47,7 +50,6 @@ class createUI():
         mc.text(l='Upper Teeth')
         mc.text(l='Lower Teeth')
         mc.text(l='tongue')
-        mc.text(l='Extra')
         mc.setParent('..')
         
         mc.gridLayout(numberOfColumns=2, cellWidthHeight=(90, 20) ) #fourth layout - frame layout
@@ -57,18 +59,18 @@ class createUI():
         gBut04 = mc.button(l='select', c=lambda _:self.assignGeo('brow','sel'), bgc=green)
         gBut05 = mc.button(l='assign', c=lambda _:self.assignGeo('lash','ass'), bgc=blue)
         gBut06 = mc.button(l='select', c=lambda _:self.assignGeo('lash','sel'), bgc=green)
+        '''
         gBut07 = mc.button(l='assign', c=lambda _:self.assignGeo('eyeR','ass'), bgc=blue)
         gBut08 = mc.button(l='select', c=lambda _:self.assignGeo('eyeR','sel'), bgc=green)
         gBut09 = mc.button(l='assign', c=lambda _:self.assignGeo('eyeL','ass'), bgc=blue)
         gBut10 = mc.button(l='select', c=lambda _:self.assignGeo('eyeL','sel'), bgc=green)
+        '''
         gBut11 = mc.button(l='assign', c=lambda _:self.assignGeo('upTeeth','ass'), bgc=blue)
         gBut12 = mc.button(l='select', c=lambda _:self.assignGeo('upTeeth','sel'), bgc=green)
         gBut13 = mc.button(l='assign', c=lambda _:self.assignGeo('loTeeth','ass'), bgc=blue)
         gBut14 = mc.button(l='select', c=lambda _:self.assignGeo('loTeeth','sel'), bgc=green)
         gBut15 = mc.button(l='assign', c=lambda _:self.assignGeo('tongue','ass'), bgc=blue)
         gBut16 = mc.button(l='select', c=lambda _:self.assignGeo('tongue','sel'), bgc=green)
-        gBut17 = mc.button(l='assign', c=lambda _:self.assignGeo('extra','ass'), bgc=blue)
-        gBut18 = mc.button(l='select', c=lambda _:self.assignGeo('extra','sel'), bgc=green)
         mc.setParent('..')
         
         mc.setParent('..')
@@ -84,7 +86,7 @@ class createUI():
         mc.text(l='Lower Lip Verts')
         mc.text(l='Upper R Eye Verts')
         mc.text(l='Lower R Eye Verts')
-        mc.text(l='R Brow Vert')
+
         mc.setParent('..')
         
         mc.gridLayout( numberOfColumns=2, cellWidthHeight=(90, 20) ) #fourth layout - frame layout
@@ -96,8 +98,6 @@ class createUI():
         mc.button(l='select', c=lambda _:self.handler01('lidUpperR','sel'), bgc=green)
         mc.button(l='assign', c=lambda _:self.handler01('lidLowerR','ass'), bgc=blue)
         mc.button(l='select', c=lambda _:self.handler01('lidLowerR','sel'), bgc=green)
-        mc.button(l='assign', c=lambda _:self.handler01('browR','ass'), bgc=blue)
-        mc.button(l='select', c=lambda _:self.handler01('browR','sel'), bgc=green)
         mc.setParent('..')
         
         mc.setParent('..')
@@ -108,18 +108,18 @@ class createUI():
         
         ###
         self.frame01 = mc.frameLayout(l='Name', collapsable=True, collapse=False, mw=10, mh=5, enable=False)
-        nBut01 = mc.button(l='1. Set Rig Names',c=self.handler02)
+        nBut01 = mc.button(l='1. Set Rig Names',c=self.setNamesHandler)
         mc.setParent('..')
         
         ###
         self.frame02 = mc.frameLayout(l='Build', collapsable=True, collapse=False, mw=10, mh=5, enable=False)
-        but01 = mc.button(l='2. Build Rig', c=self.buildRig01)
+        but01 = mc.button(l='2. Build Rig', c=self.buildRig)
         
-        mc.columnLayout(bgc=grey, w=180)
+        '''
+        mc.columnLayout(bgc=grey, w=180) #a
         mc.checkBox(l='Build All')
-        
-        mc.frameLayout( l='Build Individual', collapsable=True, collapse=False )
-        mc.gridLayout(numberOfColumns=3, cellWidthHeight=(90,20))
+        mc.frameLayout( l='Build Individual', collapsable=True, collapse=True ) #b
+        mc.gridLayout(numberOfColumns=3, cellWidthHeight=(90,20)) #c
         mc.checkBox(l='Face')
         mc.checkBox(l='Mouth')
         mc.checkBox(l='Cheek')
@@ -129,27 +129,13 @@ class createUI():
         mc.checkBox(l='Eyes')
         mc.checkBox(l='Brows')
         mc.checkBox(l='Nose')
-        mc.setParent('..')
-
-        mc.setParent('..')
-        mc.setParent('..')
+        mc.setParent('..') #c
+        mc.setParent('..') #b
+        mc.setParent('..') #a
+        '''
         
-        mc.setParent('..')
         
-        ########
-        mc.frameLayout(l='Helper', collapsable=True, collapse=True, w=220, mw=10, mh=5 )
-        mc.columnLayout()
-        mc.text('X- to X+ (R to L)')
-        hbut00 = mc.button(l='Mirror Guide',c=self.mirrorGuide, w=230)
-        hBut02 = mc.button(l='Mirror face skeleton', c=self.mirrorCtlOrient, w=230)
-        hBut01 = mc.button(l='Mirror ctl orient', c=self.mirrorCtlOrient, w=230)
-        hBut03 = mc.button(l='mirror Mouth BS curve', c=self.mirrorBlendCrvMouth, w=230)
-        hBut04 = mc.button(l='mirror Eyes BS curve', c=self.mirrorBlendCrvEyes, w=230)
-        mc.setParent('..')
-        mc.setParent('..')
-        #########
         
-        self.frame03 = mc.frameLayout(l='Bind', collapsable=True, collapse=False, mw=10, mh=5)
         but05 = mc.button(l='3. Bind Geo', c=self.bindGeo01)
         
         mc.columnLayout()
@@ -184,16 +170,31 @@ class createUI():
         mc.setParent('..')
         ##
         mc.setParent('..')
+        
         mc.setParent('..')
+        
+        ########
+        self.frame03 = mc.frameLayout(l='Helper', collapsable=True, collapse=False, w=220, mw=10, mh=5, enable=False)
+        mc.columnLayout()
+        mc.text('X- to X+ (R to L)')
+        '''hBut01 = mc.button(l='Mirror Joint Guide',c=self.mirrorGuide, w=230)'''
+        hBut02 = mc.button(l='Mirror ctl orient', c=self.mirrorCtlOrient, w=230)
+        hBut03 = mc.button(l='mirror Mouth BS curve', c=self.mirrorBlendCrvMouth, w=230)
+        hBut04 = mc.button(l='mirror Eyes BS curve', c=self.mirrorBlendCrvEyes, w=230)
+        mc.setParent('..')
+        mc.setParent('..')
+        #########
+        
+        
 
 
         mc.showWindow()
         
-        self.blueButs01 = [gBut01,gBut03,gBut05,gBut07,gBut09,gBut11,gBut13,gBut15,gBut17]
+        self.blueButs01 = [gBut01,gBut03,gBut05,gBut07,gBut09,gBut11,gBut13,gBut15]
         self.blueButs01 = [nBut01]
         self.blueButs02 = [but01,but05]
         self.redButs01 = []
-        self.greenButs01 = [hBut01,hBut03,hBut04, bBut01,bBut02,bBut03,bBut04,bBut05,bBut06,bBut07,bBut08,bBut09]
+        self.greenButs01 = [hBut02,hBut03,hBut04,bBut01,bBut02,bBut03,bBut04,bBut05,bBut06,bBut07,bBut08,bBut09]
     
 
 ###---------------------------------------------------------------------------

@@ -151,10 +151,23 @@ def connectTransform(driver, driven, reverseZ=False):
         mc.connectAttr(driver+'.ry', driven+'.ry')
         mc.connectAttr(driver+'.tz', driven+'.tz')
 
+
+def matchTransformIterate(parents, childs):
+    if isinstance(parents,str): parents = [parents]
+    if isinstance(childs,str): childs = [childs]
+    
+    constList = []
+    for parent, child in zip(parents, childs):
+        if mc.ls(parent) != [] and mc.ls(child) != []:
+            const1 = mc.parentConstraint(parent, child, mo=False)[0]
+            constList.append(const1)
+    mc.delete(constList)
+    
 def parentConstIterate(parents, childs):
     for parent, child in zip(parents, childs):
-        const1 = mc.parentConstraint(parent, child, mo=True)
+        const1 = mc.parentConstraint(parent, child, mo=True)[0]
         mc.setAttr(const1+'.interpType', 2) #shortest
+
 
 def parentIterate(parents, childs):
     for parent, child in zip(parents, childs):
@@ -182,14 +195,15 @@ def localScaleLoc(loc,num):
 def overrideColor(crvs, color=(1,1,0)):
     if isinstance(crvs,str): crvs = [crvs]
     for crv in crvs:
-        try:
-            rgb = ('R','G','B')
-            mc.setAttr(crv + '.overrideEnabled', 1)
-            mc.setAttr(crv + '.overrideRGBColors', 1)
-            for channel, col in zip(rgb, color):
-                mc.setAttr(crv + '.overrideColor%s' %channel, col)
-        except:
-            print('ERROR: overrideColor failed:', crv) ##use raise instead
+        if mc.ls(crv) != []:
+            try:
+                rgb = ('R','G','B')
+                mc.setAttr(crv + '.overrideEnabled', 1)
+                mc.setAttr(crv + '.overrideRGBColors', 1)
+                for channel, col in zip(rgb, color):
+                    mc.setAttr(crv + '.overrideColor%s' %channel, col)
+            except:
+                mc.warning('ERROR: overrideColor failed: '+ crv) ##use raise instead
         
 
     

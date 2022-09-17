@@ -8,7 +8,6 @@ from Kaia_AutoRigger import data_
 from Kaia_AutoRigger import builder
 from Kaia_AutoRigger import helper
 from Kaia_AutoRigger import binder
-from Kaia_AutoRigger import checker
 
 from Kaia_AutoRigger.ui import main
 from Kaia_AutoRigger.ui import handler
@@ -18,7 +17,6 @@ importlib.reload(data_)
 importlib.reload(builder)
 importlib.reload(helper)
 importlib.reload(binder)
-importlib.reload(checker)
 
 importlib.reload(main)
 importlib.reload(handler)
@@ -37,39 +35,48 @@ class AutoRigFace(data_.ImportExport, builder.BuildRig, helper.HelpExtra, binder
             'geo':{
                 'face':None, 'brow':None, 'lash':None,
                 'eyeR':None, 'eyeL':None, 'upTeeth':None,
-                'loTeeth':None, 'tongue':None, 'extra':None
+                'loTeeth':None, 'tongue':None
                 },
             'verts':{
-                'lipUpper':None, 'lipLower':None, 'lidUpperR':None,
-                'lidLowerR':None, 'browR':None
+                'lipUpper':None,'lipLower':None, 
+                'lidUpperR':None,'lidLowerR':None
                 },
             'orients':[],
             'bsCrv':[],
             'attr':{}
         }
-
-        self.ctrlSet = 'ctrlSet'
     
-
-    def names(self):
-        self.NTGrp = 'face_NT_grp'
+        self.createWindow()
+        
+    def setNames(self):
+        self.guideGrp = 'face_GUIDE_Grp'
+        self.bindGrp = 'face_BIND_Grp'
+        self.NTGrp = 'face_NT_Grp'
         
         #execute namer class object
         self.F = namer.Face()
         self.M = namer.Mouth(self.data['verts'])
         self.C = namer.Cheek()
-        self.T = namer.TeethTongue()
+        self.TE = namer.Teeth()
+        self.TO = namer.Tongue()
         self.L = namer.Lid(self.data['verts'])
         self.E = namer.Eye()
         self.B = namer.Brow()
         self.N = namer.Nose()
         
-        self.allBinds = mc.ls('*_bind')
+        self.allBinds = (
+                    self.F.binds + self.B.binds + self.C.binds + self.N.binds
+                    + self.E.socBinds + self.E.binds
+                    + self.TE.binds + self.TO.binds
+                    + self.L.rBinds + self.L.lBinds
+                    + self.M.binds
+                    )
+                    
         self.allCtls = self.M.lipCtls + self.M.cornerCtls + self.L.ctls + self.E.ctls + self.B.ctls + [self.F.jawCtl] + self.N.sneerCtls
         self.allCrv = self.M.blendCrvs + self.L.rBlendCrvs + self.L.lBlendCrvs
         
         self.bindSets = {
-            'face': [self.F.bind, self.F.upBind, self.F.loBind, self.F.jawBind, self.N.bridgeBind]
+            'face': [self.F.bind, self.F.upBind, self.F.loBind, self.F.jawBind]
                     + self.B.binds + self.C.binds + self.N.binds + self.E.socBinds
                     + self.L.rBinds + self.L.lBinds
                     + self.M.binds,
@@ -77,30 +84,36 @@ class AutoRigFace(data_.ImportExport, builder.BuildRig, helper.HelpExtra, binder
             'lash': self.L.rBinds + self.L.lBinds,
             'eyeR': [self.E.binds[0]],
             'eyeL': [self.E.binds[1]],
-            'upTeeth': [self.T.teethBinds[0]],
-            'loTeeth': [self.T.teethBinds[1]],
-            'tongue': self.T.tongueBinds,
-            'extra': [self.F.upBind]
+            'upTeeth': [self.TE.binds[0]],
+            'loTeeth': [self.TE.binds[1]],
+            'tongue': self.TO.binds,
         }
         
 
 
 ###-----------------------------------------------------EXECUTE---------------------------------------------------------------
-run01=AutoRigFace()
-run01.createWindow()
-
+if __name__ == "__main__":
+    Kaia_AutoRigger.AutoRigFace()
+    
 ###DQ skin > attibute editor > support Non-rigid transformation ON
 
-###face ctl > face nul
-
-###lip ctl grp unparent
-###mouth curve constraint to face root
-
-###no cls nul
-###setAttr "cluster1.relative" 1;
-###parent constraint clusters on ctrl
 
 
-###nose bind not connected
 #cheek seperate, lower face seperate
 
+
+### 1. eye close shape on guide O
+### 2. Lock values on guide joints O
+### 3. Smart clusters O
+### 4. Absolute options for clusters O
+### 5. mirror guide >> mirror lip curve too O
+### 6. Auto mirror joints
+
+
+### 7. Duplicate Binds from Guide to break connections
+### 8. Duplicate Curves from Guide
+### 9. unlock all values for joints
+
+### 7. hide mouth left curve
+
+### 8. Ditch Cheek rig, Eye rig

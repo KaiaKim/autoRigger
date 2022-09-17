@@ -30,19 +30,33 @@ class ButtonHandler():
         self.setDir()
 
         mc.button(self.importBut, e=True, enable=True, bgc=orange)
-        mc.button(self.exportBut, e=True, enable=True, bgc=orange)
+        
 
 
-    def handler02(self,_):
-        self.names()
+    def setNamesHandler(self,_):
+        missingVerts = []
+        
+        for key in self.data['verts'].keys():
+            if self.data['verts'][key] == None:
+                missingVerts.append(key)
+                
+        if missingVerts != []:
+            mc.warning(', '.join([x for x in missingVerts])+'Verts are not assigned!')
+            
+        elif missingVerts == []:
+            self.setNames()
 
-        mc.frameLayout(self.frame02,e=True,enable=True)
-        for b in self.blueButs02:
-            mc.button(b,e=True,bgc=blue)
-        for b in self.redButs01:
-            mc.button(b,e=True,bgc=red)
-        for b in self.greenButs01:
-            mc.button(b,e=True,bgc=green)
+            mc.frameLayout(self.frame02, e=True, enable=True)
+            mc.frameLayout(self.frame03, e=True, enable=True)
+            
+            mc.button(self.exportBut, e=True, enable=True, bgc=orange)
+            
+            for b in self.blueButs02:
+                mc.button(b,e=True, bgc=blue)
+            for b in self.redButs01:
+                mc.button(b,e=True, bgc=red)
+            for b in self.greenButs01:
+                mc.button(b,e=True, bgc=green)
     
     
     def handler03(self,_):
@@ -69,7 +83,7 @@ class ButtonHandler():
         self.createGrps()
         self.face01()
         self.mouth01()
-        self.cheek01()
+        #self.cheek01()
         self.teethTongue01()
         self.lid01()
         #self.eye01()
@@ -78,7 +92,7 @@ class ButtonHandler():
         
         self.face02()
         self.mouth02()
-        self.cheek02()
+        #self.cheek02()
         self.teethTongue02()
         self.lid02()
         #self.eye02()
@@ -87,7 +101,6 @@ class ButtonHandler():
 
         self.arrangeGrps()
         self.colorCtls()
-        self.createSets()
 
         if self.data['orients'] != []:
             getset.applyTransform(self.data['orients'])

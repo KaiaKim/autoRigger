@@ -24,9 +24,18 @@ importlib.reload(stretchyIk)
 class BuildRig():
     def __init__(self):
         pass
-        
+
     def face01(self):
-        #0: Create Face Ctls
+        #0: Match face skeleton to guide
+        guides = [d.replace('_bind','_guide') for d in self.allBinds]
+        util.matchTransformIterate(guides, self.allBinds) #match Transform
+        
+
+        for bind in self.allBinds:
+            if mc.ls(bind) != []: #lid binds, lip binds doesn't exist yet, so they won't be affected
+                opm_baker.bake_transform_to_offset_parent_matrix(bind) 
+        
+        #1: Create Face Ctls
         mc.group(em=True,n=self.F.root)
         
         mc.connectAttr(
@@ -36,21 +45,21 @@ class BuildRig():
                 self.F.bind+'.worldMatrix', self.F.root+'.offsetParentMatrix'
                 )
         
-        #0: Create Upper Face Ctls
+        #1: Create Upper Face Ctls
         util.createCtlGrp(
             self.F.upBind, self.F.upCtl, self.F.root,
             ori=False, size=1, shape='triangle'
             )
         util.offsetCtls(self.F.upCtl, t=(0,-1.5,12), s=(1,.4,1))
         
-        #0: Create Lower Face Ctls
+        #1: Create Lower Face Ctls
         util.createCtlGrp(
             self.F.loBind, self.F.loCtl, self.F.root,
             ori=False, size=12, shape='semiCircle'
             )
         util.offsetCtls(self.F.loCtl, t=(0,-6,0), r=(180,0,0))
         
-        #0: Create Jaw Ctls
+        #1: Create Jaw Ctls
         util.createCtlGrp(
             self.F.jawBind, self.F.jawCtl, self.F.loCtl,
             size=1, shape='triangle'
@@ -59,6 +68,10 @@ class BuildRig():
    
     
     def mouth01(self):
+        #0: Duplicate lip curves
+        mc.duplicate(self.M.upGuide, n=self.M.upCrv)
+        mc.duplicate(self.M.loGuide, n=self.M.loCrv)
+        
         #1: Generate mouth_curve from lip_curves
         mouth.createMouthCrv(self.M.crv, self.M.upCrv, self.M.loCrv)
 
@@ -135,7 +148,8 @@ class BuildRig():
         #teeth ctrls
         util.createCtlGrp(self.TE.binds, self.TE.ctls, self.F.root,
            size=.7, shape='semiCircle')
-        util.offsetCtls(self.TE.ctls,s=(2,0,1))
+        util.offsetCtls(self.TE.ctls,t=(6,0,3))
+        util.offsetCtls(self.TE.ctls[1],s=(1,-1,1))
 
         #tongue ctrls
         stretchyIk.stretchyIKMaker(self.TO, section=2, degree=3)
@@ -143,7 +157,11 @@ class BuildRig():
 
         
     def lid01(self):
-        #1: Mirror Lid Curves
+        #0: Duplicate Lid R curves
+        mc.duplicate(self.L.guides[0], n=self.L.crvs[0])
+        mc.duplicate(self.L.guides[1], n=self.L.crvs[1])
+        
+        #1: Mirror Lid R Curves to L
         getset.mirrorObj(self.L.crvs[2], self.L.crvs[0])
         getset.mirrorObj(self.L.crvs[3], self.L.crvs[1])
         
@@ -320,43 +338,10 @@ class BuildRig():
         mc.group(n=self.NTGrp, em=True)
 
 
-    def colorCtls(self):
-        red=(1,0,0)
-        blue=(0,0,1)
-        lightBlue = (.4,1.2,8.6)
-        pink=(2.4,.6,.57)
-        yellow=(1,1,0)
-        purple=(.3,0,.7)
-        
-        util.overrideColor(
-            [self.F.upCtl, self.F.jawCtl]
-            + self.TE.ctls
-            + self.T.tongueCtls,
-            color=yellow
-            )
-        util.overrideColor(
-            [self.E.rotCtl,self.E.aimCtl]
-            + self.E.ctls
-            + self.E.aimMicroCtls,
-            color=yellow
-            )
-        util.overrideColor(
-            [self.F.loCtl,self.M.ctl,self.N.ctl,self.N.bridgeCtl],
-            color=purple
-            )
-        
-        list1 = self.C.ctls + self.M.cornerCtls + self.L.ctls + self.B.bigCtls + self.B.inCtls + self.B.corCtls + self.B.peakCtls
-        util.overrideColor([d for d in list1 if '_r_' in d], color=red)
-        util.overrideColor([d for d in list1 if '_l_' in d], color=blue)
-        
-        list2 = self.M.lipCtls+sum(self.L.microCtls,[])+self.N.sneerCtls
-        util.overrideColor([d for d in list2 if '_r_' in d], color=pink)
-        util.overrideColor([d for d in list2 if '_l_' in d], color=lightBlue)
-        util.overrideColor([d for d in list2 if '_m_' in d], color=yellow)
     
+        
     def face02(self):
-        for bind in self.allBinds:
-            opm_baker.bake_transform_to_offset_parent_matrix(bind)
+        
         #1: connect face upper bind
         util.connectTransform(self.F.upCtl, self.F.upBind)
         #1: Parent constraint face lower bind
@@ -454,8 +439,8 @@ class BuildRig():
         util.parentConstIterate(self.TE.ctls, self.TE.binds)
         
         #7: Connect Tongue Ctrl
-        mc.parentConstraint(P2,self.TO.ctls[0]+'_nul',mo=True)
-        
+        mc.parentConstraint(P2,self.TO.ikCtls[0]+'_nul',mo=True)
+        mc.parent(self.TO.ctlGrp, self.F.root)
         
     def lid02(self):
         #2: Create Blendshape Node
@@ -498,25 +483,60 @@ class BuildRig():
 
         
     def arrangeGrps(self):
-        #these are rather simple parent commands,
-        #we keep going even if there's an error.
-        try:
-            mc.parent(
-                    self.M.upCrv, self.M.loCrv,self.M.crv,
-                    self.M.bindmeshesGrp, self.M.clusGrp,
-                    self.M.drivGrp,self.M.lipDrivGrp,
-                    self.M.blendCrvGrp, 
-                    self.L.crvs,self.L.drivCrvs,
-                    self.L.drivGrp,self.L.lidDrivGrp,
-                    self.L.rBlendCrvGrp, self.L.lBlendCrvGrp,
-                    self.NTGrp)
-        except: print('rig_grp parent skipped')
-
-    def createSets(self):
-        ctls = mc.ls('*_ctl')
-        mc.sets(ctls, n=self.ctrlSet) #create ctrl set
+        childs = [
+                self.M.upCrv, self.M.loCrv,self.M.crv,
+                self.M.bindmeshesGrp, self.M.clusGrp,
+                self.M.drivGrp,self.M.lipDrivGrp,
+                self.M.blendCrvGrp, 
+                self.L.crvs,self.L.drivCrvs,
+                self.L.drivGrp,self.L.lidDrivGrp,
+                self.L.rBlendCrvGrp, self.L.lBlendCrvGrp,
+                self.TO.clsGrp, self.TO.ikHand,
+        ]
         
-
+        for c in childs:
+            try:
+                mc.parent(c,self.NTGrp)
+            except:
+                mc.warning('parent '+c+' to '+self.NTGrp+' skipped')
+        
+        mc.hide(self.guideGrp, self.NTGrp, self.bindGrp)
+        
+    def colorCtls(self):
+        red=(1,0,0)
+        blue=(0,0,1)
+        lightBlue = (.4,1.2,8.6)
+        pink=(2.4,.6,.57)
+        yellow=(1,1,0)
+        purple=(.3,0,.7)
+        magenta=(1,0,1)
+        
+        util.overrideColor(
+            [self.F.upCtl, self.F.jawCtl]
+            + self.TE.ctls
+            + self.TO.ikCtls,
+            color=yellow
+            )
+        util.overrideColor(
+            [self.E.rotCtl,self.E.aimCtl]
+            + self.E.ctls
+            + self.E.aimMicroCtls,
+            color=yellow
+            )
+        util.overrideColor(
+            [self.F.loCtl,self.M.ctl,self.N.ctl,self.N.bridgeCtl],
+            color=purple
+            )
+        util.overrideColor(self.TO.fkCtls, color=magenta)
+        
+        list1 = self.C.ctls + self.M.cornerCtls + self.L.ctls + self.B.bigCtls + self.B.inCtls + self.B.corCtls + self.B.peakCtls
+        util.overrideColor([d for d in list1 if '_r_' in d], color=red)
+        util.overrideColor([d for d in list1 if '_l_' in d], color=blue)
+        
+        list2 = self.M.lipCtls+sum(self.L.microCtls,[])+self.N.sneerCtls
+        util.overrideColor([d for d in list2 if '_r_' in d], color=pink)
+        util.overrideColor([d for d in list2 if '_l_' in d], color=lightBlue)
+        util.overrideColor([d for d in list2 if '_m_' in d], color=yellow)
 #-----------------------------------------------------EXECUTE---------------------------------------------------------------
 
 ###mouth left driver scale orient x -1
