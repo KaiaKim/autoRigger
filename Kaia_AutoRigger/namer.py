@@ -12,6 +12,7 @@ class Face():
         self.upCtl = 'face_upper_ctl'
         self.loCtl = 'face_lower_ctl'
         self.jawCtl = 'jaw_ctl'
+        self.ctls = [self.upCtl, self.loCtl, self.jawCtl]
 
 
 class Mouth():
@@ -93,12 +94,11 @@ class Tongue():
         
         self.fkCtls = [d+'_FK_ctl' for d in nameRef]
         self.ikCtls = [d+'_IK_ctl' for d in nameRef]
-        ###
+        self.ctls = self.fkCtls + self.ikCtls
 
 
 class Teeth():
     def __init__(self):
-        self.nul = 'teethTongue_nul' 
         self.binds = ['teeth_upper_bind','teeth_lower_bind']
         self.ctls = ['teeth_upper_ctl','teeth_lower_ctl']
         
@@ -202,5 +202,7 @@ class Nose():
         self.bridgeCtl = 'noseBridge_ctl'
         self.ctl = 'nose_ctl'
         self.sneerCtls = ['nose_sneer_r_ctl', 'nose_sneer_l_ctl']
+
+        self.ctls = [self.bridgeCtl, self.ctl] + self.sneerCtls
 
         

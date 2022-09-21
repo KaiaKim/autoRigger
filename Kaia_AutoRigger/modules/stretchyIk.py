@@ -99,7 +99,7 @@ class stretchyIKMaker():
         
     def ikTwist(self):
         mc.spaceLocator(n=self.upObj)
-        mc.parent(self.upObj,self.FKCtls[0]+'_nul', r=True)
+        mc.parent(self.upObj,self.FKCtls[0]+'_orient', r=True)
         mc.move(0,100,0,'tongue_upObj', ls=True)
         mc.hide(self.upObj)
         

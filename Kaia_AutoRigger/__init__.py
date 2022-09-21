@@ -66,14 +66,19 @@ class AutoRigFace(data_.ImportExport, builder.BuildRig, helper.HelpExtra, binder
         self.N = namer.Nose()
         
         self.allBinds = (
-                    self.F.binds + self.B.binds + self.N.binds
-                    + self.E.socBinds + self.E.binds
-                    + self.TE.binds + self.TO.binds
-                    + self.L.rBinds + self.L.lBinds
-                    + self.M.binds
-                    )
+                        self.F.binds + self.B.binds + self.N.binds
+                        + self.E.socBinds + self.E.binds
+                        + self.TE.binds + self.TO.binds
+                        + self.L.rBinds + self.L.lBinds
+                        + self.M.binds
+                        )
                     
-        self.allCtls = self.M.lipCtls + self.M.cornerCtls + self.L.ctls + self.E.ctls + self.B.ctls + [self.F.jawCtl] + self.N.sneerCtls
+        self.allCtls = (
+                        self.F.ctls + self.M.lipCtls + self.M.cornerCtls 
+                        + self.L.ctls + self.L.microCtls[0] + self.L.microCtls[1] + self.L.microCtls[2] + self.L.microCtls[3]
+                        + self.E.ctls + self.B.ctls
+                        + self.N.ctls + self.TO.ctls + self.TE.ctls
+                        )
         self.allCrv = self.M.blendCrvs + self.L.rBlendCrvs + self.L.lBlendCrvs
         
         self.bindSets = {

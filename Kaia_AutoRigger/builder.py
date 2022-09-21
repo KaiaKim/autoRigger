@@ -125,8 +125,14 @@ class BuildRig():
         mc.parent(self.M.lipCtlGrp, self.F.root)
         
         #5: Add handle toggle attribute on corner ctl
-        for ctl in self.M.cornerCtls: util.handleToggle(ctl)
-        
+        #5: Lock Ctls
+        for ctl in self.M.cornerCtls: 
+            util.handleToggle(ctl)
+            util.lockCtls(ctl, r=True)
+            mc.setAttr(ctl+'.tz', lock=True, keyable=False, channelBox=False)
+
+        util.lockCtls(self.M.lipCtls, r=True)
+
         #6: Normalize Corner Ctls
         util.normalizeCtls(self.M.cornerCtls,val=(2,2,2))
         
@@ -141,18 +147,16 @@ class BuildRig():
         
 
     def teethTongue01(self):
-        #teethTongue nul
-        mc.group(n=self.TE.nul, em=True, p=self.F.root)
-        
         #teeth ctrls
-        util.createCtlGrp(self.TE.binds, self.TE.ctls, self.TE.nul,
+        util.createCtlGrp(self.TE.binds, self.TE.ctls, self.F.root,
            size=.7, shape='semiCircle')
         util.offsetCtls(self.TE.ctls,t=(6,0,3))
         util.offsetCtls(self.TE.ctls[1],s=(1,-1,1))
 
         #tongue ctrls
         stretchyIk.stretchyIKMaker(self.TO, section=2, degree=3)
-        mc.parent(self.TO.fkCtls[0]+'_nul', self.TE.nul)
+        mc.parent(self.TO.fkCtls[0]+'_nul', self.F.root)
+
         
     def lid01(self):
         #0: Duplicate Lid R curves
@@ -175,7 +179,7 @@ class BuildRig():
         
         lowerLPos = getset.mirrorPosX(lowerRPos)
         util.createBindsOnCrv(self.L.lowerLBinds, lowerLPos, self.L.crvs[3], self.E.socBinds[1])
-        
+
         #3: set world inverse matrix for lids
         for bind in self.L.rBinds:
             mc.connectAttr(
@@ -210,6 +214,9 @@ class BuildRig():
             )
             util.offsetCtls(self.L.microCtls[i], t=(0,0,.7))
             
+            #6: Lock Ctls
+            util.lockCtls(self.L.microCtls[i], r=True)
+
             #5: Create Lid Driver Joints
             lid.createlidDrivers(self.L.lidDrivs[i], self.L.drivs[i], self.L.microCtls[i], self.L.lidDrivGrp)
             
@@ -391,7 +398,7 @@ class BuildRig():
             self.M.cornerClus[1], self.M.ctl,
             self.M.bindmeshes[6], self.M.clusGrp
             )
-            
+        
         #3: Skin bindmeshes with driver
         mouth.skinBindmeshes(self.M.bindmeshes, self.M.drivs)
 
@@ -424,23 +431,18 @@ class BuildRig():
         mouth.connectBs(self.M.cornerCtls[1], self.M.lBlendCrvs, self.M.bsNode)
         
     def teethTongue02(self):
-        P0 = self.M.ctl
+        
         P1 = self.F.upCtl
         P2 = self.F.jawCtl
-        
-        #5: Connect teethToungue nul
-        const1 = mc.parentConstraint(P0, self.TE.nul, mo=True)[0]
-        mc.addAttr(P0, sn='teethFollow', k=True, dv=1, at='bool')
-        mc.connectAttr(P0+'.teethFollow',const1+'.'+P0+'W0')
-        
+
         #6: Connect Teeth Ctrl
         util.parentConstIterate(self.TE.ctls, self.TE.binds)
         
-        util.parentConstAlterInv(P1,self.TE.ctls[0]+'_nul',P0)
-        util.parentConstAlterInv(P2,self.TE.ctls[1]+'_nul',P0)
+        mc.parentConstraint(P1, self.TE.ctls[0]+'_nul', mo=True)
+        mc.parentConstraint(P2, self.TE.ctls[1]+'_nul', mo=True)
         
         #7: Connect Tongue Ctrl
-        util.parentConstAlterInv(P2, self.TO.fkCtls[0]+'_nul',P0)
+        mc.parentConstraint(P2, self.TO.fkCtls[0]+'_nul', mo=True)
 
         
     def lid02(self):
@@ -476,12 +478,18 @@ class BuildRig():
 
     
     def nose02(self):
+        #1: Nose Follow Auto
         util.createAutoGrp(self.N.bridgeCtl, self.N.bridgeCtl+'_nul')
-        
         nose.connectNoseFollow(
             self.N.bridgeCtl, self.N.bridgeBind, self.F.loCtl
             )
 
+        #2: Connect Ctls
+        util.connectTransform(self.N.bridgeCtl, self.N.bridgeBind)
+        util.connectTransform(self.N.ctl, self.N.tipBind)
+        util.connectTransform(self.N.sneerCtls[0], self.N.sneerBinds[0])
+        util.connectTransform(self.N.sneerCtls[1], self.N.sneerBinds[1])
+        
         
     def arrangeGrps(self, clean=True):
         childs = [
@@ -508,6 +516,8 @@ class BuildRig():
             mc.delete(self.guideGrp)
             mc.delete(self.noSelectLayer)
         
+        ###temp
+        util.lockCtls(self.allCtls, s=True)
         
     def colorCtls(self):
         red=(1,0,0)

@@ -99,7 +99,7 @@ class ButtonHandler():
 
         self.arrangeGrps()
         self.colorCtls()
-
+        
         if self.data['orients'] != []:
             getset.applyTransform(self.data['orients'])
         if self.data['bsCrv'] != []:
