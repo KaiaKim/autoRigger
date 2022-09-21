@@ -16,6 +16,6 @@ https://github.com/KaiaKim/autoRigger
 import Kaia_AutoRigger
 from importlib import reload
 reload (Kaia_AutoRigger)
-Kaia_AutoRigger.AutoRigFace()
+run01 = Kaia_AutoRigger.AutoRigFace()
 
 '''
