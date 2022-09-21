@@ -105,11 +105,13 @@ def createClsGrp(name, targ, bindmeshes, grpName, weights=[]):
             mc.percent( name+'Cluster', v=val ) #set percents on the selected items to each value
 
         
-def createBsCrv(orig,names, grpName):
-    grp = mc.group(em=True, n=grpName)
-    for name in names:
-        crv = mc.duplicate(orig, n=name)[0]
-        mc.parent(crv, grp)
+def createBsCrv(guides, names, grpName):
+    if not mc.ls(grpName): mc.group(em=True, n=grpName)
+
+    for guide, name in zip(guides, names):
+        upperCrv, lowerCrv = guide
+        createMouthCrv(name, upperCrv, lowerCrv)
+        mc.parent(name, grpName)
 
 def createBsNode(name, orig, targList):
     bs = mc.blendShape(orig, n=name, o='local')[0] #o is origin
@@ -123,10 +125,10 @@ def setBsCvWeight(bs):
             if j in [3,9]: #middle vertex
                 val=.5
             elif j in [0,1,2,10,11]: #left side vertex
-                if i%2 == 1: #left side target
+                if 4<=i: #left side target
                     val=0
             elif j in [4,5,6,7,8]: #right side vertex
-                if i%2 == 0: #right side target
+                if i<4: #right side target
                     val=0
             mc.setAttr(bs+'.inputTarget[0].inputTargetGroup[%d].targetWeights[%d]'%(i,j), val)
             
@@ -146,35 +148,32 @@ def symmetricMouthCrv(crvList):
         outList += posList
     return outList
 
-def connectBs(mCornerCtls, blendCrvs, bs):
-    #rCtl = mCornerCtls[0]
-    #lCtl = mCornerCtls[1]
-    #blendCrvs = 
-    #[ wideR wideL smallR smallL smileR smileL frownR frownL ]
-    #[ 0     1     2      3      4      5      6      7      ]
-    for num,ctl in enumerate(mCornerCtls):
-        ###
-        clp = mc.createNode('clamp')
-        mc.setAttr(clp+'.maxR', 10)
-        mc.setAttr(clp+'.minG', -10)
-        mc.connectAttr(ctl+'.tx', clp+'.inputR')
-        mc.connectAttr(ctl+'.tx', clp+'.inputG')
-        mc.connectAttr(clp+'.outputR', bs+'.'+blendCrvs[2+num]) #2 or 3
-        
-        mul = mc.createNode('multDoubleLinear')
-        mc.setAttr(mul+'.input2', -1)
-        mc.connectAttr(clp+'.outputG', mul+'.input1')
-        mc.connectAttr(mul+'.output', bs+'.'+blendCrvs[0+num]) #0 or 1
-        ###
-        rng = mc.createNode('setRange')
-        mc.setAttr(rng+'.minX', 10)
-        mc.setAttr(rng+'.oldMinX', -10)
-        mc.setAttr(rng+'.maxY', 10)
-        mc.setAttr(rng+'.oldMaxY', 10)
-        mc.connectAttr(ctl+'.ty', rng+'.valueX')
-        mc.connectAttr(ctl+'.ty', rng+'.valueY')
-        mc.connectAttr(rng+'.outValueX', bs+'.'+blendCrvs[6+num]) #6 or 7
-        mc.connectAttr(rng+'.outValueY', bs+'.'+blendCrvs[4+num]) #4 or 5
+def connectBs(ctl, blendCrvs, bs):
+    #rBlendCrvs = 
+    #[ wideR smallR smileR frownR ]
+    #[ 0     1     2      3      4 ]
+
+    clp = mc.createNode('clamp')
+    mc.setAttr(clp+'.maxR', 10)
+    mc.setAttr(clp+'.minG', -10)
+    mc.connectAttr(ctl+'.tx', clp+'.inputR')
+    mc.connectAttr(ctl+'.tx', clp+'.inputG')
+    mc.connectAttr(clp+'.outputR', bs+'.'+blendCrvs[1])
+    
+    mul = mc.createNode('multDoubleLinear')
+    mc.setAttr(mul+'.input2', -1)
+    mc.connectAttr(clp+'.outputG', mul+'.input1')
+    mc.connectAttr(mul+'.output', bs+'.'+blendCrvs[0])
+    ###
+    rng = mc.createNode('setRange')
+    mc.setAttr(rng+'.minX', 10)
+    mc.setAttr(rng+'.oldMinX', -10)
+    mc.setAttr(rng+'.maxY', 10)
+    mc.setAttr(rng+'.oldMaxY', 10)
+    mc.connectAttr(ctl+'.ty', rng+'.valueX')
+    mc.connectAttr(ctl+'.ty', rng+'.valueY')
+    mc.connectAttr(rng+'.outValueX', bs+'.'+blendCrvs[3])
+    mc.connectAttr(rng+'.outValueY', bs+'.'+blendCrvs[2])
         
     
 def matchCrvRtoL(posList):

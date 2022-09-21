@@ -24,7 +24,7 @@ class createUI():
 
         ###
         mc.frameLayout(l='Prepare', collapsable=True, collapse=False, mw=10, mh=5)
-        mc.button(l='Import Face Skeleton',c=lambda x:mc.file(self.mayascripts+'/Kaia_AutoRigger/prepare/faceSkeleton.ma',i=True),bgc=blue)
+        mc.button(l='Import Face Skeleton',c=lambda x:mc.file(self.mayascripts+'/Kaia_AutoRigger/prepare/faceGuides.ma',i=True),bgc=blue)
         
         mc.button(l='Set character data directory',c=self.setDirHandler ,bgc=orange)
         
@@ -45,8 +45,10 @@ class createUI():
         mc.text(l='Face')
         mc.text(l='Brow')
         mc.text(l='Lash')
+        '''
         mc.text(l='Eye R')
         mc.text(l='Eye L')
+        '''
         mc.text(l='Upper Teeth')
         mc.text(l='Lower Teeth')
         mc.text(l='tongue')
@@ -190,7 +192,7 @@ class createUI():
 
         mc.showWindow()
         
-        self.blueButs01 = [gBut01,gBut03,gBut05,gBut07,gBut09,gBut11,gBut13,gBut15]
+        self.blueButs01 = [gBut01,gBut03,gBut05,gBut11,gBut13,gBut15]
         self.blueButs01 = [nBut01]
         self.blueButs02 = [but01,but05]
         self.redButs01 = []

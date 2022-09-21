@@ -26,6 +26,10 @@ class BuildRig():
         pass
 
     def face01(self):
+        #0: Import face binds if no face_BIND_Grp in scene
+        if mc.ls(self.bindGrp) == []:
+            mc.file(self.mayascripts+'/Kaia_AutoRigger/prepare/faceBinds.ma',i=True)
+            
         #0: Match face skeleton to guide
         guides = [d.replace('_bind','_guide') for d in self.allBinds]
         util.matchTransformIterate(guides, self.allBinds) #match Transform
@@ -128,33 +132,27 @@ class BuildRig():
         
             ###Mouth crv blendshapes
         #1: Duplicate orig curve
-        mouth.createBsCrv(self.M.crv,self.M.blendCrvs,self.M.blendCrvGrp)
+        mouth.createBsCrv(self.M.blendGuides,self.M.rBlendCrvs,self.M.blendCrvGrp)
+        mouth.createBsCrv(self.M.blendGuides,self.M.lBlendCrvs,self.M.blendCrvGrp)
         #2: Create Blendshape Node
         mouth.createBsNode(self.M.bsNode, self.M.crv, self.M.blendCrvs)
         #3: Set blendshape cv weight(sepereate left & right weight)
         mouth.setBsCvWeight(self.M.bsNode)
         
-    def cheek01(self):
-        #0: Create Cheek Ctls
-        util.createCtlGrp(self.C.binds, self.C.ctls, self.C.ctlGrp, size=.5)
-        util.offsetCtls(self.C.ctls,t=(0,0,.5),reverseZ=True)
-        
-        #scale orient in z
-        util.scaleOrient(self.C.ctls,s=(1,1,-1))
-
-        mc.parent(self.C.ctlGrp,self.F.root)
 
     def teethTongue01(self):
+        #teethTongue nul
+        mc.group(n=self.TE.nul, em=True, p=self.F.root)
+        
         #teeth ctrls
-        util.createCtlGrp(self.TE.binds, self.TE.ctls, self.F.root,
+        util.createCtlGrp(self.TE.binds, self.TE.ctls, self.TE.nul,
            size=.7, shape='semiCircle')
         util.offsetCtls(self.TE.ctls,t=(6,0,3))
         util.offsetCtls(self.TE.ctls[1],s=(1,-1,1))
 
         #tongue ctrls
         stretchyIk.stretchyIKMaker(self.TO, section=2, degree=3)
-
-
+        mc.parent(self.TO.fkCtls[0]+'_nul', self.TE.nul)
         
     def lid01(self):
         #0: Duplicate Lid R curves
@@ -243,8 +241,14 @@ class BuildRig():
         
             ###lid crv blendshapes
         #1: Duplicate orig curve
-        lid.createBsCrv(self.L.crvs[:2], self.L.rBlendCrvs, self.L.rBlendCrvGrp)
-        lid.createBsCrv(self.L.crvs[2:], self.L.lBlendCrvs, self.L.lBlendCrvGrp)
+        lid.createBsCrv(self.L.blendGuides[0], self.L.blendCrvs[0], self.L.blendCrvGrp)
+        lid.createBsCrv(self.L.blendGuides[1], self.L.blendCrvs[1], self.L.blendCrvGrp)
+        
+        for r,l in zip(self.L.blendCrvs[0], self.L.blendCrvs[2]):
+            getset.mirrorObj(l,r)
+            
+        for r,l in zip(self.L.blendCrvs[1], self.L.blendCrvs[3]):
+            getset.mirrorObj(l,r)
         
         
     def eye01(self):
@@ -341,7 +345,8 @@ class BuildRig():
     
         
     def face02(self):
-        
+        #1: connect face root
+        mc.parentConstraint(self.F.root, self.F.bind, mo=False)
         #1: connect face upper bind
         util.connectTransform(self.F.upCtl, self.F.upBind)
         #1: Parent constraint face lower bind
@@ -415,32 +420,28 @@ class BuildRig():
          #6,7,8,9,10,11,0
         util.bindSkin(self.M.lipDrivs[6:]+[self.M.lipDrivs[0]], self.M.loCrv)
         #1: Connect Blendshape weight to translate value of mouth corner ctrls
-        mouth.connectBs(self.M.cornerCtls, self.M.blendCrvs, self.M.bsNode)
-    
-    def cheek02(self):
-        #1: Cheek ctls follow mCorner ctls
-        cheek.createDrv(self.C.drvs,self.M.cornerCtls,self.F.root)
-        #2: Create Auto grp
-        for ctl in self.C.ctls: util.createAutoGrp(ctl, ctl+'_orient')
-        #3: Connect Auto grp
-        cheek.connectCtls(self.C.ctls[0:2], self.C.drvs, (.2,.5,.1)) #upper
-        cheek.connectCtls(self.C.ctls[2:4], self.C.drvs, (.5,.7,.5)) #mid
-        cheek.connectCtls(self.C.ctls[4:6], self.C.drvs, (.5,1.4,.2)) #low
-        #2: Cheek binds follow mCorner ctls
-        cheek.connectBinds(self.C.ctls, self.C.binds)
+        mouth.connectBs(self.M.cornerCtls[0], self.M.rBlendCrvs, self.M.bsNode)
+        mouth.connectBs(self.M.cornerCtls[1], self.M.lBlendCrvs, self.M.bsNode)
         
     def teethTongue02(self):
-        P1 = self.F.upBind
-        P2 = self.F.jawBind
-
+        P0 = self.M.ctl
+        P1 = self.F.upCtl
+        P2 = self.F.jawCtl
+        
+        #5: Connect teethToungue nul
+        const1 = mc.parentConstraint(P0, self.TE.nul, mo=True)[0]
+        mc.addAttr(P0, sn='teethFollow', k=True, dv=1, at='bool')
+        mc.connectAttr(P0+'.teethFollow',const1+'.'+P0+'W0')
+        
         #6: Connect Teeth Ctrl
-        mc.parentConstraint(P1,self.TE.ctls[0]+'_nul',mo=True)
-        mc.parentConstraint(P2,self.TE.ctls[1]+'_nul',mo=True)
         util.parentConstIterate(self.TE.ctls, self.TE.binds)
         
+        util.parentConstAlterInv(P1,self.TE.ctls[0]+'_nul',P0)
+        util.parentConstAlterInv(P2,self.TE.ctls[1]+'_nul',P0)
+        
         #7: Connect Tongue Ctrl
-        mc.parentConstraint(P2,self.TO.ikCtls[0]+'_nul',mo=True)
-        mc.parent(self.TO.ctlGrp, self.F.root)
+        util.parentConstAlterInv(P2, self.TO.fkCtls[0]+'_nul',P0)
+
         
     def lid02(self):
         #2: Create Blendshape Node
@@ -482,7 +483,7 @@ class BuildRig():
             )
 
         
-    def arrangeGrps(self):
+    def arrangeGrps(self, clean=True):
         childs = [
                 self.M.upCrv, self.M.loCrv,self.M.crv,
                 self.M.bindmeshesGrp, self.M.clusGrp,
@@ -490,8 +491,8 @@ class BuildRig():
                 self.M.blendCrvGrp, 
                 self.L.crvs,self.L.drivCrvs,
                 self.L.drivGrp,self.L.lidDrivGrp,
-                self.L.rBlendCrvGrp, self.L.lBlendCrvGrp,
-                self.TO.clsGrp, self.TO.ikHand,
+                self.L.blendCrvGrp,
+                self.TO.clsGrp, self.TO.ikHand, self.TO.crv
         ]
         
         for c in childs:
@@ -500,7 +501,13 @@ class BuildRig():
             except:
                 mc.warning('parent '+c+' to '+self.NTGrp+' skipped')
         
+        mc.sets(self.M.rBlendCrvs, self.L.blendCrvs[0][0], self.L.blendCrvs[1][0], n=self.BSCrvSet)
+        
         mc.hide(self.guideGrp, self.NTGrp, self.bindGrp)
+        if clean == True:
+            mc.delete(self.guideGrp)
+            mc.delete(self.noSelectLayer)
+        
         
     def colorCtls(self):
         red=(1,0,0)
@@ -509,11 +516,11 @@ class BuildRig():
         pink=(2.4,.6,.57)
         yellow=(1,1,0)
         purple=(.3,0,.7)
+        lavender=(.6,.3,1)
         magenta=(1,0,1)
         
         util.overrideColor(
             [self.F.upCtl, self.F.jawCtl]
-            + self.TE.ctls
             + self.TO.ikCtls,
             color=yellow
             )
@@ -528,8 +535,10 @@ class BuildRig():
             color=purple
             )
         util.overrideColor(self.TO.fkCtls, color=magenta)
+        util.overrideColor(self.TE.ctls, color=lavender)
+
         
-        list1 = self.C.ctls + self.M.cornerCtls + self.L.ctls + self.B.bigCtls + self.B.inCtls + self.B.corCtls + self.B.peakCtls
+        list1 = self.M.cornerCtls + self.L.ctls + self.B.bigCtls + self.B.inCtls + self.B.corCtls + self.B.peakCtls
         util.overrideColor([d for d in list1 if '_r_' in d], color=red)
         util.overrideColor([d for d in list1 if '_l_' in d], color=blue)
         

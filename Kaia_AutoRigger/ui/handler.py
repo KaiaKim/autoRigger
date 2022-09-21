@@ -83,7 +83,6 @@ class ButtonHandler():
         self.createGrps()
         self.face01()
         self.mouth01()
-        #self.cheek01()
         self.teethTongue01()
         self.lid01()
         #self.eye01()
@@ -92,7 +91,6 @@ class ButtonHandler():
         
         self.face02()
         self.mouth02()
-        #self.cheek02()
         self.teethTongue02()
         self.lid02()
         #self.eye02()

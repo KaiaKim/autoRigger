@@ -45,14 +45,11 @@ def createBindsOnCrv(names, posList, curv, grpName):
         mc.rename(jnt, name)
 
 
-def createCtlGrp(targs, names, grp, ori=True, shape='circle', size=1, opm=False, mid=False):
+def createCtlGrp(targs, names, grps, ori=True, shape='circle', size=1, opm=False, mid=False):
     if isinstance(targs,str): targs = [targs]
     if isinstance(names,str): names = [names]
     
-    if isinstance(grp,str):
-        if not mc.ls(grp):
-            mc.group(em=True, n=grp)
-    
+
     for i, targ in enumerate(targs):
         ctl = customNURBScircle(shape, size, names[i])
         nul = mc.group(ctl, n=ctl+'_nul')
@@ -69,10 +66,14 @@ def createCtlGrp(targs, names, grp, ori=True, shape='circle', size=1, opm=False,
         if mid == True:
             mc.move(0, nul, x=True, ws=True)
         
-        if isinstance(grp,str):
-            mc.parent(nul, grp)
-        else:
-            mc.parent(nul, grp[i])
+        if isinstance(grps,str):
+            if not mc.ls(grps):
+                mc.group(em=True, n=grps)
+            mc.parent(nul, grps)
+        elif isinstance(grps,list):
+            mc.parent(nul, grps[i])
+        elif grps == None:
+            pass
         
 
 def createAutoGrp(child, parent, name=None):
@@ -168,6 +169,11 @@ def parentConstIterate(parents, childs):
         const1 = mc.parentConstraint(parent, child, mo=True)[0]
         mc.setAttr(const1+'.interpType', 2) #shortest
 
+def parentConstAlterInv(parent, child, alter):
+        const1 = mc.parentConstraint(parent, child, mo=True)[0]
+        mc.setAttr(const1+'.interpType', 2) #shortest
+        mc.disconnectAttr(child+'.parentInverseMatrix', const1+'.constraintParentInverseMatrix')
+        mc.connectAttr(alter+'.parentInverseMatrix', const1+'.constraintParentInverseMatrix')
 
 def parentIterate(parents, childs):
     for parent, child in zip(parents, childs):

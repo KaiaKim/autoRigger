@@ -52,11 +52,12 @@ class AutoRigFace(data_.ImportExport, builder.BuildRig, helper.HelpExtra, binder
         self.guideGrp = 'face_GUIDE_Grp'
         self.bindGrp = 'face_BIND_Grp'
         self.NTGrp = 'face_NT_Grp'
+        self.noSelectLayer = 'noSelect'
+        self.BSCrvSet = 'BSCurve_set'
         
         #execute namer class object
         self.F = namer.Face()
         self.M = namer.Mouth(self.data['verts'])
-        self.C = namer.Cheek()
         self.TE = namer.Teeth()
         self.TO = namer.Tongue()
         self.L = namer.Lid(self.data['verts'])
@@ -65,7 +66,7 @@ class AutoRigFace(data_.ImportExport, builder.BuildRig, helper.HelpExtra, binder
         self.N = namer.Nose()
         
         self.allBinds = (
-                    self.F.binds + self.B.binds + self.C.binds + self.N.binds
+                    self.F.binds + self.B.binds + self.N.binds
                     + self.E.socBinds + self.E.binds
                     + self.TE.binds + self.TO.binds
                     + self.L.rBinds + self.L.lBinds
@@ -77,7 +78,7 @@ class AutoRigFace(data_.ImportExport, builder.BuildRig, helper.HelpExtra, binder
         
         self.bindSets = {
             'face': [self.F.bind, self.F.upBind, self.F.loBind, self.F.jawBind]
-                    + self.B.binds + self.C.binds + self.N.binds + self.E.socBinds
+                    + self.B.binds + self.N.binds + self.E.socBinds
                     + self.L.rBinds + self.L.lBinds
                     + self.M.binds,
             'brow': self.B.binds,
@@ -86,7 +87,7 @@ class AutoRigFace(data_.ImportExport, builder.BuildRig, helper.HelpExtra, binder
             'eyeL': [self.E.binds[1]],
             'upTeeth': [self.TE.binds[0]],
             'loTeeth': [self.TE.binds[1]],
-            'tongue': self.TO.binds,
+            'tongue': self.TO.binds
         }
         
 

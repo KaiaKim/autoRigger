@@ -39,27 +39,12 @@ def createlidDrivers(names,locs,ctls,grpName):
         
         mc.parent(jnt,grpName)
 
-
-
-
-def createBsCrv(crvs,names,grpName):
-    grp = mc.group(em=True,n=grpName)
+def createBsCrv(guides,names,grpName):
+    if not mc.ls(grpName): mc.group(em=True, n=grpName)
     
-    for name in names:
-        if 'upper' in name:
-            orig = crvs[0]
-        elif 'lower' in name:
-            orig = crvs[1]
-        
-        if ('upper' in name and'neutral' in name) or ('lower' in name and'closed' in name): #lower_closed = upper_neut = upper_orig
-            orig = crvs[0]
-        if ('lower' in name and'neutral' in name) or ('upper' in name and 'closed' in name): #upper_closed = lower_neut = lower_ orig
-            orig = crvs[1]
-
-        dup = mc.duplicate(orig,n=name)
-        mc.parent(dup, grp)
-
-
+    for guide, name in zip(guides, names):
+        dup = mc.duplicate(guide, n=name)
+        mc.parent(dup, grpName)
 
 def createBsNode(nodes,crvs,targList):
     for node in nodes:
@@ -71,12 +56,10 @@ def createBsNode(nodes,crvs,targList):
             mc.blendShape(node, e=True, t=(orig, 1, targList[0+4*x], 1.0))
             mc.setAttr(node+'.'+targList[0+4*x],1)
         elif '_closed' in node:
-            #print('_closedTarget:',targList[3+4*x])
             mc.blendShape(node, e=True, t=(orig, 1, targList[3+4*x], 1.0))
             mc.blendShape(node, e=True, ib=True, t=(orig, 1, targList[1+4*x], 0.333))
             mc.blendShape(node, e=True, ib=True, t=(orig, 1, targList[2+4*x], 0.666))
-            
-            
+       
 def connectBs(blinkCtls, blendCrvs, bsNodes):
         #upper closed
     #set driven key node1
@@ -128,6 +111,3 @@ def connectBs(blinkCtls, blendCrvs, bsNodes):
 
     mc.setAttr(sdk2+'.preInfinity',1)
     mc.setAttr(sdk2+'.postInfinity',1)
-
-
-    
