@@ -85,7 +85,7 @@ class ButtonHandler():
         self.mouth01()
         self.teethTongue01()
         self.lid01()
-        #self.eye01()
+        self.eye01()
         self.brow01()
         self.nose01()
         
@@ -93,7 +93,7 @@ class ButtonHandler():
         self.mouth02()
         self.teethTongue02()
         self.lid02()
-        #self.eye02()
+        self.eye02()
         self.brow02()
         self.nose02()
 

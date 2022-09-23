@@ -82,8 +82,8 @@ class AutoRigFace(data_.ImportExport, builder.BuildRig, helper.HelpExtra, binder
         self.allCrv = self.M.blendCrvs + self.L.rBlendCrvs + self.L.lBlendCrvs
         
         self.bindSets = {
-            'face': [self.F.bind, self.F.upBind, self.F.loBind, self.F.jawBind]
-                    + self.B.binds + self.N.binds + self.E.socBinds
+            'face': [self.F.bind, self.F.upBind, self.F.jawBind]
+                    + self.B.binds + self.N.binds
                     + self.L.rBinds + self.L.lBinds
                     + self.M.binds,
             'brow': self.B.binds,

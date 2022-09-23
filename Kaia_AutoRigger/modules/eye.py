@@ -19,7 +19,7 @@ def connectEyeCtls(ctls, rotCtl, aimCtl, aimMicroCtls, binds):
         #connectRotCtl
         mc.connectAttr(rotCtl+'.r',rotGrp+'.r')
         #connectMicroAim
-        mc.aimConstraint(aimMicroCtls[i],aimGrp,mo=True)
+        mc.aimConstraint(aimMicroCtls[i], aimGrp, mo=True, wut='none')
         
     #connectConverge
     mc.addAttr(aimCtl, shortName='converge', keyable=True, defaultValue=0, minValue=-2, maxValue=2)

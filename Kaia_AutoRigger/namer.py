@@ -3,16 +3,15 @@ class Face():
     def __init__(self):
         self.bind = 'face_bind'
         self.upBind = 'face_upper_bind' 
-        self.loBind = 'face_lower_bind' 
+        self.jawTransBind = 'jaw_trans_bind'
         self.jawBind = 'jaw_bind'
         self.jawTipBind = 'jaw_tip_bind'
-        self.binds = [self.bind, self.upBind, self.loBind, self.jawBind, self.jawTipBind]
+        self.binds = [self.bind, self.upBind, self.jawTransBind, self.jawBind, self.jawTipBind]
         
         self.root = 'face_ctl_root'
         self.upCtl = 'face_upper_ctl'
-        self.loCtl = 'face_lower_ctl'
         self.jawCtl = 'jaw_ctl'
-        self.ctls = [self.upCtl, self.loCtl, self.jawCtl]
+        self.ctls = [self.upCtl, self.jawCtl]
 
 
 class Mouth():
@@ -170,7 +169,6 @@ class Eye():
         self.ctls = ['eye_r_ctl','eye_l_ctl']
         self.aimCtl = 'eye_aim_ctl'
         self.aimMicroCtls = ['eye_r_aim_ctl','eye_l_aim_ctl']
-        self.pupilCtls = ['eye_r_pupil_ctl','eye_l_pupil_ctl'] #not using
             ###
 
 

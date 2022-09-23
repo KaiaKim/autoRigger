@@ -56,16 +56,9 @@ class BuildRig():
             )
         util.offsetCtls(self.F.upCtl, t=(0,-1.5,12), s=(1,.4,1))
         
-        #1: Create Lower Face Ctls
-        util.createCtlGrp(
-            self.F.loBind, self.F.loCtl, self.F.root,
-            ori=False, size=12, shape='semiCircle'
-            )
-        util.offsetCtls(self.F.loCtl, t=(0,-6,0), r=(180,0,0))
-        
         #1: Create Jaw Ctls
         util.createCtlGrp(
-            self.F.jawBind, self.F.jawCtl, self.F.loCtl,
+            self.F.jawBind, self.F.jawCtl, self.F.root,
             size=1, shape='triangle'
             )
         util.offsetCtls(self.F.jawCtl, t=(0,-6,10), r=(180,0,0), s=(1,.6,1))
@@ -82,23 +75,17 @@ class BuildRig():
         #1: Create lip binds
         upperPos = util.getPosListFromVerts(self.data['verts']['lipUpper'])
         util.createBindsOnCrv(
-            self.M.upBinds, upperPos, self.M.upCrv, self.F.loBind
+            self.M.upBinds, upperPos, self.M.upCrv, self.M.upBindGrp
             )
         lowerPos = util.getPosListFromVerts(self.data['verts']['lipLower'])
         util.createBindsOnCrv(
-            self.M.loBinds, lowerPos, self.M.loCrv, self.F.loBind
+            self.M.loBinds, lowerPos, self.M.loCrv, self.M.loBindGrp
             )
-    
-        for bind in self.M.binds:
-            mc.connectAttr(
-                self.F.loBind+'.worldInverseMatrix', bind+'.offsetParentMatrix'
-                )
-            mc.disconnectAttr(
-                self.F.loBind+'.worldInverseMatrix', bind+'.offsetParentMatrix'
-                )
+        
+        mc.parent(self.M.upBindGrp, self.M.loBindGrp, self.bindGrp)
         
         ###temp: aim constraint lip binds
-        util.aimConstIterate(self.M.binds, self.F.loBind)
+        util.aimConstIterate(self.M.binds, self.F.bind)
         
         #2: Create mouth drivers
         mouth.createMouthDrivers(self.M.drivs, self.M.crv,self.M.drivGrp)
@@ -112,9 +99,9 @@ class BuildRig():
         util.offsetCtls(self.M.lipCtls, t=(0,0,1))
             #big ctl
         util.createCtlGrp(
-            self.F.loBind,self.M.ctl, self.F.loCtl,
+            self.F.bind,self.M.ctl, self.F.root,
             ori=False, size=4, shape='square')
-        util.offsetCtls(self.M.ctl, t=(0,-4.5,12), s=(1,.5,1))
+        util.offsetCtls(self.M.ctl, t=(0,-4,10), s=(1,.5,1))
             #corner ctrls
         util.createCtlGrp(
             [self.M.drivs[0],self.M.drivs[6]], self.M.cornerCtls, self.M.ctl,
@@ -169,34 +156,21 @@ class BuildRig():
         
         #2: Create lid Binds on lid verts & connect to lid curves
         upperRPos = util.getPosListFromVerts(self.data['verts']['lidUpperR'])
-        util.createBindsOnCrv(self.L.upperRBinds, upperRPos, self.L.crvs[0], self.E.socBinds[0])
+        util.createBindsOnCrv(self.L.upperRBinds, upperRPos, self.L.crvs[0], self.L.rBindGrp)
         
         upperLPos = getset.mirrorPosX(upperRPos)
-        util.createBindsOnCrv(self.L.upperLBinds, upperLPos, self.L.crvs[2], self.E.socBinds[1])
+        util.createBindsOnCrv(self.L.upperLBinds, upperLPos, self.L.crvs[2], self.L.lBindGrp)
         
         lowerRPos = util.getPosListFromVerts(self.data['verts']['lidLowerR'])
-        util.createBindsOnCrv(self.L.lowerRBinds, lowerRPos, self.L.crvs[1], self.E.socBinds[0])
+        util.createBindsOnCrv(self.L.lowerRBinds, lowerRPos, self.L.crvs[1], self.L.rBindGrp)
         
         lowerLPos = getset.mirrorPosX(lowerRPos)
-        util.createBindsOnCrv(self.L.lowerLBinds, lowerLPos, self.L.crvs[3], self.E.socBinds[1])
-
-        #3: set world inverse matrix for lids
-        for bind in self.L.rBinds:
-            mc.connectAttr(
-                self.E.socBinds[0]+'.worldInverseMatrix', bind+'.offsetParentMatrix'
-                )
-            mc.disconnectAttr(
-                self.E.socBinds[0]+'.worldInverseMatrix', bind+'.offsetParentMatrix'
-                )        
-
-        for bind in self.L.lBinds:
-            mc.connectAttr(
-                self.E.socBinds[1]+'.worldInverseMatrix', bind+'.offsetParentMatrix'
-                )
-            mc.disconnectAttr(
-                self.E.socBinds[1]+'.worldInverseMatrix', bind+'.offsetParentMatrix'
-                ) 
-
+        util.createBindsOnCrv(self.L.lowerLBinds, lowerLPos, self.L.crvs[3], self.L.lBindGrp)
+        
+        mc.parentConstraint(self.E.socBinds[0], self.L.rBindGrp, mo=True)
+        mc.parentConstraint(self.E.socBinds[1], self.L.lBindGrp, mo=True)
+        mc.parent(self.L.rBindGrp, self.L.lBindGrp, self.bindGrp)
+        
         #3: Aim constraint lid binds to eye socket bind
         util.aimConstIterate(self.L.rBinds, self.E.socBinds[0])
         util.aimConstIterate(self.L.lBinds, self.E.socBinds[1])
@@ -259,10 +233,18 @@ class BuildRig():
         
         
     def eye01(self):
+        #3: Create Eye Binds
+        for targ, name in zip(self.E.socBinds, self.E.binds):
+            mc.select(cl=True)
+            mc.joint(rad=.3,n=name)
+            const1 = mc.pointConstraint(targ, name, mo=False)[0]
+            mc.delete(const1)
+            mc.parent(name,self.bindGrp)
+        
         #4: Create Eye Ctls
         #eye_rot_ctl
         util.createCtlGrp(
-            self.E.socBinds[1], self.E.rotCtl, self.F.upCtl,
+            self.E.socBinds[0], self.E.rotCtl, self.F.upCtl,
             ori=False, mid=True, size=1, shape='triangle'
         )
         util.offsetCtls(self.E.rotCtl, t=(0,0,7.5), r=(90,0,0))
@@ -270,13 +252,12 @@ class BuildRig():
         #eye_R_ctl, eye_L_ctl
         util.createCtlGrp(
             self.E.binds, self.E.ctls, self.F.upCtl, 
-            size=.7
-        )
-        util.offsetCtls(self.E.ctls, t=(0,0,6))        
+            size=3.5
+        )   
         
         #eye aim macro ctl
         util.createCtlGrp(
-            self.E.socBinds[1], self.E.aimCtl, self.F.upCtl,
+            self.E.socBinds[0], self.E.aimCtl, self.F.upCtl,
             ori=False, mid=True, size=1, shape='square'
         )
         util.offsetCtls(self.E.aimCtl,s=(7,1,1))
@@ -349,15 +330,9 @@ class BuildRig():
         mc.group(n=self.NTGrp, em=True)
 
 
-    
-        
     def face02(self):
-        #1: connect face root
-        mc.parentConstraint(self.F.root, self.F.bind, mo=False)
         #1: connect face upper bind
         util.connectTransform(self.F.upCtl, self.F.upBind)
-        #1: Parent constraint face lower bind
-        util.connectTransform(self.F.loCtl, self.F.loBind)
         #1: Parent constraint jaw bind
         util.connectTransform(self.F.jawCtl, self.F.jawBind)
         
@@ -374,7 +349,7 @@ class BuildRig():
         #2: Create Clusters on Bindmeshes
             #big clus
         mouth.createClsGrp(
-            self.M.clus, self.F.loBind, self.M.bindmeshes, self.M.clusGrp
+            self.M.clus, self.F.bind, self.M.bindmeshes, self.M.clusGrp
             )
             #jaw clus
                 #upper
@@ -384,7 +359,7 @@ class BuildRig():
             self.M.clusGrp, weights=upWeights
             )
                 #lower
-        loWeights = [.6,.8,1,.8,.6]
+        loWeights = [.5,.7,1,.7,.5]
         mouth.createClsGrp(
             self.M.jawClus[1], self.F.jawBind, self.M.bindmeshes[7:],
             self.M.clusGrp, weights=loWeights
@@ -404,7 +379,7 @@ class BuildRig():
 
         #4: Connect Ctls
             #big ctl
-        mouth.connectBigClus(self.M.clus+'_nul', P3, self.F.loCtl)
+        mouth.connectBigClus(self.M.clus+'_nul', P3)
             #jaw ctl
         util.connectTransform(P1, self.M.jawClus[0]+'_nul')
         util.connectTransform(P2, self.M.jawClus[1]+'_nul')
@@ -465,6 +440,9 @@ class BuildRig():
             ) 
     
     def eye02(self):
+        #4: Connect Eye Binds
+        util.parentConstIterate(self.E.ctls, self.E.binds)
+        
         #5: Connect Eye Ctls
         eye.connectEyeCtls(
             self.E.ctls, self.E.rotCtl, self.E.aimCtl,
@@ -478,12 +456,6 @@ class BuildRig():
 
     
     def nose02(self):
-        #1: Nose Follow Auto
-        util.createAutoGrp(self.N.bridgeCtl, self.N.bridgeCtl+'_nul')
-        nose.connectNoseFollow(
-            self.N.bridgeCtl, self.N.bridgeBind, self.F.loCtl
-            )
-
         #2: Connect Ctls
         util.connectTransform(self.N.bridgeCtl, self.N.bridgeBind)
         util.connectTransform(self.N.ctl, self.N.tipBind)
@@ -541,18 +513,18 @@ class BuildRig():
             color=yellow
             )
         util.overrideColor(
-            [self.F.loCtl,self.M.ctl,self.N.ctl,self.N.bridgeCtl],
+            [self.M.ctl,self.N.ctl,self.N.bridgeCtl],
             color=purple
             )
         util.overrideColor(self.TO.fkCtls, color=magenta)
         util.overrideColor(self.TE.ctls, color=lavender)
 
         
-        list1 = self.M.cornerCtls + self.L.ctls + self.B.bigCtls + self.B.inCtls + self.B.corCtls + self.B.peakCtls
+        list1 = self.M.cornerCtls + self.L.ctls + self.B.bigCtls + self.B.inCtls + self.B.corCtls + self.B.peakCtls + self.E.ctls
         util.overrideColor([d for d in list1 if '_r_' in d], color=red)
         util.overrideColor([d for d in list1 if '_l_' in d], color=blue)
         
-        list2 = self.M.lipCtls+sum(self.L.microCtls,[])+self.N.sneerCtls
+        list2 = self.M.lipCtls+sum(self.L.microCtls,[])+self.N.sneerCtls + self.E.aimMicroCtls
         util.overrideColor([d for d in list2 if '_r_' in d], color=pink)
         util.overrideColor([d for d in list2 if '_l_' in d], color=lightBlue)
         util.overrideColor([d for d in list2 if '_m_' in d], color=yellow)

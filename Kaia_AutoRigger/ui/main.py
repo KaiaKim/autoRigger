@@ -45,10 +45,8 @@ class createUI():
         mc.text(l='Face')
         mc.text(l='Brow')
         mc.text(l='Lash')
-        '''
         mc.text(l='Eye R')
         mc.text(l='Eye L')
-        '''
         mc.text(l='Upper Teeth')
         mc.text(l='Lower Teeth')
         mc.text(l='tongue')
@@ -61,12 +59,10 @@ class createUI():
         gBut04 = mc.button(l='select', c=lambda _:self.assignGeo('brow','sel'), bgc=green)
         gBut05 = mc.button(l='assign', c=lambda _:self.assignGeo('lash','ass'), bgc=blue)
         gBut06 = mc.button(l='select', c=lambda _:self.assignGeo('lash','sel'), bgc=green)
-        '''
         gBut07 = mc.button(l='assign', c=lambda _:self.assignGeo('eyeR','ass'), bgc=blue)
         gBut08 = mc.button(l='select', c=lambda _:self.assignGeo('eyeR','sel'), bgc=green)
         gBut09 = mc.button(l='assign', c=lambda _:self.assignGeo('eyeL','ass'), bgc=blue)
         gBut10 = mc.button(l='select', c=lambda _:self.assignGeo('eyeL','sel'), bgc=green)
-        '''
         gBut11 = mc.button(l='assign', c=lambda _:self.assignGeo('upTeeth','ass'), bgc=blue)
         gBut12 = mc.button(l='select', c=lambda _:self.assignGeo('upTeeth','sel'), bgc=green)
         gBut13 = mc.button(l='assign', c=lambda _:self.assignGeo('loTeeth','ass'), bgc=blue)
@@ -181,8 +177,10 @@ class createUI():
         mc.text('X- to X+ (R to L)')
         '''hBut01 = mc.button(l='Mirror Joint Guide',c=self.mirrorGuide, w=230)'''
         hBut02 = mc.button(l='Mirror ctl orient', c=self.mirrorCtlOrient, w=230)
-        hBut03 = mc.button(l='mirror Mouth BS curve', c=self.mirrorBlendCrvMouth, w=230)
-        hBut04 = mc.button(l='mirror Eyes BS curve', c=self.mirrorBlendCrvEyes, w=230)
+        hBut03 = mc.button(l='Mirror Mouth BS curve', c=self.mirrorBlendCrvMouth, w=230)
+        hBut04 = mc.button(l='Mirror Eyes BS curve', c=self.mirrorBlendCrvEyes, w=230)
+        hBut05 = mc.button(l='Connect To Advanced Skeleton', c=self.connectToAdavncedSkeleton, w=230)
+
         mc.setParent('..')
         mc.setParent('..')
         #########
@@ -192,11 +190,14 @@ class createUI():
 
         mc.showWindow()
         
-        self.blueButs01 = [gBut01,gBut03,gBut05,gBut11,gBut13,gBut15]
+        self.blueButs01 = [gBut01,gBut03,gBut05,gBut07,gBut09,gBut11,gBut13,gBut15]
         self.blueButs01 = [nBut01]
         self.blueButs02 = [but01,but05]
         self.redButs01 = []
-        self.greenButs01 = [hBut02,hBut03,hBut04,bBut01,bBut02,bBut03,bBut04,bBut05,bBut06,bBut07,bBut08,bBut09]
+        self.greenButs01 = [
+                            hBut02,hBut03,hBut04,hBut05,
+                            bBut01,bBut02,bBut03,bBut04,bBut05,bBut06,bBut07,bBut08,bBut09
+                            ]
     
 
 ###---------------------------------------------------------------------------

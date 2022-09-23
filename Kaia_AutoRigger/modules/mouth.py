@@ -186,12 +186,9 @@ def matchCrvRtoL(posList):
     outList = rPosList + lPosList
     return outList
 
-def connectBigClus(C1, P1, P2):
-    mm1 = mc.createNode('multMatrix')
-    mc.connectAttr(P1+'.matrix', mm1+'.matrixIn[0]')
-    mc.connectAttr(P2+'.matrix', mm1+'.matrixIn[1]')
+def connectBigClus(C1, P1):
     dm1 = mc.createNode('decomposeMatrix')
-    mc.connectAttr(mm1+'.matrixSum', dm1+'.inputMatrix')
+    mc.connectAttr(P1+'.matrix', dm1+'.inputMatrix')
     mc.connectAttr(dm1+'.outputTranslate', C1+'.t')
     mc.connectAttr(dm1+'.outputRotate', C1+'.r')
 

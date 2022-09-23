@@ -5,11 +5,13 @@ from Kaia_AutoRigger.modules import util
 from Kaia_AutoRigger.modules import getset
 from Kaia_AutoRigger.modules import mouth
 from Kaia_AutoRigger.modules import lid
+from Kaia_AutoRigger.modules import adv_custom
 
 importlib.reload(util)
 importlib.reload(mouth)
 importlib.reload(getset)
 importlib.reload(lid)
+importlib.reload(adv_custom)
 
 class HelpExtra():
     def __init__(self):
@@ -77,3 +79,7 @@ class HelpExtra():
         cvPos = getset.getTransform(allCVs, t=True, r=False, os=True)
         cvPos5 = getset.mirrorCVs(cvPos)
         getset.applyTransform(cvPos5, os=True)
+        
+    def connectToAdavncedSkeleton(self,_):
+        adv_custom.deleteExtra()
+        adv_custom.connectFaceToBody(self.F.root)
