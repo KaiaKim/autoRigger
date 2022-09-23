@@ -10,7 +10,7 @@ def deleteExtra():
     mc.delete(facebinds)
 
 def connectFaceToBody(faceRoot):
-    const1 = mc.parentConstraint('FKHead_M', faceRoot, mo=True)
+    const1 = mc.parentConstraint('FKHead_M', faceRoot, mo=True)[0]
     mc.setAttr(const1+'.interpType', 2) #shortest
 
 if __name__ == "__main__":

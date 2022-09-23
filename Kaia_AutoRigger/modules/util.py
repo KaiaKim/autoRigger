@@ -110,7 +110,7 @@ def offsetCtls(ctls, r=(0,0,0), s=(1,1,1), t=(0,0,0), reverseZ=False):
         else:
             mc.move(t[0], t[1], t[2], CVs, r=True)
 
-def lockCtls(ctls,t=False,r=False,s=False):
+def lockHideTransform(ctls,t=False,r=False,s=False):
     if isinstance(ctls,str): ctls = [ctls]
     axis = ['x','y','z']
     for ctl in ctls:
@@ -118,13 +118,30 @@ def lockCtls(ctls,t=False,r=False,s=False):
         
         if t == True:
             for ax in axis:
-                    mc.setAttr(ctl+'.s'+ax, lock=True, keyable=False, channelBox=False)
+                    mc.setAttr(ctl+'.t'+ax, lock=True, keyable=False, channelBox=False)
         if r == True:
             for ax in axis:
                     mc.setAttr(ctl+'.r'+ax, lock=True, keyable=False, channelBox=False)
         if s == True:
             for ax in axis:
                     mc.setAttr(ctl+'.s'+ax, lock=True, keyable=False, channelBox=False)
+
+def unlockTransform(ctls,t=False,r=False,s=False):
+    if isinstance(ctls,str): ctls = [ctls]
+    axis = ['x','y','z']
+    for ctl in ctls:
+        if mc.ls(ctl) == []: continue
+        
+        if t == True:
+            for ax in axis:
+                    mc.setAttr(ctl+'.t'+ax, lock=False)
+        if r == True:
+            for ax in axis:
+                    mc.setAttr(ctl+'.r'+ax, lock=False)
+        if s == True:
+            for ax in axis:
+                    mc.setAttr(ctl+'.s'+ax, lock=False)
+
 
 
 def normalizeCtls(ctls, val=(1,1,1)):

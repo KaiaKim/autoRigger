@@ -78,9 +78,7 @@ class ButtonHandler():
 
 
     def buildRig(self,_):
-        ###duplicate out the guide
-
-        self.createGrps()
+        
         self.face01()
         self.mouth01()
         self.teethTongue01()

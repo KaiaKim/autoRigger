@@ -29,7 +29,10 @@ class BuildRig():
         #0: Import face binds if no face_BIND_Grp in scene
         if mc.ls(self.bindGrp) == []:
             mc.file(self.mayascripts+'/Kaia_AutoRigger/prepare/faceBinds.ma',i=True)
-            
+
+        #0: Create NT Grp
+        mc.group(n=self.NTGrp, em=True)
+
         #0: Match face skeleton to guide
         guides = [d.replace('_bind','_guide') for d in self.allBinds]
         util.matchTransformIterate(guides, self.allBinds) #match Transform
@@ -65,6 +68,9 @@ class BuildRig():
    
     
     def mouth01(self):
+        #0: Unlock Transform for the guides
+        util.unlockTransform([self.M.upGuide, self.M.loGuide] , t=True, r=True, s=True)
+
         #0: Duplicate lip curves
         mc.duplicate(self.M.upGuide, n=self.M.upCrv)
         mc.duplicate(self.M.loGuide, n=self.M.loCrv)
@@ -115,10 +121,10 @@ class BuildRig():
         #5: Lock Ctls
         for ctl in self.M.cornerCtls: 
             util.handleToggle(ctl)
-            util.lockCtls(ctl, r=True)
+            util.lockHideTransform(ctl, r=True)
             mc.setAttr(ctl+'.tz', lock=True, keyable=False, channelBox=False)
 
-        util.lockCtls(self.M.lipCtls, r=True)
+        util.lockHideTransform(self.M.lipCtls, r=True)
 
         #6: Normalize Corner Ctls
         util.normalizeCtls(self.M.cornerCtls,val=(2,2,2))
@@ -146,6 +152,9 @@ class BuildRig():
 
         
     def lid01(self):
+        #0: Unlock Transform for the guides
+        util.unlockTransform(self.L.guides, t=True, r=True, s=True)
+
         #0: Duplicate Lid R curves
         mc.duplicate(self.L.guides[0], n=self.L.crvs[0])
         mc.duplicate(self.L.guides[1], n=self.L.crvs[1])
@@ -189,7 +198,7 @@ class BuildRig():
             util.offsetCtls(self.L.microCtls[i], t=(0,0,.7))
             
             #6: Lock Ctls
-            util.lockCtls(self.L.microCtls[i], r=True)
+            util.lockHideTransform(self.L.microCtls[i], r=True)
 
             #5: Create Lid Driver Joints
             lid.createlidDrivers(self.L.lidDrivs[i], self.L.drivs[i], self.L.microCtls[i], self.L.lidDrivGrp)
@@ -325,9 +334,6 @@ class BuildRig():
            size=.5, shape='arch'
            )
         util.offsetCtls(self.N.sneerCtls, t=(0,0,1.7))
-    
-    def createGrps(self):
-        mc.group(n=self.NTGrp, em=True)
 
 
     def face02(self):
@@ -489,7 +495,7 @@ class BuildRig():
             mc.delete(self.noSelectLayer)
         
         ###temp
-        util.lockCtls(self.allCtls, s=True)
+        util.lockHideTransform(self.allCtls, s=True)
         
     def colorCtls(self):
         red=(1,0,0)

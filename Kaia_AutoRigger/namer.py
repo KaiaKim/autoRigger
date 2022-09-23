@@ -105,7 +105,7 @@ class Teeth():
 
 class Lid():
     def __init__(self,verts):
-        self.guides = ['lid_upper_r_guide','lid_lower_r_guide']
+        self.guides = ['lid_upper_r_guide','lid_lower_r_guide','lid_mid_r_guide']
         lList = ['_upper_r', '_lower_r', '_upper_l', '_lower_l']
         self.crvs = ['lid'+d+'_curve' for d in lList] #No change this!
         self.drivCrvs = ['lid'+d+'_driver_curve' for d in lList] #lid driver curve
