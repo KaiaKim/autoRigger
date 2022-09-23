@@ -79,7 +79,9 @@ class ImportExport():
             json.dump(self.data['orients'], wfile)
         with open(self.dir+'/blendshapeCrv.json',"w") as wfile:
             json.dump(self.data['bsCrv'], wfile)
-    
+
+        mc.warning('Export Success! Directory: '+self.dir)
+
     def assignGeo(self,x,flag):
         if flag=='ass':
             self.data['geo'][x]=mc.ls(sl=True)

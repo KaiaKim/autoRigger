@@ -41,8 +41,7 @@ class ButtonHandler():
                 missingVerts.append(key)
                 
         if missingVerts != []:
-            mc.warning(', '.join([x for x in missingVerts])+'Verts are not assigned!')
-            
+            mc.error(', '.join([x for x in missingVerts])+'Verts are not assigned!')     
         elif missingVerts == []:
             self.setNames()
 
@@ -78,7 +77,7 @@ class ButtonHandler():
 
 
     def buildRig(self,_):
-        
+
         self.face01()
         self.mouth01()
         self.teethTongue01()
