@@ -85,7 +85,7 @@ def createAutoGrp(child, parent, name=None):
 
 def handleToggle(ctl):
     shape=getset.getCrvShape(ctl)
-    mc.addAttr(ctl, sn='handle', k=True, dv=1, at='bool')
+    mc.addAttr(ctl, sn='handle', k=False, dv=1, at='bool')
     mc.connectAttr(ctl+'.handle', ctl+'.displayHandle')
     rev1=mc.createNode('reverse')
     mc.connectAttr(ctl+'.handle', rev1+'.inputX')
